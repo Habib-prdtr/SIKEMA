@@ -6,12 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIKEMA - Login</title>
 
-    <!-- Bootstrap 5 -->
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Google Font -->
+    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
     * {
@@ -19,84 +22,146 @@
     }
 
     body {
-        background: #f4f7fb;
-        height: 100vh;
+        background-color: #f5faf7;
+        background-image:
+            radial-gradient(circle at center, rgba(16, 185, 129, 0.08) 2px, transparent 2px);
+        background-size: 80px 80px;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         overflow: hidden;
     }
 
-    .login-container {
-        height: 100vh;
-    }
-
-    .left-side {
-        background: linear-gradient(135deg, #1e3c72, #2a5298);
-        color: white;
-        padding: 60px;
-    }
-
-    .left-side h1 {
-        font-weight: 700;
-        font-size: 42px;
-    }
-
-    .left-side p {
-        opacity: 0.9;
-        margin-top: 20px;
-        line-height: 1.8;
-    }
-
-    .right-side {
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 40px;
+    .login-wrapper {
+        width: 100%;
+        max-width: 560px;
+        padding: 20px;
     }
 
     .login-card {
-        width: 100%;
-        max-width: 420px;
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 45px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
     }
 
-    .login-title {
+    .logo-box {
+        width: 110px;
+        height: 110px;
+        margin: auto;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.25);
+    }
+
+    .logo-box i {
+        font-size: 52px;
+        color: white;
+    }
+
+    .title {
+        font-size: 52px;
         font-weight: 700;
+        color: #0f172a;
+        text-align: center;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #475569;
+        margin-bottom: 45px;
+        font-size: 18px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #1e293b;
         margin-bottom: 10px;
     }
 
-    .login-subtitle {
-        color: #6c757d;
-        margin-bottom: 35px;
+    .form-control {
+        height: 58px;
+        border-radius: 14px;
+        border: 1px solid #dbe2ea;
+        padding-left: 18px;
+        font-size: 16px;
+        box-shadow: none !important;
     }
 
-    .form-control {
-        height: 50px;
-        border-radius: 12px;
+    .form-control:focus {
+        border-color: #10b981;
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .password-wrapper i {
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        cursor: pointer;
+    }
+
+    .remember-me {
+        margin-top: 18px;
+        margin-bottom: 28px;
+    }
+
+    .remember-me label {
+        font-weight: 500;
+        color: #334155;
     }
 
     .btn-login {
-        height: 50px;
-        border-radius: 12px;
-        background: #1e3c72;
+        width: 100%;
+        height: 58px;
         border: none;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        font-size: 20px;
         font-weight: 600;
+        transition: 0.3s ease;
     }
 
     .btn-login:hover {
-        background: #16325c;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.25);
     }
 
-    .school-logo {
-        width: 90px;
-        margin-bottom: 25px;
+    .divider {
+        margin: 35px 0 25px;
+        border-top: 1px solid #e2e8f0;
     }
 
-    @media(max-width: 991px) {
-        .left-side {
-            display: none;
+    .demo-info {
+        text-align: center;
+        color: #64748b;
+        font-size: 15px;
+    }
+
+    .demo-info span {
+        color: #10b981;
+        font-weight: 700;
+    }
+
+    @media(max-width: 576px) {
+
+        .login-card {
+            padding: 30px 22px;
         }
 
-        .right-side {
-            width: 100%;
+        .title {
+            font-size: 42px;
         }
     }
     </style>
@@ -104,59 +169,68 @@
 
 <body>
 
-    <div class="container-fluid">
-        <div class="row login-container">
+    <div class="login-wrapper">
 
-            <!-- Left -->
-            <div class="col-lg-6 left-side d-flex flex-column justify-content-center">
-                <div>
-                    <h1>SIKEMA</h1>
-                    <h4>Sistem Keuangan Madrasah</h4>
+        <div class="login-card">
 
-                    <p>
-                        Platform pengelolaan keuangan sekolah madrasah untuk
-                        membantu administrasi pembayaran siswa menjadi lebih
-                        cepat, rapi, dan efisien.
-                    </p>
-                </div>
+            <div class="logo-box">
+                <i class="bi bi-mortarboard"></i>
             </div>
 
-            <!-- Right -->
-            <div class="col-lg-6 right-side">
-                <div class="login-card">
+            <h1 class="title">SIKEMA</h1>
 
-                    <div class="text-center mb-4">
-                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" class="school-logo"
-                            alt="Logo">
-                    </div>
+            <p class="subtitle">
+                Sistem Keuangan Madrasah
+            </p>
 
-                    <h2 class="login-title">Selamat Datang 👋</h2>
-                    <p class="login-subtitle">
-                        Silakan login untuk melanjutkan
-                    </p>
+            <!-- FORM UI ONLY -->
+            <form>
 
-                    <form>
+                <div class="mb-4">
+                    <label class="form-label">
+                        Username / Email
+                    </label>
 
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-control" placeholder="Masukkan username">
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label">Password</label>
-                            <input type="password" class="form-control" placeholder="Masukkan password">
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-login w-100">
-                            Login
-                        </button>
-
-                    </form>
-
+                    <input type="text" class="form-control" placeholder="Masukkan username atau email">
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Password
+                    </label>
+
+                    <div class="password-wrapper">
+
+                        <input type="password" class="form-control" placeholder="Masukkan password">
+
+                        <i class="bi bi-eye"></i>
+
+                    </div>
+                </div>
+
+                <div class="form-check remember-me">
+                    <input class="form-check-input" type="checkbox" id="remember">
+
+                    <label class="form-check-label" for="remember">
+                        Ingat saya
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    Masuk
+                </button>
+
+            </form>
+
+            <div class="divider"></div>
+
+            <div class="demo-info">
+                Demo: username <span>admin</span>,
+                password <span>admin</span>
             </div>
 
         </div>
+
     </div>
 
 </body>
