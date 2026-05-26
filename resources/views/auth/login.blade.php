@@ -229,6 +229,12 @@
                 password <span>admin</span>
             </div>
 
+            <div class="mt-4 text-center">
+                <a href="/auth/test" class="fw-semibold text-decoration-none" style="color: #10b981; font-size: 14px; transition: color 0.2s;">
+                    <i class="bi bi-cpu-fill me-1"></i> Buka Auth Test Playground
+                </a>
+            </div>
+
         </div>
 
     </div>
