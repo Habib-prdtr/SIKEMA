@@ -12,10 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('saldo_awal', function (Blueprint $table) {
-            $table->tinyIncrements('id');
+            $table->smallIncrements('id');
 
-            $table->string('tahun_pelajaran', 9)->unique();
+            // Satu saldo awal per tahun ajaran
+            $table->foreignId('tahun_ajaran_id')
+                ->unique()
+                ->constrained('tahun_ajaran')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
 
+            // Nominal kas awal (BIGINT)
             $table->bigInteger('jumlah');
 
             $table->text('keterangan')->nullable();

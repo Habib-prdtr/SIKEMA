@@ -20,22 +20,18 @@ return new class extends Migration
 
             $table->string('kelas', 10);
 
-            $table->enum('jenis_kelamin', [
-                'L',
-                'P'
-            ]);
+            // Asrama (opsional, contoh: Putra A, Putri B)
+            $table->string('asrama', 50)->nullable();
+
+            $table->enum('jenis_kelamin', ['L', 'P']);
 
             $table->date('tanggal_masuk')->nullable();
 
             $table->enum('status', [
                 'aktif',
                 'nonaktif',
-                'lulus'
+                'lulus',
             ])->default('aktif');
-
-            $table->bigInteger('tunggakan_awal')->default(0);
-
-            $table->bigInteger('tarif_spp');
 
             $table->timestamps();
         });

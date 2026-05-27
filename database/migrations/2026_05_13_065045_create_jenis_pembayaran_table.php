@@ -11,23 +11,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jenis_pembayaran', function (Blueprint $table) {
-            $table->tinyIncrements('id');
+        // Menggantikan jenis_pembayaran — disesuaikan dengan PRD
+        Schema::create('jenis_penerimaan', function (Blueprint $table) {
+            $table->smallIncrements('id');
 
-            $table->tinyInteger('urutan')->unsigned()->unique();
+            $table->foreignId('tahun_ajaran_id')
+                ->constrained('tahun_ajaran')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+
+            // Urutan tampil di form (1-15 sesuai PRD, max 15 item iuran)
+            $table->smallInteger('urutan')->unsigned();
 
             $table->string('nama', 100);
 
-            $table->bigInteger('tarif')->default(0);
+            // Nominal per siswa (BIGINT, bukan float)
+            $table->bigInteger('tarif');
 
-            $table->boolean('is_flat')->default(1);
-
-            $table->boolean('is_aktif')->default(1);
-
-            $table->string('tahun_pelajaran', 9);
+            $table->boolean('is_aktif')->default(true);
 
             $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+
+            $table->unique(['tahun_ajaran_id', 'urutan']);
         });
     }
 
@@ -36,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jenis_pembayaran');
+        Schema::dropIfExists('jenis_penerimaan');
     }
 };

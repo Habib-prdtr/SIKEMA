@@ -14,26 +14,26 @@ return new class extends Migration
         Schema::create('tagihan_iuran', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('siswa_id')
-                ->constrained('siswa')
+            $table->foreignId('siswa_tahun_ajaran_id')
+                ->constrained('siswa_tahun_ajaran')
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
 
-            $table->foreignId('jenis_pembayaran_id')
-                ->constrained('jenis_pembayaran')
+            $table->foreignId('jenis_penerimaan_id')
+                ->constrained('jenis_penerimaan')
                 ->cascadeOnUpdate()
                 ->restrictOnDelete();
 
-            $table->string('tahun_pelajaran', 9);
-
+            // Nominal tagihan iuran ini (BIGINT)
             $table->bigInteger('tagihan');
 
+            // Akumulasi yang sudah dibayar (BIGINT)
             $table->bigInteger('terbayar')->default(0);
 
             $table->enum('status', [
-                'belum',
-                'cicilan',
-                'lunas'
+                'belum',    // belum ada pembayaran
+                'cicilan',  // sudah dibayar sebagian
+                'lunas',    // terbayar = tagihan
             ])->default('belum');
 
             $table->timestamp('updated_at')->nullable();

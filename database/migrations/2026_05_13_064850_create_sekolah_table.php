@@ -25,8 +25,6 @@ return new class extends Migration
             $table->string('kepala_tu', 100)->nullable();
             $table->string('nip_kepala_tu', 30)->nullable();
 
-            $table->string('tahun_pelajaran', 9);
-
             $table->timestamp('updated_at')->nullable();
         });
     }
