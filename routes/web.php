@@ -13,3 +13,9 @@ Route::get('/login', function () {
 
 // Dashboard (UI only)
 Route::view('/dashboard', 'dashboard.index');
+
+// data tahun ajaran (UI only)
+Route::view('/data/tahun-ajaran', 'data.tahun-ajaran.index');
+
+// data siswa (UI only)
+Route::view('/data/siswa', 'data.siswa.index');

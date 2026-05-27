@@ -1,3 +1,9 @@
+@extends('layouts.app')
+
+@section('page-title', 'Dashboard')
+
+@section('content')
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -16,6 +22,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
+    <!-- Chart JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
     * {
         font-family: 'Poppins', sans-serif;
@@ -25,10 +34,6 @@
         background: #f5f7fb;
         overflow-x: hidden;
     }
-
-    /* =======================
-            SIDEBAR
-    ======================== */
 
     .sidebar {
         width: 300px;
@@ -139,17 +144,9 @@
         color: #059669;
     }
 
-    /* =======================
-            MAIN
-    ======================== */
-
     .main-content {
         margin-left: 300px;
     }
-
-    /* =======================
-            TOPBAR
-    ======================== */
 
     .topbar {
         height: 80px;
@@ -207,10 +204,6 @@
         cursor: pointer;
     }
 
-    /* =======================
-            CONTENT
-    ======================== */
-
     .content {
         padding: 40px;
     }
@@ -226,10 +219,6 @@
         font-size: 20px;
         color: #475569;
     }
-
-    /* =======================
-            STAT CARD
-    ======================== */
 
     .stat-card {
         background: white;
@@ -285,10 +274,6 @@
         color: #64748b;
         margin: 0;
     }
-
-    /* =======================
-            MENU CARD
-    ======================== */
 
     .menu-title {
         font-size: 42px;
@@ -358,9 +343,53 @@
         font-size: 17px;
     }
 
-    /* =======================
-            RESPONSIVE
-    ======================== */
+    /* =========================
+        CHART CARD
+    ========================== */
+
+    .chart-card {
+        background: white;
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.04);
+        height: 100%;
+    }
+
+    .chart-card h3 {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 25px;
+        color: #0f172a;
+    }
+
+    .payment-info {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 30px;
+    }
+
+    .payment-box {
+        text-align: center;
+    }
+
+    .payment-box h4 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .payment-box p {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .green {
+        color: #16a34a;
+    }
+
+    .orange {
+        color: #f59e0b;
+    }
 
     @media(max-width: 991px) {
 
@@ -437,8 +466,8 @@
             </a>
 
             <div class="submenu">
-                <a href="#">Tahun Ajaran</a>
-                <a href="#">Data Siswa</a>
+                <a href="/data/tahun-ajaran">Tahun Ajaran</a>
+                <a href="/data/siswa">Data Siswa</a>
                 <a href="#">Siswa per Tahun Ajaran</a>
                 <a href="#">Jenis Penerimaan</a>
                 <a href="#">Pos Biaya</a>
@@ -452,8 +481,6 @@
                     <span>Penerimaan</span>
                 </div>
 
-                <i class="bi bi-chevron-right"></i>
-
             </a>
 
             <a href="#" class="menu-item">
@@ -462,8 +489,6 @@
                     <i class="bi bi-graph-down-arrow"></i>
                     <span>Pengeluaran</span>
                 </div>
-
-                <i class="bi bi-chevron-right"></i>
 
             </a>
 
@@ -598,7 +623,7 @@
                 Menu Utama
             </h2>
 
-            <div class="row g-4">
+            <div class="row g-4 mb-5">
 
                 <div class="col-lg-3 col-md-6">
 
@@ -690,9 +715,109 @@
 
             </div>
 
+            <!-- =========================
+                CHART SECTION
+            ========================== -->
+
+            <div class="row g-4">
+
+                <!-- BAR CHART -->
+                <div class="col-lg-6">
+
+                    <div class="chart-card">
+
+                        <h3>Pemasukan vs Pengeluaran</h3>
+
+                        <canvas id="barChart"></canvas>
+
+                    </div>
+
+                </div>
+
+                <!-- PIE CHART -->
+                <div class="col-lg-6">
+
+                    <div class="chart-card">
+
+                        <h3>Status Pembayaran</h3>
+
+                        <canvas id="pieChart"></canvas>
+
+                        <div class="payment-info">
+
+                            <div class="payment-box">
+                                <h4>Lunas</h4>
+                                <p class="green">297</p>
+                            </div>
+
+                            <div class="payment-box">
+                                <h4>Belum Lunas</h4>
+                                <p class="orange">45</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
     </div>
+
+    <!-- =========================
+        CHART JS
+    ========================== -->
+
+    <script>
+    // BAR CHART
+
+    const barCtx = document.getElementById('barChart');
+
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei'],
+            datasets: [{
+                    label: 'Pemasukan',
+                    data: [45000000, 52000000, 48000000, 61000000, 55000000],
+                    backgroundColor: '#16a34a'
+                },
+                {
+                    label: 'Pengeluaran',
+                    data: [35000000, 38000000, 42000000, 45000000, 40000000],
+                    backgroundColor: '#ef4444'
+                }
+            ]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+    // PIE CHART
+
+    const pieCtx = document.getElementById('pieChart');
+
+    new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Lunas', 'Belum Lunas'],
+            datasets: [{
+                data: [297, 45],
+                backgroundColor: [
+                    '#16a34a',
+                    '#f59e0b'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+    </script>
 
 </body>
 
