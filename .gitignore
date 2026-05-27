@@ -21,6 +21,8 @@
 /storage/*.key
 /storage/pail
 /vendor
+/Madrasah Financial Management System
+/prd
 _ide_helper.php
 Homestead.json
 Homestead.yaml

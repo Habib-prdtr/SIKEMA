@@ -13,7 +13,32 @@ return new class extends Migration
     {
         Schema::create('transaksi_detail', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+
+            $table->foreignId('transaksi_id')
+                ->constrained('transaksi')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+
+            // Jenis item: spp | iuran | tunggakan
+            $table->enum('jenis', ['spp', 'iuran', 'tunggakan']);
+
+            // Diisi jika jenis = iuran; NULL jika spp atau tunggakan
+            $table->foreignId('jenis_penerimaan_id')
+                ->nullable()
+                ->constrained('jenis_penerimaan')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+
+            // Diisi jika jenis = spp (1-12); NULL untuk iuran/tunggakan
+            $table->smallInteger('bulan')->unsigned()->nullable();
+
+            // Diisi jika jenis = spp; NULL untuk iuran/tunggakan
+            $table->smallInteger('tahun')->unsigned()->nullable();
+
+            // Nominal yang dibayar untuk item ini (BIGINT)
+            $table->bigInteger('nominal');
+
+            $table->timestamp('created_at')->nullable();
         });
     }
 

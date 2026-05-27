@@ -14,13 +14,16 @@ return new class extends Migration
         Schema::create('transaksi', function (Blueprint $table) {
             $table->id();
 
+            // Format: TRX-0001, TRX-0042
             $table->string('no_transaksi', 20)->unique();
 
-            $table->foreignId('siswa_id')
-                ->constrained('siswa')
+            // Siapa yang bayar (siswa di tahun ajaran mana)
+            $table->foreignId('siswa_tahun_ajaran_id')
+                ->constrained('siswa_tahun_ajaran')
                 ->cascadeOnUpdate()
                 ->restrictOnDelete();
 
+            // Operator yang mencatat
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->cascadeOnUpdate()
@@ -28,11 +31,8 @@ return new class extends Migration
 
             $table->date('tanggal');
 
+            // Total semua item dalam sesi bayar ini (BIGINT)
             $table->bigInteger('total_bayar');
-
-            $table->bigInteger('bayar_tunggakan')->default(0);
-
-            $table->string('tahun_pelajaran', 9);
 
             $table->text('keterangan')->nullable();
 

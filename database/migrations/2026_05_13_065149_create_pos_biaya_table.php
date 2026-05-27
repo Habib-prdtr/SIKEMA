@@ -14,15 +14,19 @@ return new class extends Migration
         Schema::create('pos_biaya', function (Blueprint $table) {
             $table->id();
 
+            $table->foreignId('tahun_ajaran_id')
+                ->constrained('tahun_ajaran')
+                ->cascadeOnUpdate()
+                ->restrictOnDelete();
+
             $table->string('nama', 100);
 
+            // Anggaran tahunan untuk pos ini (BIGINT)
             $table->bigInteger('anggaran');
-
-            $table->string('tahun_pelajaran', 9);
 
             $table->text('keterangan')->nullable();
 
-            $table->boolean('is_aktif')->default(1);
+            $table->boolean('is_aktif')->default(true);
 
             $table->timestamp('created_at')->nullable();
         });

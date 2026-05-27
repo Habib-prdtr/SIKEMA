@@ -26,13 +26,14 @@ return new class extends Migration
 
             $table->date('tanggal');
 
+            // Nominal pengeluaran (BIGINT)
             $table->bigInteger('jumlah');
 
-            $table->tinyInteger('bulan')->unsigned();
+            // Bulan pengeluaran (1-12)
+            $table->smallInteger('bulan')->unsigned();
 
-            $table->year('tahun');
-
-            $table->string('tahun_pelajaran', 9);
+            // Tahun pengeluaran
+            $table->smallInteger('tahun')->unsigned();
 
             $table->text('keterangan')->nullable();
 
