@@ -1,699 +1,284 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - SIKEMA</title>
-
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-
-    <style>
-    * {
-        font-family: 'Poppins', sans-serif;
-    }
-
-    body {
-        background: #f5f7fb;
-        overflow-x: hidden;
-    }
-
-    /* =======================
-            SIDEBAR
-    ======================== */
-
-    .sidebar {
-        width: 300px;
-        height: 100vh;
-        background: #fff;
-        border-right: 1px solid #e5e7eb;
-        position: fixed;
-        top: 0;
-        left: 0;
-        overflow-y: auto;
-    }
-
-    .sidebar-header {
-        padding: 30px;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .brand {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .brand-logo {
-        width: 56px;
-        height: 56px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #10b981, #059669);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
-    }
-
-    .brand-logo i {
-        color: white;
-        font-size: 28px;
-    }
-
-    .brand-text h3 {
-        font-size: 18px;
-        font-weight: 700;
-        margin: 0;
-        color: #0f172a;
-    }
-
-    .brand-text p {
-        margin: 0;
-        color: #64748b;
-        font-size: 14px;
-    }
-
-    .sidebar-menu {
-        padding: 15px;
-    }
-
-    .menu-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 16px 18px;
-        border-radius: 14px;
-        margin-bottom: 12px;
-        text-decoration: none;
-        color: #1e293b;
-        font-weight: 500;
-        transition: 0.3s;
-    }
-
-    .menu-item:hover {
-        background: #ecfdf5;
-        color: #059669;
-    }
-
-    .menu-item.active {
-        background: #dcfce7;
-        color: #059669;
-    }
-
-    .menu-left {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .menu-left i {
-        font-size: 22px;
-    }
-
-    .submenu {
-        margin-left: 42px;
-        border-left: 2px solid #e2e8f0;
-        padding-left: 20px;
-        margin-top: 5px;
-        margin-bottom: 20px;
-    }
-
-    .submenu a {
-        display: block;
-        text-decoration: none;
-        color: #475569;
-        margin-bottom: 22px;
-        font-weight: 500;
-        transition: 0.3s;
-    }
-
-    .submenu a:hover {
-        color: #059669;
-    }
-
-    /* =======================
-            MAIN
-    ======================== */
-
-    .main-content {
-        margin-left: 300px;
-    }
-
-    /* =======================
-            TOPBAR
-    ======================== */
-
-    .topbar {
-        height: 80px;
-        background: white;
-        border-bottom: 1px solid #e5e7eb;
-        padding: 0 40px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .topbar-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #0f172a;
-    }
-
-    .topbar-right {
-        display: flex;
-        align-items: center;
-        gap: 30px;
-    }
-
-    .search-box {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #475569;
-        font-size: 17px;
-    }
-
-    .topbar-icon {
-        position: relative;
-        font-size: 24px;
-        color: #475569;
-        cursor: pointer;
-    }
-
-    .notification-dot {
-        width: 10px;
-        height: 10px;
-        background: #ef4444;
-        border-radius: 50%;
-        position: absolute;
-        top: 0;
-        right: -2px;
-    }
-
-    .logout {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 500;
-        color: #1e293b;
-        cursor: pointer;
-    }
-
-    /* =======================
-            CONTENT
-    ======================== */
-
-    .content {
-        padding: 40px;
-    }
-
-    .dashboard-title h1 {
-        font-size: 56px;
-        font-weight: 700;
-        color: #0f172a;
-        margin-bottom: 10px;
-    }
-
-    .dashboard-title p {
-        font-size: 20px;
-        color: #475569;
-    }
-
-    /* =======================
-            STAT CARD
-    ======================== */
-
-    .stat-card {
-        background: white;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-        height: 100%;
-    }
-
-    .stat-icon {
-        width: 72px;
-        height: 72px;
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 24px;
-        font-size: 32px;
-    }
-
-    .bg-blue-soft {
-        background: #dbeafe;
-        color: #2563eb;
-    }
-
-    .bg-green-soft {
-        background: #d1fae5;
-        color: #059669;
-    }
-
-    .bg-red-soft {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-
-    .bg-yellow-soft {
-        background: #fef3c7;
-        color: #d97706;
-    }
-
-    .bg-purple-soft {
-        background: #ede9fe;
-        color: #9333ea;
-    }
-
-    .stat-card h2 {
-        font-size: 34px;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-
-    .stat-card p {
-        color: #64748b;
-        margin: 0;
-    }
-
-    /* =======================
-            MENU CARD
-    ======================== */
-
-    .menu-title {
-        font-size: 42px;
-        font-weight: 700;
-        margin-bottom: 30px;
-        color: #0f172a;
-    }
-
-    .menu-card {
-        background: white;
-        border-radius: 22px;
-        padding: 32px;
-        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.04);
-        transition: 0.3s;
-        height: 100%;
-    }
-
-    .menu-card:hover {
-        transform: translateY(-6px);
-    }
-
-    .menu-icon {
-        width: 80px;
-        height: 80px;
-        border-radius: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 24px;
-        font-size: 34px;
-        color: white;
-    }
-
-    .bg-blue {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-    }
-
-    .bg-green {
-        background: linear-gradient(135deg, #10b981, #059669);
-    }
-
-    .bg-red {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-    }
-
-    .bg-gray {
-        background: linear-gradient(135deg, #64748b, #475569);
-    }
-
-    .menu-card h4 {
-        font-weight: 700;
-        margin-bottom: 12px;
-        color: #0f172a;
-        font-size: 24px;
-    }
-
-    .menu-card p {
-        color: #64748b;
-        margin-bottom: 24px;
-        font-size: 17px;
-    }
-
-    .menu-card a {
-        text-decoration: none;
-        color: #059669;
-        font-weight: 600;
-        font-size: 17px;
-    }
-
-    /* =======================
-            RESPONSIVE
-    ======================== */
-
-    @media(max-width: 991px) {
-
-        .sidebar {
-            width: 100%;
-            height: auto;
-            position: relative;
-        }
-
-        .main-content {
-            margin-left: 0;
-        }
-
-        .topbar {
-            padding: 20px;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .content {
-            padding: 20px;
-        }
-
-        .dashboard-title h1 {
-            font-size: 36px;
-        }
-
-    }
-    </style>
-</head>
-
-<body>
-
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-
-        <div class="sidebar-header">
-
-            <div class="brand">
-
-                <div class="brand-logo">
-                    <i class="bi bi-mortarboard"></i>
+<x-layouts.app title="Dashboard">
+    <x-slot:pageTitle>Dashboard</x-slot:pageTitle>
+
+    <div class="space-y-6">
+
+        {{-- Heading --}}
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p class="text-gray-500 text-sm mt-0.5">
+                Selamat datang, {{ auth()->user()->name }}
+                @if($tahunAktif) — Tahun Ajaran <span class="font-semibold text-emerald-600">{{ $tahunAktif->nama }}</span> @endif
+            </p>
+        </div>
+
+        @if(!$tahunAktif)
+            <div class="alert-warning">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <p class="font-medium">Tahun Ajaran Belum Aktif</p>
+                    <p class="text-sm mt-0.5">Silakan aktifkan tahun ajaran terlebih dahulu di menu
+                        <a href="{{ route('master.tahun-ajaran.index') }}" class="font-semibold underline">Master Data → Tahun Ajaran</a>.
+                    </p>
                 </div>
+            </div>
+        @endif
 
-                <div class="brand-text">
-                    <h3>SIKEMA</h3>
-                    <p>Sistem Keuangan</p>
+        {{-- ── Stat Cards ─────────────────────────────────────── --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+
+            {{-- Saldo Kas --}}
+            <div class="card p-5">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Saldo Kas</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</p>
+                        <p class="text-xs text-gray-400 mt-1">TA {{ $tahunAktif?->nama ?? '-' }}</p>
+                    </div>
+                    <div class="w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                    </div>
                 </div>
+            </div>
 
+            {{-- Penerimaan Bulan Ini --}}
+            <div class="card p-5">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Penerimaan Bulan Ini</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">Rp {{ number_format($totalPenerimaanBulanIni, 0, ',', '.') }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ now()->locale('id')->isoFormat('MMMM YYYY') }}</p>
+                    </div>
+                    <div class="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Pengeluaran Bulan Ini --}}
+            <div class="card p-5">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Pengeluaran Bulan Ini</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">Rp {{ number_format($totalPengeluaranBulanIni, 0, ',', '.') }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ now()->locale('id')->isoFormat('MMMM YYYY') }}</p>
+                    </div>
+                    <div class="w-11 h-11 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17H5m0 0V9m0 8l8-8 4 4 6-6"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Jumlah Siswa --}}
+            <div class="card p-5">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Siswa Aktif</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($jumlahSiswa) }}</p>
+                        <p class="text-xs text-gray-400 mt-1">Terdaftar tahun ini</p>
+                    </div>
+                    <div class="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                </div>
             </div>
 
         </div>
 
-        <div class="sidebar-menu">
-
-            <a href="#" class="menu-item active">
-
-                <div class="menu-left">
-                    <i class="bi bi-house-door"></i>
-                    <span>Dashboard</span>
+        {{-- ── Banner tunggakan ────────────────────────────────── --}}
+        @if($siswaAdaTunggakan > 0)
+            <div class="alert-warning">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <p class="font-medium">Terdapat Tunggakan Aktif</p>
+                    <p class="text-sm mt-0.5">
+                        <strong>{{ $siswaAdaTunggakan }} siswa</strong> memiliki tunggakan tahun sebelumnya
+                        dengan total <strong>Rp {{ number_format($totalTunggakanAwal, 0, ',', '.') }}</strong>.
+                    </p>
                 </div>
-
-            </a>
-
-            <a href="#" class="menu-item">
-
-                <div class="menu-left">
-                    <i class="bi bi-database"></i>
-                    <span>Data</span>
-                </div>
-
-                <i class="bi bi-chevron-right"></i>
-
-            </a>
-
-            <div class="submenu">
-                <a href="#">Tahun Ajaran</a>
-                <a href="#">Data Siswa</a>
-                <a href="#">Siswa per Tahun Ajaran</a>
-                <a href="#">Jenis Penerimaan</a>
-                <a href="#">Pos Biaya</a>
-                <a href="#">Rekap Pembayaran</a>
             </div>
+        @endif
 
-            <a href="#" class="menu-item">
-
-                <div class="menu-left">
-                    <i class="bi bi-graph-up-arrow"></i>
-                    <span>Penerimaan</span>
-                </div>
-
-                <i class="bi bi-chevron-right"></i>
-
-            </a>
-
-            <a href="#" class="menu-item">
-
-                <div class="menu-left">
-                    <i class="bi bi-graph-down-arrow"></i>
-                    <span>Pengeluaran</span>
-                </div>
-
-                <i class="bi bi-chevron-right"></i>
-
-            </a>
-
-            <a href="#" class="menu-item">
-
-                <div class="menu-left">
-                    <i class="bi bi-gear"></i>
-                    <span>Pengaturan</span>
-                </div>
-
-            </a>
-
-        </div>
-
-    </div>
-
-    <!-- MAIN -->
-    <div class="main-content">
-
-        <!-- TOPBAR -->
-        <div class="topbar">
-
-            <div class="topbar-title">
-                Dashboard
-            </div>
-
-            <div class="topbar-right">
-
-                <div class="search-box">
-                    <i class="bi bi-search"></i>
-                    <span>Cari...</span>
-                </div>
-
-                <div class="topbar-icon">
-                    <i class="bi bi-bell"></i>
-                    <div class="notification-dot"></div>
-                </div>
-
-                <div class="logout">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Keluar</span>
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- CONTENT -->
-        <div class="content">
-
-            <!-- TITLE -->
-            <div class="dashboard-title mb-5">
-                <h1>Selamat Datang di SIKEMA</h1>
-
+        @if($sppBelumLunas > 0)
+            <div class="alert-info">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
                 <p>
-                    Sistem Keuangan Madrasah - Dashboard Utama
+                    <strong>{{ $sppBelumLunas }} siswa</strong> belum melunasi SPP bulan
+                    {{ now()->locale('id')->isoFormat('MMMM YYYY') }}.
                 </p>
             </div>
+        @endif
 
-            <!-- STAT -->
-            <div class="row g-4 mb-5">
+        {{-- ── Grafik (SVG Bar Chart sederhana) + Transaksi ───── --}}
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
-                <div class="col-lg-2 col-md-6">
-                    <div class="stat-card">
-
-                        <div class="stat-icon bg-blue-soft">
-                            <i class="bi bi-people"></i>
-                        </div>
-
-                        <p>Total Siswa</p>
-                        <h2>342</h2>
-
+            {{-- Bar Chart 6 bulan --}}
+            <div class="card xl:col-span-2">
+                <div class="card-header">
+                    <h3 class="font-semibold text-gray-900">Grafik Keuangan 6 Bulan Terakhir</h3>
+                </div>
+                <div class="p-5">
+                    @php
+                        $maxVal = max(max($dataPenerimaan->toArray() ?: [1]), max($dataPengeluaran->toArray() ?: [1]));
+                        $chartH = 160;
+                    @endphp
+                    <div class="overflow-x-auto">
+                        <svg viewBox="0 0 {{ count($bulanLabels) * 80 }} {{ $chartH + 40 }}"
+                             class="w-full min-w-xs" style="min-height:200px">
+                            @foreach($bulanLabels as $i => $label)
+                                @php
+                                    $x       = $i * 80 + 10;
+                                    $p       = $dataPenerimaan[$i] ?? 0;
+                                    $k       = $dataPengeluaran[$i] ?? 0;
+                                    $pHeight = $maxVal > 0 ? ($p / $maxVal * $chartH) : 0;
+                                    $kHeight = $maxVal > 0 ? ($k / $maxVal * $chartH) : 0;
+                                @endphp
+                                {{-- Penerimaan bar --}}
+                                <rect x="{{ $x }}" y="{{ $chartH - $pHeight }}"
+                                      width="24" height="{{ $pHeight }}"
+                                      fill="#059669" rx="3" opacity="0.85">
+                                    <title>Penerimaan: Rp {{ number_format($p, 0, ',', '.') }}</title>
+                                </rect>
+                                {{-- Pengeluaran bar --}}
+                                <rect x="{{ $x + 28 }}" y="{{ $chartH - $kHeight }}"
+                                      width="24" height="{{ $kHeight }}"
+                                      fill="#dc2626" rx="3" opacity="0.75">
+                                    <title>Pengeluaran: Rp {{ number_format($k, 0, ',', '.') }}</title>
+                                </rect>
+                                {{-- Label --}}
+                                <text x="{{ $x + 26 }}" y="{{ $chartH + 16 }}"
+                                      text-anchor="middle" font-size="11" fill="#6b7280">{{ $label }}</text>
+                            @endforeach
+                        </svg>
+                    </div>
+                    <div class="flex items-center gap-5 mt-2 text-xs text-gray-500">
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600 inline-block"></span>Penerimaan</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-600 inline-block"></span>Pengeluaran</span>
                     </div>
                 </div>
-
-                <div class="col-lg-2 col-md-6">
-                    <div class="stat-card">
-
-                        <div class="stat-icon bg-green-soft">
-                            <i class="bi bi-graph-up-arrow"></i>
-                        </div>
-
-                        <p>Total Pemasukan</p>
-                        <h2 class="text-success">Rp 55jt</h2>
-
-                    </div>
-                </div>
-
-                <div class="col-lg-2 col-md-6">
-                    <div class="stat-card">
-
-                        <div class="stat-icon bg-red-soft">
-                            <i class="bi bi-graph-down-arrow"></i>
-                        </div>
-
-                        <p>Total Pengeluaran</p>
-                        <h2 class="text-danger">Rp 40jt</h2>
-
-                    </div>
-                </div>
-
-                <div class="col-lg-2 col-md-6">
-                    <div class="stat-card">
-
-                        <div class="stat-icon bg-yellow-soft">
-                            <i class="bi bi-exclamation-circle"></i>
-                        </div>
-
-                        <p>Total Tunggakan</p>
-                        <h2 style="color:#d97706;">Rp 15,7jt</h2>
-
-                    </div>
-                </div>
-
-                <div class="col-lg-2 col-md-6">
-                    <div class="stat-card">
-
-                        <div class="stat-icon bg-purple-soft">
-                            <i class="bi bi-wallet2"></i>
-                        </div>
-
-                        <p>Saldo Saat Ini</p>
-                        <h2 style="color:#9333ea;">Rp 125jt</h2>
-
-                    </div>
-                </div>
-
             </div>
 
-            <!-- MENU -->
-            <h2 class="menu-title">
-                Menu Utama
-            </h2>
-
-            <div class="row g-4">
-
-                <div class="col-lg-3 col-md-6">
-
-                    <div class="menu-card">
-
-                        <div class="menu-icon bg-blue">
-                            <i class="bi bi-database"></i>
-                        </div>
-
-                        <h4>Data</h4>
-
-                        <p>
-                            Kelola data master sistem
-                        </p>
-
-                        <a href="#">
-                            Buka Menu →
-                        </a>
-
+            {{-- Quick actions --}}
+            <div class="space-y-3">
+                <a href="{{ route('penerimaan.catat') }}"
+                    class="card p-4 flex items-center gap-4 hover:border-emerald-300 hover:shadow-md transition-all group">
+                    <div class="w-10 h-10 bg-emerald-100 group-hover:bg-emerald-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
                     </div>
-
-                </div>
-
-                <div class="col-lg-3 col-md-6">
-
-                    <div class="menu-card">
-
-                        <div class="menu-icon bg-green">
-                            <i class="bi bi-graph-up-arrow"></i>
-                        </div>
-
-                        <h4>Pencatatan Penerimaan</h4>
-
-                        <p>
-                            Catat pembayaran siswa
-                        </p>
-
-                        <a href="#">
-                            Buka Menu →
-                        </a>
-
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Catat Penerimaan</p>
+                        <p class="text-xs text-gray-500">Proses pembayaran siswa</p>
                     </div>
-
-                </div>
-
-                <div class="col-lg-3 col-md-6">
-
-                    <div class="menu-card">
-
-                        <div class="menu-icon bg-red">
-                            <i class="bi bi-graph-down-arrow"></i>
-                        </div>
-
-                        <h4>Pencatatan Pengeluaran</h4>
-
-                        <p>
-                            Catat pengeluaran madrasah
-                        </p>
-
-                        <a href="#">
-                            Buka Menu →
-                        </a>
-
+                </a>
+                <a href="{{ route('pengeluaran.catat') }}"
+                    class="card p-4 flex items-center gap-4 hover:border-red-200 hover:shadow-md transition-all group">
+                    <div class="w-10 h-10 bg-red-100 group-hover:bg-red-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                        </svg>
                     </div>
-
-                </div>
-
-                <div class="col-lg-3 col-md-6">
-
-                    <div class="menu-card">
-
-                        <div class="menu-icon bg-gray">
-                            <i class="bi bi-gear"></i>
-                        </div>
-
-                        <h4>Pengaturan</h4>
-
-                        <p>
-                            Konfigurasi sistem
-                        </p>
-
-                        <a href="#">
-                            Buka Menu →
-                        </a>
-
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Catat Pengeluaran</p>
+                        <p class="text-xs text-gray-500">Rekam kas keluar</p>
                     </div>
-
-                </div>
-
+                </a>
+                <a href="{{ route('laporan.penerimaan') }}"
+                    class="card p-4 flex items-center gap-4 hover:border-blue-200 hover:shadow-md transition-all group">
+                    <div class="w-10 h-10 bg-blue-100 group-hover:bg-blue-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Lihat Laporan</p>
+                        <p class="text-xs text-gray-500">Rekap keuangan</p>
+                    </div>
+                </a>
+                <a href="{{ route('master.siswa.index') }}"
+                    class="card p-4 flex items-center gap-4 hover:border-purple-200 hover:shadow-md transition-all group">
+                    <div class="w-10 h-10 bg-purple-100 group-hover:bg-purple-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-900 text-sm">Data Siswa</p>
+                        <p class="text-xs text-gray-500">Kelola data siswa</p>
+                    </div>
+                </a>
             </div>
+        </div>
 
+        {{-- ── Transaksi Terbaru ───────────────────────────────── --}}
+        <div class="card">
+            <div class="card-header">
+                <h3 class="font-semibold text-gray-900">Transaksi Terbaru</h3>
+                <a href="{{ route('penerimaan.index') }}" class="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+                    Lihat semua →
+                </a>
+            </div>
+            @if($transaksiTerbaru->isEmpty())
+                <div class="p-10 text-center text-gray-400">
+                    <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <p class="text-sm">Belum ada transaksi</p>
+                </div>
+            @else
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>No. Transaksi</th>
+                                <th>Siswa</th>
+                                <th>Kelas</th>
+                                <th>Tanggal</th>
+                                <th class="text-right">Jumlah</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($transaksiTerbaru as $trx)
+                                <tr>
+                                    <td class="font-mono text-xs">{{ $trx->no_transaksi }}</td>
+                                    <td class="font-medium text-gray-900">{{ $trx->siswaTahunAjaran->siswa->nama }}</td>
+                                    <td>{{ $trx->siswaTahunAjaran->siswa->kelas }}</td>
+                                    <td>{{ $trx->tanggal->format('d/m/Y') }}</td>
+                                    <td class="text-right font-semibold text-emerald-700">
+                                        Rp {{ number_format($trx->total_bayar, 0, ',', '.') }}
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('penerimaan.show', $trx) }}"
+                                            class="text-xs text-blue-600 hover:text-blue-700 font-medium">Detail</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
 
     </div>
-
-</body>
-
-</html>
+</x-layouts.app>
