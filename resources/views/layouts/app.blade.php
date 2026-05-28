@@ -308,9 +308,7 @@
             <!-- SUBMENU -->
             <div class="submenu">
 
-                <a href="/data/tahun-ajaran" class="{{ request()->is('data/tahun-ajaran
-                
-                ') ? 'active' : '' }}">
+                <a href="/data/tahun-ajaran" class="{{ request()->is('data/tahun-ajaran') ? 'active' : '' }}">
                     Tahun Ajaran
                 </a>
 
@@ -318,15 +316,16 @@
                     Data Siswa
                 </a>
 
-                <a href="#">
+                <a href="/data/siswa-per-tahun-ajaran"
+                    class="{{ request()->is('data/siswa-per-tahun-ajaran') ? 'active' : '' }}">
                     Siswa per Tahun Ajaran
                 </a>
 
-                <a href="#">
+                <a href="/data/jenis-penerimaan" class="{{ request()->is('data/jenis-penerimaan') ? 'active' : '' }}">
                     Jenis Penerimaan
                 </a>
 
-                <a href="#">
+                <a href="/data/pos-biaya" class="{{ request()->is('data/pos-biaya') ? 'active' : '' }}">
                     Pos Biaya
                 </a>
 
