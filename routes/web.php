@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Laporan\LaporanPenerimaanController;
 use App\Http\Controllers\Laporan\LaporanPengeluaranController;
@@ -35,7 +36,7 @@ Route::middleware('auth')->group(function () {
 
     // ─── Dashboard ────────────────────────────────────────
     Route::get('/', fn () => redirect()->route('dashboard'));
-    Route::view('/dashboard', 'dashboard.index')->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ─── Master: Tahun Ajaran ─────────────────────────────
     Route::prefix('master/tahun-ajaran')->name('master.tahun-ajaran.')->group(function () {
@@ -87,7 +88,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('penerimaan')->name('penerimaan.')->group(function () {
         Route::get('/', [PenerimaanController::class, 'index'])->name('index');
         Route::get('/catat', [PenerimaanController::class, 'create'])->name('catat');
-        Route::post('/simpan', [PenerimaanController::class, 'store'])->name('simpan');
+        Route::post('/store', [PenerimaanController::class, 'store'])->name('store');
         Route::get('/{transaksi}', [PenerimaanController::class, 'show'])->name('show');
     });
 
@@ -95,7 +96,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('pengeluaran')->name('pengeluaran.')->group(function () {
         Route::get('/', [PengeluaranController::class, 'index'])->name('index');
         Route::get('/catat', [PengeluaranController::class, 'create'])->name('catat');
-        Route::post('/simpan', [PengeluaranController::class, 'store'])->name('simpan');
+        Route::post('/store', [PengeluaranController::class, 'store'])->name('store');
         Route::get('/{pengeluaran}', [PengeluaranController::class, 'show'])->name('show');
     });
 
@@ -109,6 +110,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('pengaturan')->name('pengaturan.')->group(function () {
         Route::get('/sekolah', [SekolahController::class, 'edit'])->name('sekolah.edit');
         Route::put('/sekolah', [SekolahController::class, 'update'])->name('sekolah.update');
+        Route::put('/password', [SekolahController::class, 'updatePassword'])->name('password.update');
     });
 
 });
