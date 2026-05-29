@@ -23,9 +23,9 @@
 
         {{-- Kop --}}
         <div class="px-8 pt-8 pb-5 border-b-2 border-emerald-600 text-center">
-            <h2 class="text-xl font-bold text-gray-900 uppercase">{{ $sekolah->nama ?? 'MADRASAH' }}</h2>
-            @if($sekolah->alamat ?? false)
-                <p class="text-xs text-gray-500 mt-1">{{ $sekolah->alamat }}</p>
+            <h2 class="text-xl font-bold text-gray-900 uppercase">{{ $sekolah->nama_sekolah ?? 'MADRASAH' }}</h2>
+            @if($sekolah->nama_yayasan ?? false)
+                <p class="text-xs text-gray-500">{{ $sekolah->nama_yayasan }}</p>
             @endif
             <div class="mt-3 inline-block bg-emerald-600 text-white px-6 py-1 rounded-full text-sm font-semibold tracking-wide">
                 BUKTI PEMBAYARAN / KWITANSI

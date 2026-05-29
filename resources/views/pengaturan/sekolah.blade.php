@@ -1,5 +1,4 @@
-<x-layouts.app title="Pengaturan Sekolah">
-    <x-slot:pageTitle>Pengaturan / Profil Sekolah</x-slot:pageTitle>
+<x-layouts.app title="Pengaturan Sekolah" pageTitle="Pengaturan / Profil Sekolah">
 
     <div class="max-w-2xl space-y-5">
 
@@ -16,19 +15,19 @@
                 @csrf @method('PUT')
 
                 <div>
-                    <label for="nama" class="form-label">Nama Madrasah / Sekolah <span class="text-red-500">*</span></label>
-                    <input id="nama" type="text" name="nama"
-                        value="{{ old('nama', $sekolah->nama ?? '') }}"
-                        class="form-input @error('nama') border-red-400 @enderror"
+                    <label for="nama_sekolah" class="form-label">Nama Madrasah / Sekolah <span class="text-red-500">*</span></label>
+                    <input id="nama_sekolah" type="text" name="nama_sekolah"
+                        value="{{ old('nama_sekolah', $sekolah->nama_sekolah ?? '') }}"
+                        class="form-input @error('nama_sekolah') border-red-400 @enderror"
                         placeholder="MTs Contoh Al-Hikmah" maxlength="150" required>
-                    @error('nama')<p class="form-error">{{ $message }}</p>@enderror
+                    @error('nama_sekolah')<p class="form-error">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label for="npsn" class="form-label">NPSN</label>
-                    <input id="npsn" type="text" name="npsn"
-                        value="{{ old('npsn', $sekolah->npsn ?? '') }}"
-                        class="form-input" placeholder="8 digit NPSN" maxlength="10">
+                    <label for="nama_yayasan" class="form-label">Nama Yayasan</label>
+                    <input id="nama_yayasan" type="text" name="nama_yayasan"
+                        value="{{ old('nama_yayasan', $sekolah->nama_yayasan ?? '') }}"
+                        class="form-input" placeholder="Yayasan ..." maxlength="150">
                 </div>
 
                 <div>
@@ -51,16 +50,16 @@
                             class="form-input" placeholder="sekolah@example.com">
                     </div>
                     <div>
-                        <label for="kepala_sekolah" class="form-label">Nama Kepala Sekolah</label>
-                        <input id="kepala_sekolah" type="text" name="kepala_sekolah"
-                            value="{{ old('kepala_sekolah', $sekolah->kepala_sekolah ?? '') }}"
+                        <label for="kepala_tu" class="form-label">Nama Kepala TU</label>
+                        <input id="kepala_tu" type="text" name="kepala_tu"
+                            value="{{ old('kepala_tu', $sekolah->kepala_tu ?? '') }}"
                             class="form-input" placeholder="Nama lengkap" maxlength="100">
                     </div>
                     <div>
-                        <label for="bendahara" class="form-label">Nama Bendahara</label>
-                        <input id="bendahara" type="text" name="bendahara"
-                            value="{{ old('bendahara', $sekolah->bendahara ?? '') }}"
-                            class="form-input" placeholder="Nama lengkap" maxlength="100">
+                        <label for="nip_kepala_tu" class="form-label">NIP Kepala TU</label>
+                        <input id="nip_kepala_tu" type="text" name="nip_kepala_tu"
+                            value="{{ old('nip_kepala_tu', $sekolah->nip_kepala_tu ?? '') }}"
+                            class="form-input" placeholder="NIP" maxlength="30">
                     </div>
                 </div>
 

@@ -19,7 +19,7 @@
 
     <div class="card max-w-xl">
         <div class="px-6 pt-6 pb-4 border-b border-gray-200 text-center">
-            <h2 class="text-lg font-bold text-gray-900">{{ $sekolah->nama ?? 'MADRASAH' }}</h2>
+            <h2 class="text-lg font-bold text-gray-900">{{ $sekolah->nama_sekolah ?? 'MADRASAH' }}</h2>
             <div class="mt-2 inline-block bg-red-600 text-white px-5 py-1 rounded-full text-xs font-semibold tracking-wide">
                 BUKTI PENGELUARAN KAS
             </div>

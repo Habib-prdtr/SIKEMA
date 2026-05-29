@@ -42,16 +42,25 @@ class LaporanPengeluaranController extends Controller
             $query->where('pos_biaya_id', $request->pos_biaya_id);
         }
 
-        $pengeluaran    = $query->get();
+        $pengeluaran    = $query->paginate(50)->withQueryString();
         $totalPengeluaran = (int) $pengeluaran->sum('jumlah');
 
-        // Rekap per pos biaya
-        $rekapPerPos = $pengeluaran->groupBy('pos_biaya_id')->map(function ($items) {
-            return [
-                'nama'  => $items->first()->posBiaya->nama,
-                'total' => $items->sum('jumlah'),
-            ];
-        })->values();
+        // Rekap per pos biaya — pakai withSum agar bisa akses ->nama dan ->total langsung
+        $rekapPerPos = PosBiaya::withSum('pengeluaran', 'jumlah')
+            ->where('tahun_ajaran_id', $tahunAjaranId)
+            ->when($request->filled('bulan'), function ($q) use ($request) {
+                $q->whereHas('pengeluaran', fn ($p) => $p->where('bulan', $request->bulan));
+            })
+            ->orderBy('nama')
+            ->get()
+            ->map(function ($pos) {
+                return (object) [
+                    'nama'     => $pos->nama,
+                    'anggaran' => $pos->anggaran ?? 0,
+                    'total'    => (int) ($pos->pengeluaran_sum_jumlah ?? 0),
+                ];
+            })
+            ->filter(fn ($r) => $r->total > 0);
 
         return view('laporan.pengeluaran', compact(
             'pengeluaran',
