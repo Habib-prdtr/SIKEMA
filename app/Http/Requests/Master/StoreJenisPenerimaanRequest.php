@@ -18,6 +18,7 @@ class StoreJenisPenerimaanRequest extends FormRequest
             'urutan'          => ['required', 'integer', 'min:1', 'max:15'],
             'nama'            => ['required', 'string', 'max:100'],
             'tarif'           => ['required', 'integer', 'min:0'],
+            'keterangan'      => ['nullable', 'string', 'max:255'],
             'is_aktif'        => ['boolean'],
         ];
     }

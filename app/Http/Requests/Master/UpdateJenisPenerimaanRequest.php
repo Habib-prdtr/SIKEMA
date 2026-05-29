@@ -15,8 +15,10 @@ class UpdateJenisPenerimaanRequest extends FormRequest
     {
         return [
             'nama'     => ['required', 'string', 'max:100'],
-            'tarif'    => ['required', 'integer', 'min:0'],
-            'is_aktif' => ['boolean'],
+            'tarif'      => ['required', 'integer', 'min:0'],
+            'urutan'     => ['required', 'integer', 'min:1', 'max:15'],
+            'keterangan' => ['nullable', 'string', 'max:255'],
+            'is_aktif'   => ['boolean'],
         ];
     }
 

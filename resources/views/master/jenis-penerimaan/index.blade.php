@@ -42,7 +42,7 @@
                             <tr>
                                 <th>Urutan</th>
                                 <th>Nama Iuran</th>
-                                <th class="text-right">Nominal</th>
+                                <th class="text-right">Tarif</th>
                                 <th>Keterangan</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
@@ -53,14 +53,14 @@
                                     <td class="text-center font-bold text-gray-500 w-16">{{ $jp->urutan }}</td>
                                     <td class="font-medium text-gray-900">{{ $jp->nama }}</td>
                                     <td class="text-right font-semibold text-emerald-700">
-                                        Rp {{ number_format($jp->nominal, 0, ',', '.') }}
+                                        Rp {{ number_format($jp->tarif, 0, ',', '.') }}
                                     </td>
                                     <td class="text-gray-500 text-sm max-w-xs truncate">{{ $jp->keterangan ?? '-' }}</td>
                                     <td class="text-center">
                                         <div class="flex items-center justify-center gap-2">
                                             <button class="btn-secondary btn-sm"
                                                 data-modal-open="modal-edit-{{ $jp->id }}"
-                                                data-edit-fill='@json(["nama" => $jp->nama, "nominal" => $jp->nominal, "urutan" => $jp->urutan, "keterangan" => $jp->keterangan])'
+                                                data-edit-fill="{{ json_encode(['nama' => $jp->nama, 'tarif' => $jp->tarif, 'urutan' => $jp->urutan, 'keterangan' => $jp->keterangan]) }}"
                                                 data-edit-form="form-edit-{{ $jp->id }}">
                                                 Edit
                                             </button>
@@ -97,10 +97,10 @@
                                                         class="form-input" maxlength="100" required>
                                                 </div>
                                                 <div>
-                                                    <label class="form-label">Nominal <span class="text-red-500">*</span></label>
+                                                    <label class="form-label">Tarif <span class="text-red-500">*</span></label>
                                                     <div class="relative">
                                                         <span class="absolute left-3 inset-y-0 flex items-center text-gray-500 text-sm">Rp</span>
-                                                        <input type="number" name="nominal" value="{{ $jp->nominal }}"
+                                                        <input type="number" name="tarif" value="{{ $jp->tarif }}"
                                                             class="form-input pl-9" min="0" step="1000" required>
                                                     </div>
                                                 </div>
@@ -153,13 +153,13 @@
                         @error('nama')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label class="form-label">Nominal <span class="text-red-500">*</span></label>
+                        <label class="form-label">Tarif <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <span class="absolute left-3 inset-y-0 flex items-center text-gray-500 text-sm">Rp</span>
-                            <input type="number" name="nominal" value="{{ old('nominal') }}"
+                            <input type="number" name="tarif" value="{{ old('tarif') }}"
                                 class="form-input pl-9" placeholder="0" min="0" step="1000" required>
                         </div>
-                        @error('nominal')<p class="form-error">{{ $message }}</p>@enderror
+                        @error('tarif')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="form-label">Urutan (1-15) <span class="text-red-500">*</span></label>
