@@ -74,9 +74,10 @@ class TransaksiService
 
                 // Update tagihan yang bersangkutan
                 match ($jenis) {
-                    'spp'      => $this->updateTagihanSpp($sta, $item, $nominal),
-                    'iuran'    => $this->updateTagihanIuran($item, $nominal),
-                    'tunggakan' => null, // tunggakan tidak punya tabel tagihan, dihitung via TunggakanService
+                    'spp'       => $this->updateTagihanSpp($sta, $item, $nominal),
+                    'iuran'     => $this->updateTagihanIuran($item, $nominal),
+                    'tunggakan' => null, // dihitung via TunggakanService, tidak ada tabel tagihan
+                    default     => null,
                 };
             }
 

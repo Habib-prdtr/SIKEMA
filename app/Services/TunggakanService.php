@@ -21,9 +21,9 @@ class TunggakanService
     {
         // Total yang sudah dibayarkan ke pos tunggakan di tahun ajaran ini
         $totalDibayar = $sta->transaksi()
-            ->with('detail')
+            ->with('details')
             ->get()
-            ->flatMap(fn ($t) => $t->detail)
+            ->flatMap(fn ($t) => $t->details)
             ->where('jenis', 'tunggakan')
             ->sum('nominal');
 

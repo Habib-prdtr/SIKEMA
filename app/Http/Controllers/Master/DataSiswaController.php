@@ -23,8 +23,8 @@ class DataSiswaController extends Controller
         if ($request->filled('cari')) {
             $cari = $request->cari;
             $query->where(function ($q) use ($cari) {
-                $q->where('nama', 'ilike', "%{$cari}%")
-                    ->orWhere('no_induk', 'ilike', "%{$cari}%");
+                $q->where('nama', 'like', "%{$cari}%")
+                    ->orWhere('no_induk', 'like', "%{$cari}%");
             });
         }
 

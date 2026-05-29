@@ -35,13 +35,15 @@ class PenerimaanController extends Controller
             ->orderByDesc('tanggal')
             ->orderByDesc('id');
 
-        // Filter pencarian
+        // Filter pencarian — dibatasi dalam scope whereHas agar tidak bocor ke tahun ajaran lain
         if ($request->filled('cari')) {
             $cari = $request->cari;
-            $query->whereHas('siswaTahunAjaran.siswa', function ($q) use ($cari) {
-                $q->where('nama', 'ilike', "%{$cari}%")
-                    ->orWhere('no_induk', 'ilike', "%{$cari}%");
-            })->orWhere('no_transaksi', 'ilike', "%{$cari}%");
+            $query->where(function ($outer) use ($cari) {
+                $outer->whereHas('siswaTahunAjaran.siswa', function ($q) use ($cari) {
+                    $q->where('nama', 'like', "%{$cari}%")
+                      ->orWhere('no_induk', 'like', "%{$cari}%");
+                })->orWhere('no_transaksi', 'like', "%{$cari}%");
+            });
         }
 
         $transaksi = $query->paginate(20)->withQueryString();
@@ -114,7 +116,7 @@ class PenerimaanController extends Controller
         $transaksi->load([
             'siswaTahunAjaran.siswa',
             'siswaTahunAjaran.tahunAjaran',
-            'detail.jenisPenerimaan',
+            'details.jenisPenerimaan',
             'user',
         ]);
 

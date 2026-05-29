@@ -51,7 +51,7 @@
             <div class="card p-5 border-l-4 border-l-emerald-500">
                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Penerimaan</p>
                 <p class="text-2xl font-bold text-emerald-700 mt-1">Rp {{ number_format($totalPenerimaan, 0, ',', '.') }}</p>
-                <p class="text-xs text-gray-400 mt-1">{{ $transaksi->total() }} transaksi</p>
+                <p class="text-xs text-gray-400 mt-1">{{ $transaksi->count() }} transaksi</p>
             </div>
             <div class="card p-5 border-l-4 border-l-blue-500">
                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total SPP</p>
@@ -59,7 +59,7 @@
             </div>
             <div class="card p-5 border-l-4 border-l-purple-500">
                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Iuran & Tunggakan</p>
-                <p class="text-2xl font-bold text-purple-700 mt-1">Rp {{ number_format($totalLainnya, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-purple-700 mt-1">Rp {{ number_format($totalIuran + $totalTunggakan, 0, ',', '.') }}</p>
             </div>
         </div>
 

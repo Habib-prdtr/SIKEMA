@@ -25,7 +25,7 @@ class LaporanPenerimaanController extends Controller
 
         $query = Transaksi::with([
             'siswaTahunAjaran.siswa',
-            'detail',
+            'details.jenisPenerimaan',
             'user',
         ])
             ->whereHas('siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranId))
@@ -52,9 +52,9 @@ class LaporanPenerimaanController extends Controller
         $totalPenerimaan = $transaksi->sum('total_bayar');
 
         // Rekap per jenis
-        $totalSpp       = $transaksi->flatMap(fn ($t) => $t->detail)->where('jenis', 'spp')->sum('nominal');
-        $totalIuran     = $transaksi->flatMap(fn ($t) => $t->detail)->where('jenis', 'iuran')->sum('nominal');
-        $totalTunggakan = $transaksi->flatMap(fn ($t) => $t->detail)->where('jenis', 'tunggakan')->sum('nominal');
+        $totalSpp       = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'spp')->sum('nominal');
+        $totalIuran     = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'iuran')->sum('nominal');
+        $totalTunggakan = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'tunggakan')->sum('nominal');
 
         return view('laporan.penerimaan', compact(
             'transaksi',

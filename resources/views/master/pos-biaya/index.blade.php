@@ -49,7 +49,7 @@
                         </thead>
                         <tbody>
                             @foreach($posBiaya as $pb)
-                                @php $terpakai = $pb->pengeluaran->sum('jumlah'); @endphp
+                                @php $terpakai = (int) ($pb->pengeluaran_sum_jumlah ?? 0); @endphp
                                 <tr>
                                     <td class="font-medium text-gray-900">{{ $pb->nama }}</td>
                                     <td class="text-right font-medium">
