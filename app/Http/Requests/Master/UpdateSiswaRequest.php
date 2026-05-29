@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Master;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateSiswaRequest extends FormRequest
 {
@@ -13,10 +14,11 @@ class UpdateSiswaRequest extends FormRequest
 
     public function rules(): array
     {
-        $siswaId = $this->route('siswa');
+        $siswa = $this->route('siswa');
+        $siswaId = $siswa->id ?? $siswa;
 
         return [
-            'no_induk'      => ['required', 'string', 'max:20', "unique:siswa,no_induk,{$siswaId}"],
+            'no_induk'      => ['required', 'string', 'max:20', Rule::unique('siswa', 'no_induk')->ignore($siswaId)],
             'nama'          => ['required', 'string', 'max:100'],
             'kelas'         => ['required', 'string', 'max:10'],
             'asrama'        => ['nullable', 'string', 'max:50'],

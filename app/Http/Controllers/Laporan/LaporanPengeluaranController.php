@@ -42,7 +42,7 @@ class LaporanPengeluaranController extends Controller
             $query->where('pos_biaya_id', $request->pos_biaya_id);
         }
 
-        $pengeluaran    = $query->paginate(50)->withQueryString();
+        $pengeluaran    = $query->get();
         $totalPengeluaran = (int) $pengeluaran->sum('jumlah');
 
         // Rekap per pos biaya — pakai withSum agar bisa akses ->nama dan ->total langsung

@@ -19,10 +19,8 @@ class TunggakanService
      */
     public function hitungSisa(SiswaTahunAjaran $sta): int
     {
-        // Total yang sudah dibayarkan ke pos tunggakan di tahun ajaran ini
-        $totalDibayar = $sta->transaksi()
-            ->with('details')
-            ->get()
+        // Menggunakan property (bukan method) agar bisa memanfaatkan eager loading dari Controller
+        $totalDibayar = $sta->transaksi
             ->flatMap(fn ($t) => $t->details)
             ->where('jenis', 'tunggakan')
             ->sum('nominal');

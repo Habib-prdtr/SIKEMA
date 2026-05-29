@@ -53,7 +53,11 @@
                                     <td class="font-medium text-gray-900">{{ $s->nama }}</td>
                                     <td>{{ $s->kelas }}</td>
                                     <td>
-                                        @if($sta)
+                                        @if($s->status === 'nonaktif')
+                                            <span class="badge-red">Nonaktif</span>
+                                        @elseif($s->status === 'lulus')
+                                            <span class="badge-blue">Lulus</span>
+                                        @elseif($sta)
                                             <span class="badge-green">✓ Terdaftar</span>
                                         @else
                                             <span class="badge-yellow">Belum Aktif</span>
@@ -63,10 +67,15 @@
                                         {{ $sta ? 'Rp ' . number_format($sta->tarif_spp, 0, ',', '.') : '-' }}
                                     </td>
                                     <td class="text-right">
-                                        @if($sta && $sta->tunggakan_awal > 0)
-                                            <span class="text-amber-700 font-medium">
-                                                Rp {{ number_format($sta->tunggakan_awal, 0, ',', '.') }}
-                                            </span>
+                                        @if($sta)
+                                            @php $sisa = app(App\Services\TunggakanService::class)->hitungSisa($sta); @endphp
+                                            @if($sisa > 0)
+                                                <span class="text-amber-700 font-medium">
+                                                    Rp {{ number_format($sisa, 0, ',', '.') }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
                                         @else
                                             <span class="text-gray-400">-</span>
                                         @endif
@@ -106,7 +115,7 @@
                         <select id="siswa_id" name="siswa_id" class="form-select" required>
                             <option value="">-- Pilih Siswa --</option>
                             @foreach($siswaList as $s)
-                                @if(!$s->tahunAjaran->first())
+                                @if(!$s->tahunAjaran->first() && $s->status === 'aktif')
                                     <option value="{{ $s->id }}">{{ $s->no_induk }} — {{ $s->nama }} ({{ $s->kelas }})</option>
                                 @endif
                             @endforeach

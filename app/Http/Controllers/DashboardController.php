@@ -35,12 +35,23 @@ class DashboardController extends Controller
         ->sum('jumlah');
 
         // ── Tunggakan ──────────────────────────────────────────
-        $siswaAdaTunggakan = SiswaTahunAjaran::where('tahun_ajaran_id', $tahunAktif?->id)
+        // Hanya ambil siswa yang punya tunggakan_awal > 0, lalu hitung sisa tunggakannya
+        $siswaDenganTunggakan = SiswaTahunAjaran::where('tahun_ajaran_id', $tahunAktif?->id)
             ->where('tunggakan_awal', '>', 0)
-            ->count();
+            ->with('transaksi.details')
+            ->get();
+        
+        $tunggakanService = app(\App\Services\TunggakanService::class);
+        $siswaAdaTunggakan = 0;
+        $totalTunggakanAwal = 0; // Sebenarnya ini adalah "Total Sisa Tunggakan", tapi variabel di view namanya totalTunggakanAwal
 
-        $totalTunggakanAwal = SiswaTahunAjaran::where('tahun_ajaran_id', $tahunAktif?->id)
-            ->sum('tunggakan_awal');
+        foreach ($siswaDenganTunggakan as $sta) {
+            $sisa = $tunggakanService->hitungSisa($sta);
+            if ($sisa > 0) {
+                $siswaAdaTunggakan++;
+                $totalTunggakanAwal += $sisa;
+            }
+        }
 
         // ── SPP belum lunas bulan ini ──────────────────────────
         $sppBelumLunas = TagihanSpp::whereHas('siswaTahunAjaran', fn ($q) =>

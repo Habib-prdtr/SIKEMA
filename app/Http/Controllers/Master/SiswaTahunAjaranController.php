@@ -24,9 +24,10 @@ class SiswaTahunAjaranController extends Controller
     {
         $tahunAktif = TahunAjaran::aktif();
 
-        $siswaList = Siswa::with([
+        $siswaList = Siswa::where('status', 'aktif')->with([
             'tahunAjaran' => function ($query) use ($tahunAktif) {
-                $query->where('tahun_ajaran_id', $tahunAktif?->id);
+                $query->where('tahun_ajaran_id', $tahunAktif?->id)
+                      ->with('transaksi.details');
             },
         ])->orderBy('nama')->paginate(20);
 

@@ -95,7 +95,7 @@
                         <tbody>
                             @foreach($transaksi as $i => $trx)
                                 <tr>
-                                    <td class="text-gray-400">{{ $transaksi->firstItem() + $i }}</td>
+                                    <td class="text-gray-400">{{ $loop->iteration }}</td>
                                     <td class="font-mono font-semibold">{{ $trx->no_transaksi }}</td>
                                     <td>{{ $trx->tanggal->format('d/m/Y') }}</td>
                                     <td class="font-medium text-gray-900">{{ $trx->siswaTahunAjaran->siswa->nama }}</td>
@@ -126,12 +126,6 @@
                         </tfoot>
                     </table>
                 </div>
-
-                @if($transaksi->hasPages())
-                    <div class="px-5 py-4 border-t border-gray-100 no-print">
-                        {{ $transaksi->withQueryString()->links() }}
-                    </div>
-                @endif
             @endif
         </div>
 
