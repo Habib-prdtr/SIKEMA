@@ -17,6 +17,66 @@ class SimpanPenerimaanRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        // Jika tidak ada input tanggal dari frontend, gunakan hari ini
+        $this->mergeIfMissing([
+            'tanggal' => now()->format('Y-m-d'),
+        ]);
+
+        $rawItems = $this->input('items', []);
+        $formattedItems = [];
+
+        // Jika items sudah dalam format array asosiatif (misal dari API), biarkan saja
+        if (isset($rawItems[0]['jenis'])) {
+            return;
+        }
+
+        if (is_array($rawItems)) {
+            // Mapping SPP
+            if (!empty($rawItems['spp']) && is_array($rawItems['spp'])) {
+                foreach ($rawItems['spp'] as $sppId) {
+                    $tagihan = TagihanSpp::find($sppId);
+                    if ($tagihan) {
+                        $formattedItems[] = [
+                            'jenis'   => 'spp',
+                            'nominal' => $tagihan->sisa(),
+                            'bulan'   => $tagihan->bulan,
+                            'tahun'   => $tagihan->tahun,
+                        ];
+                    }
+                }
+            }
+
+            // Mapping Iuran
+            if (!empty($rawItems['iuran']) && is_array($rawItems['iuran'])) {
+                foreach ($rawItems['iuran'] as $iuranId) {
+                    $tagihan = TagihanIuran::find($iuranId);
+                    if ($tagihan) {
+                        $formattedItems[] = [
+                            'jenis'               => 'iuran',
+                            'nominal'             => $tagihan->sisa(),
+                            'tagihan_iuran_id'    => $tagihan->id,
+                            'jenis_penerimaan_id' => $tagihan->jenis_penerimaan_id,
+                        ];
+                    }
+                }
+            }
+
+            // Mapping Tunggakan
+            if (!empty($rawItems['tunggakan'])) {
+                $formattedItems[] = [
+                    'jenis'   => 'tunggakan',
+                    'nominal' => (int) $this->input('nominal_tunggakan', 0),
+                ];
+            }
+        }
+
+        $this->merge([
+            'items' => $formattedItems,
+        ]);
+    }
+
     public function rules(): array
     {
         return [

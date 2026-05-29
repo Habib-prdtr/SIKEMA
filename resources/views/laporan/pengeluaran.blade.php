@@ -45,7 +45,7 @@
         <div class="card p-5 border-l-4 border-l-red-500">
             <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Pengeluaran</p>
             <p class="text-3xl font-bold text-red-700 mt-1">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</p>
-            <p class="text-xs text-gray-400 mt-1">{{ $pengeluaran->total() }} transaksi</p>
+            <p class="text-xs text-gray-400 mt-1">{{ count($pengeluaran) }} transaksi</p>
         </div>
 
         {{-- Rekap per Pos --}}
@@ -128,7 +128,7 @@
                         <tbody>
                             @foreach($pengeluaran as $i => $p)
                                 <tr>
-                                    <td class="text-gray-400">{{ $pengeluaran->firstItem() + $i }}</td>
+                                    <td class="text-gray-400">{{ $loop->iteration }}</td>
                                     <td>{{ $p->tanggal->format('d/m/Y') }}</td>
                                     <td class="font-medium text-gray-900">{{ $p->posBiaya->nama }}</td>
                                     <td class="text-gray-500 max-w-xs truncate">{{ $p->keterangan }}</td>
@@ -149,11 +149,6 @@
                         </tfoot>
                     </table>
                 </div>
-                @if($pengeluaran->hasPages())
-                    <div class="px-5 py-4 border-t border-gray-100 no-print">
-                        {{ $pengeluaran->withQueryString()->links() }}
-                    </div>
-                @endif
             @endif
         </div>
 
