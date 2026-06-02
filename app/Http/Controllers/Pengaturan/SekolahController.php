@@ -48,17 +48,17 @@ class SekolahController extends Controller
     {
         $request->validate([
             'current_password' => ['required'],
-            'password'         => ['required', 'min:6', 'confirmed'],
+            'password' => ['required', 'min:6', 'confirmed'],
         ], [
             'current_password.required' => 'Password saat ini wajib diisi.',
-            'password.required'         => 'Password baru wajib diisi.',
-            'password.min'              => 'Password baru minimal 6 karakter.',
-            'password.confirmed'        => 'Konfirmasi password tidak cocok.',
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password baru minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
         $user = $request->user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             throw ValidationException::withMessages([
                 'current_password' => 'Password saat ini tidak sesuai.',
             ]);

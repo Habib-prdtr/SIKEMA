@@ -21,10 +21,10 @@ class Pengeluaran extends Model
     ];
 
     protected $casts = [
-        'tanggal'    => 'date',
-        'jumlah'     => 'integer',
-        'bulan'      => 'integer',
-        'tahun'      => 'integer',
+        'tanggal' => 'date',
+        'jumlah' => 'integer',
+        'bulan' => 'integer',
+        'tahun' => 'integer',
         'created_at' => 'datetime',
     ];
 

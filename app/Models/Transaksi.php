@@ -20,7 +20,7 @@ class Transaksi extends Model
     ];
 
     protected $casts = [
-        'tanggal'    => 'date',
+        'tanggal' => 'date',
         'total_bayar' => 'integer',
         'created_at' => 'datetime',
     ];

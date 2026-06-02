@@ -23,8 +23,8 @@ class StoreTahunAjaranRequest extends FormRequest
     {
         return [
             'nama.required' => 'Nama tahun ajaran wajib diisi.',
-            'nama.regex'    => 'Format tahun ajaran harus 2024/2025.',
-            'nama.unique'   => 'Tahun ajaran ini sudah ada.',
+            'nama.regex' => 'Format tahun ajaran harus 2024/2025.',
+            'nama.unique' => 'Tahun ajaran ini sudah ada.',
         ];
     }
 }

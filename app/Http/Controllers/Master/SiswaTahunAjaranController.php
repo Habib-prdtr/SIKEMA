@@ -27,7 +27,7 @@ class SiswaTahunAjaranController extends Controller
         $siswaList = Siswa::where('status', 'aktif')->with([
             'tahunAjaran' => function ($query) use ($tahunAktif) {
                 $query->where('tahun_ajaran_id', $tahunAktif?->id)
-                      ->with('transaksi.details');
+                    ->with('transaksi.details');
             },
         ])->orderBy('nama')->paginate(20);
 
@@ -59,10 +59,10 @@ class SiswaTahunAjaranController extends Controller
         }
 
         $sta = SiswaTahunAjaran::create([
-            'siswa_id'        => $data['siswa_id'],
+            'siswa_id' => $data['siswa_id'],
             'tahun_ajaran_id' => $data['tahun_ajaran_id'],
-            'tarif_spp'       => $data['tarif_spp'],
-            'tunggakan_awal'  => $data['tunggakan_awal'] ?? 0,
+            'tarif_spp' => $data['tarif_spp'],
+            'tunggakan_awal' => $data['tunggakan_awal'] ?? 0,
         ]);
 
         // Load relasi tahunAjaran agar TagihanService bisa ambil nama tahun

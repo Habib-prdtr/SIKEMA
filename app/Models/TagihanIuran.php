@@ -19,8 +19,8 @@ class TagihanIuran extends Model
     ];
 
     protected $casts = [
-        'tagihan'    => 'integer',
-        'terbayar'   => 'integer',
+        'tagihan' => 'integer',
+        'terbayar' => 'integer',
         'updated_at' => 'datetime',
     ];
 
@@ -56,7 +56,7 @@ class TagihanIuran extends Model
     public function bayar(int $nominal): void
     {
         $this->terbayar += $nominal;
-        $this->status   = $this->terbayar >= $this->tagihan ? 'lunas' : 'cicilan';
+        $this->status = $this->terbayar >= $this->tagihan ? 'lunas' : 'cicilan';
         $this->save();
     }
 }

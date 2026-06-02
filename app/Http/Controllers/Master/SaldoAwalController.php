@@ -17,8 +17,8 @@ class SaldoAwalController extends Controller
      */
     public function index(): View
     {
-        $saldoList   = SaldoAwal::with('tahunAjaran')->orderByDesc('id')->get();
-        $tahunList   = TahunAjaran::orderByDesc('nama')->get();
+        $saldoList = SaldoAwal::with('tahunAjaran')->orderByDesc('id')->get();
+        $tahunList = TahunAjaran::orderByDesc('nama')->get();
 
         return view('master.saldo-awal.index', compact('saldoList', 'tahunList'));
     }

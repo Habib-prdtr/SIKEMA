@@ -16,10 +16,10 @@ class SekolahSeeder extends Seeder
             Sekolah::create([
                 'nama_sekolah' => 'Madrasah Aliyah ...',
                 'nama_yayasan' => null,
-                'alamat'       => null,
-                'telepon'      => null,
-                'email'        => null,
-                'kepala_tu'    => null,
+                'alamat' => null,
+                'telepon' => null,
+                'email' => null,
+                'kepala_tu' => null,
                 'nip_kepala_tu' => null,
             ]);
         }

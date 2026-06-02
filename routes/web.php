@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Laporan\LaporanPenerimaanController;
 use App\Http\Controllers\Laporan\LaporanPengeluaranController;
 use App\Http\Controllers\Master\DataSiswaController;

@@ -19,8 +19,8 @@ class PosBiaya extends Model
     ];
 
     protected $casts = [
-        'anggaran'   => 'integer',
-        'is_aktif'   => 'boolean',
+        'anggaran' => 'integer',
+        'is_aktif' => 'boolean',
         'created_at' => 'datetime',
     ];
 

@@ -19,8 +19,8 @@ class JenisPenerimaan extends Model
     ];
 
     protected $casts = [
-        'tarif'      => 'integer',
-        'is_aktif'   => 'boolean',
+        'tarif' => 'integer',
+        'is_aktif' => 'boolean',
         'created_at' => 'datetime',
     ];
 

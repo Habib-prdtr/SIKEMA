@@ -16,7 +16,7 @@ class TahunAjaran extends Model
     ];
 
     protected $casts = [
-        'is_aktif'   => 'boolean',
+        'is_aktif' => 'boolean',
         'created_at' => 'datetime',
     ];
 

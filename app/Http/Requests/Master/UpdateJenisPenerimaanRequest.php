@@ -14,21 +14,21 @@ class UpdateJenisPenerimaanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama'     => ['required', 'string', 'max:100'],
-            'tarif'      => ['required', 'integer', 'min:0'],
-            'urutan'     => ['required', 'integer', 'min:1', 'max:15'],
+            'nama' => ['required', 'string', 'max:100'],
+            'tarif' => ['required', 'integer', 'min:0'],
+            'urutan' => ['required', 'integer', 'min:1', 'max:15'],
             'keterangan' => ['nullable', 'string', 'max:255'],
-            'is_aktif'   => ['boolean'],
+            'is_aktif' => ['boolean'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'nama.required'  => 'Nama iuran wajib diisi.',
+            'nama.required' => 'Nama iuran wajib diisi.',
             'tarif.required' => 'Tarif wajib diisi.',
-            'tarif.integer'  => 'Tarif harus berupa angka bulat.',
-            'tarif.min'      => 'Tarif tidak boleh negatif.',
+            'tarif.integer' => 'Tarif harus berupa angka bulat.',
+            'tarif.min' => 'Tarif tidak boleh negatif.',
         ];
     }
 }

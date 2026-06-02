@@ -14,7 +14,7 @@ class UpdateSaldoAwalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jumlah'     => ['required', 'integer', 'min:0'],
+            'jumlah' => ['required', 'integer', 'min:0'],
             'keterangan' => ['nullable', 'string'],
         ];
     }
@@ -23,8 +23,8 @@ class UpdateSaldoAwalRequest extends FormRequest
     {
         return [
             'jumlah.required' => 'Jumlah saldo awal wajib diisi.',
-            'jumlah.integer'  => 'Jumlah harus berupa angka bulat.',
-            'jumlah.min'      => 'Jumlah tidak boleh negatif.',
+            'jumlah.integer' => 'Jumlah harus berupa angka bulat.',
+            'jumlah.min' => 'Jumlah tidak boleh negatif.',
         ];
     }
 }

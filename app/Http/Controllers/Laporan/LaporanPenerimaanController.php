@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Laporan;
 
 use App\Http\Controllers\Controller;
-use App\Models\SiswaTahunAjaran;
 use App\Models\TahunAjaran;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
@@ -19,7 +18,7 @@ class LaporanPenerimaanController extends Controller
     public function index(Request $request): View
     {
         $tahunAktif = TahunAjaran::aktif();
-        $tahunList  = TahunAjaran::orderByDesc('nama')->get();
+        $tahunList = TahunAjaran::orderByDesc('nama')->get();
 
         $tahunAjaranId = $request->get('tahun_ajaran_id', $tahunAktif?->id);
 
@@ -52,8 +51,8 @@ class LaporanPenerimaanController extends Controller
         $totalPenerimaan = $transaksi->sum('total_bayar');
 
         // Rekap per jenis
-        $totalSpp       = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'spp')->sum('nominal');
-        $totalIuran     = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'iuran')->sum('nominal');
+        $totalSpp = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'spp')->sum('nominal');
+        $totalIuran = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'iuran')->sum('nominal');
         $totalTunggakan = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'tunggakan')->sum('nominal');
 
         return view('laporan.penerimaan', compact(
