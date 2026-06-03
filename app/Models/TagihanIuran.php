@@ -2,10 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class TagihanIuran extends Model
 {
+    use HasFactory;
+
+    public const STATUS_BELUM = 'belum';
+    public const STATUS_CICILAN = 'cicilan';
+    public const STATUS_LUNAS = 'lunas';
+
     public $timestamps = false;
 
     protected $table = 'tagihan_iuran';
@@ -19,8 +26,8 @@ class TagihanIuran extends Model
     ];
 
     protected $casts = [
-        'tagihan'    => 'integer',
-        'terbayar'   => 'integer',
+        'tagihan' => 'integer',
+        'terbayar' => 'integer',
         'updated_at' => 'datetime',
     ];
 
@@ -56,7 +63,7 @@ class TagihanIuran extends Model
     public function bayar(int $nominal): void
     {
         $this->terbayar += $nominal;
-        $this->status   = $this->terbayar >= $this->tagihan ? 'lunas' : 'cicilan';
+        $this->status = $this->terbayar >= $this->tagihan ? self::STATUS_LUNAS : self::STATUS_CICILAN;
         $this->save();
     }
 }

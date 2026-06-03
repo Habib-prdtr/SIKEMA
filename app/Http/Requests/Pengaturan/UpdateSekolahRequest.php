@@ -14,12 +14,12 @@ class UpdateSekolahRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_sekolah'  => ['required', 'string', 'max:150'],
-            'nama_yayasan'  => ['nullable', 'string', 'max:150'],
-            'alamat'        => ['nullable', 'string'],
-            'telepon'       => ['nullable', 'string', 'max:20'],
-            'email'         => ['nullable', 'email', 'max:100'],
-            'kepala_tu'     => ['nullable', 'string', 'max:100'],
+            'nama_sekolah' => ['required', 'string', 'max:150'],
+            'nama_yayasan' => ['nullable', 'string', 'max:150'],
+            'alamat' => ['nullable', 'string'],
+            'telepon' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:100'],
+            'kepala_tu' => ['nullable', 'string', 'max:100'],
             'nip_kepala_tu' => ['nullable', 'string', 'max:30'],
         ];
     }
@@ -28,7 +28,7 @@ class UpdateSekolahRequest extends FormRequest
     {
         return [
             'nama_sekolah.required' => 'Nama sekolah wajib diisi.',
-            'email.email'           => 'Format email tidak valid.',
+            'email.email' => 'Format email tidak valid.',
         ];
     }
 }

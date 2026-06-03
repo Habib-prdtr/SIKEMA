@@ -15,9 +15,9 @@ class SimpanPengeluaranRequest extends FormRequest
     {
         return [
             'pos_biaya_id' => ['required', 'exists:pos_biaya,id'],
-            'tanggal'      => ['required', 'date'],
-            'jumlah'       => ['required', 'integer', 'min:1'],
-            'keterangan'   => ['nullable', 'string', 'max:500'],
+            'tanggal' => ['required', 'date'],
+            'jumlah' => ['required', 'integer', 'min:1'],
+            'keterangan' => ['nullable', 'string', 'max:500'],
         ];
     }
 
@@ -25,11 +25,11 @@ class SimpanPengeluaranRequest extends FormRequest
     {
         return [
             'pos_biaya_id.required' => 'Pos biaya wajib dipilih.',
-            'pos_biaya_id.exists'   => 'Pos biaya tidak ditemukan.',
-            'tanggal.required'      => 'Tanggal wajib diisi.',
-            'jumlah.required'       => 'Jumlah pengeluaran wajib diisi.',
-            'jumlah.integer'        => 'Jumlah harus berupa angka bulat.',
-            'jumlah.min'            => 'Jumlah minimal Rp 1.',
+            'pos_biaya_id.exists' => 'Pos biaya tidak ditemukan.',
+            'tanggal.required' => 'Tanggal wajib diisi.',
+            'jumlah.required' => 'Jumlah pengeluaran wajib diisi.',
+            'jumlah.integer' => 'Jumlah harus berupa angka bulat.',
+            'jumlah.min' => 'Jumlah minimal Rp 1.',
         ];
     }
 }

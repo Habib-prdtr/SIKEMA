@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasHashids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Pengeluaran extends Model
 {
+    use HasFactory, HasHashids;
+
     public $timestamps = false;
 
     protected $table = 'pengeluaran';
@@ -21,10 +25,10 @@ class Pengeluaran extends Model
     ];
 
     protected $casts = [
-        'tanggal'    => 'date',
-        'jumlah'     => 'integer',
-        'bulan'      => 'integer',
-        'tahun'      => 'integer',
+        'tanggal' => 'date',
+        'jumlah' => 'integer',
+        'bulan' => 'integer',
+        'tahun' => 'integer',
         'created_at' => 'datetime',
     ];
 

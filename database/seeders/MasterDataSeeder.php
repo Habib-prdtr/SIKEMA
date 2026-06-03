@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\TahunAjaran;
-use App\Models\Siswa;
-use App\Models\SiswaTahunAjaran;
 use App\Models\JenisPenerimaan;
 use App\Models\PosBiaya;
 use App\Models\SaldoAwal;
+use App\Models\Siswa;
+use App\Models\SiswaTahunAjaran;
+use App\Models\TahunAjaran;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class MasterDataSeeder extends Seeder
@@ -32,7 +32,7 @@ class MasterDataSeeder extends Seeder
 
             foreach ($siswaList as $siswaData) {
                 $siswa = Siswa::create($siswaData);
-                
+
                 // Daftarkan siswa ke tahun ajaran aktif
                 SiswaTahunAjaran::create([
                     'siswa_id' => $siswa->id,

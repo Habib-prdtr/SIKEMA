@@ -9,6 +9,7 @@ use App\Models\SiswaTahunAjaran;
 use App\Models\TahunAjaran;
 use App\Services\TagihanService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class SiswaTahunAjaranController extends Controller
@@ -24,10 +25,10 @@ class SiswaTahunAjaranController extends Controller
     {
         $tahunAktif = TahunAjaran::aktif();
 
-        $siswaList = Siswa::where('status', 'aktif')->with([
+        $siswaList = Siswa::where('status', Siswa::STATUS_AKTIF)->with([
             'tahunAjaran' => function ($query) use ($tahunAktif) {
                 $query->where('tahun_ajaran_id', $tahunAktif?->id)
-                      ->with('transaksi.details');
+                    ->with('transaksi.details');
             },
         ])->orderBy('nama')->paginate(20);
 
@@ -58,18 +59,26 @@ class SiswaTahunAjaranController extends Controller
             ]);
         }
 
-        $sta = SiswaTahunAjaran::create([
-            'siswa_id'        => $data['siswa_id'],
-            'tahun_ajaran_id' => $data['tahun_ajaran_id'],
-            'tarif_spp'       => $data['tarif_spp'],
-            'tunggakan_awal'  => $data['tunggakan_awal'] ?? 0,
-        ]);
+        DB::beginTransaction();
+        try {
+            $sta = SiswaTahunAjaran::create([
+                'siswa_id' => $data['siswa_id'],
+                'tahun_ajaran_id' => $data['tahun_ajaran_id'],
+                'tarif_spp' => $data['tarif_spp'],
+                'tunggakan_awal' => $data['tunggakan_awal'] ?? 0,
+            ]);
 
-        // Load relasi tahunAjaran agar TagihanService bisa ambil nama tahun
-        $sta->load('tahunAjaran');
+            // Load relasi tahunAjaran agar TagihanService bisa ambil nama tahun
+            $sta->load('tahunAjaran');
 
-        // Generate 12 tagihan SPP otomatis
-        $this->tagihanService->generateSpp($sta);
+            // Generate 12 tagihan SPP otomatis
+            $this->tagihanService->generateSpp($sta);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Gagal mengaktifkan siswa: ' . $e->getMessage()]);
+        }
 
         $siswa = Siswa::find($data['siswa_id']);
 

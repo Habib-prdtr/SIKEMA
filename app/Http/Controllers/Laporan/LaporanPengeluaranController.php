@@ -19,7 +19,7 @@ class LaporanPengeluaranController extends Controller
     public function index(Request $request): View
     {
         $tahunAktif = TahunAjaran::aktif();
-        $tahunList  = TahunAjaran::orderByDesc('nama')->get();
+        $tahunList = TahunAjaran::orderByDesc('nama')->get();
 
         $tahunAjaranId = $request->get('tahun_ajaran_id', $tahunAktif?->id);
 
@@ -42,7 +42,7 @@ class LaporanPengeluaranController extends Controller
             $query->where('pos_biaya_id', $request->pos_biaya_id);
         }
 
-        $pengeluaran    = $query->get();
+        $pengeluaran = $query->get();
         $totalPengeluaran = (int) $pengeluaran->sum('jumlah');
 
         // Rekap per pos biaya — pakai withSum agar bisa akses ->nama dan ->total langsung
@@ -55,9 +55,9 @@ class LaporanPengeluaranController extends Controller
             ->get()
             ->map(function ($pos) {
                 return (object) [
-                    'nama'     => $pos->nama,
+                    'nama' => $pos->nama,
                     'anggaran' => $pos->anggaran ?? 0,
-                    'total'    => (int) ($pos->pengeluaran_sum_jumlah ?? 0),
+                    'total' => (int) ($pos->pengeluaran_sum_jumlah ?? 0),
                 ];
             })
             ->filter(fn ($r) => $r->total > 0);

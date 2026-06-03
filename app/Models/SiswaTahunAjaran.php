@@ -18,9 +18,9 @@ class SiswaTahunAjaran extends Model
     ];
 
     protected $casts = [
-        'tarif_spp'      => 'integer',
+        'tarif_spp' => 'integer',
         'tunggakan_awal' => 'integer',
-        'created_at'     => 'datetime',
+        'created_at' => 'datetime',
     ];
 
     // =========================================================

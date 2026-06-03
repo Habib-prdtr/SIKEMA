@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasHashids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaksi extends Model
 {
+    use HasFactory, HasHashids;
+
     public $timestamps = false;
 
     protected $table = 'transaksi';
@@ -20,7 +24,7 @@ class Transaksi extends Model
     ];
 
     protected $casts = [
-        'tanggal'    => 'date',
+        'tanggal' => 'date',
         'total_bayar' => 'integer',
         'created_at' => 'datetime',
     ];

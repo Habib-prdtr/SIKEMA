@@ -14,7 +14,6 @@ class TunggakanService
      *
      * JANGAN duplikasi logika ini di Controller atau tempat lain.
      *
-     * @param  SiswaTahunAjaran $sta
      * @return int Sisa tunggakan dalam rupiah (integer, tidak boleh negatif)
      */
     public function hitungSisa(SiswaTahunAjaran $sta): int

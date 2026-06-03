@@ -20,9 +20,9 @@ class TransaksiDetail extends Model
     ];
 
     protected $casts = [
-        'nominal'    => 'integer',
-        'bulan'      => 'integer',
-        'tahun'      => 'integer',
+        'nominal' => 'integer',
+        'bulan' => 'integer',
+        'tahun' => 'integer',
         'created_at' => 'datetime',
     ];
 

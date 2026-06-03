@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Transaksi;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Transaksi\SimpanPenerimaanRequest;
+use App\Models\Sekolah;
 use App\Models\Siswa;
 use App\Models\SiswaTahunAjaran;
 use App\Models\TahunAjaran;
@@ -41,7 +42,7 @@ class PenerimaanController extends Controller
             $query->where(function ($outer) use ($cari) {
                 $outer->whereHas('siswaTahunAjaran.siswa', function ($q) use ($cari) {
                     $q->where('nama', 'like', "%{$cari}%")
-                      ->orWhere('no_induk', 'like', "%{$cari}%");
+                        ->orWhere('no_induk', 'like', "%{$cari}%");
                 })->orWhere('no_transaksi', 'like', "%{$cari}%");
             });
         }
@@ -56,10 +57,10 @@ class PenerimaanController extends Controller
      */
     public function create(Request $request): View
     {
-        $tahunAktif    = TahunAjaran::aktif();
-        $siswa         = null;
-        $tagihanSpp    = collect();
-        $tagihanIuran  = collect();
+        $tahunAktif = TahunAjaran::aktif();
+        $siswa = null;
+        $tagihanSpp = collect();
+        $tagihanIuran = collect();
         $sisaTunggakan = 0;
 
         if ($request->filled('no_induk')) {
@@ -69,7 +70,7 @@ class PenerimaanController extends Controller
                 $sta = SiswaTahunAjaran::with([
                     'siswa',
                     'tahunAjaran',
-                    'tagihanSpp'   => fn ($q) => $q->orderBy('tahun')->orderBy('bulan'),
+                    'tagihanSpp' => fn ($q) => $q->orderBy('tahun')->orderBy('bulan'),
                     'tagihanIuran' => fn ($q) => $q->with('jenisPenerimaan'),
                 ])
                     ->where('siswa_id', $siswaCari->id)
@@ -77,9 +78,9 @@ class PenerimaanController extends Controller
                     ->first();
 
                 if ($sta) {
-                    $siswa         = $sta;
-                    $tagihanSpp    = $sta->tagihanSpp;
-                    $tagihanIuran  = $sta->tagihanIuran;
+                    $siswa = $sta;
+                    $tagihanSpp = $sta->tagihanSpp;
+                    $tagihanIuran = $sta->tagihanIuran;
                     $sisaTunggakan = $this->tunggakanService->hitungSisa($sta);
                 }
             }
@@ -120,7 +121,7 @@ class PenerimaanController extends Controller
             'user',
         ]);
 
-        $sekolah = \App\Models\Sekolah::getData();
+        $sekolah = Sekolah::getData();
 
         return view('transaksi.penerimaan.show', compact('transaksi', 'sekolah'));
     }

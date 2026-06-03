@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Pengaturan;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Pengaturan\UpdatePasswordRequest;
 use App\Http\Requests\Pengaturan\UpdateSekolahRequest;
 use App\Models\Sekolah;
 use Illuminate\Http\RedirectResponse;
@@ -44,26 +45,9 @@ class SekolahController extends Controller
     /**
      * Ganti password operator yang sedang login.
      */
-    public function updatePassword(Request $request): RedirectResponse
+    public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
     {
-        $request->validate([
-            'current_password' => ['required'],
-            'password'         => ['required', 'min:6', 'confirmed'],
-        ], [
-            'current_password.required' => 'Password saat ini wajib diisi.',
-            'password.required'         => 'Password baru wajib diisi.',
-            'password.min'              => 'Password baru minimal 6 karakter.',
-            'password.confirmed'        => 'Konfirmasi password tidak cocok.',
-        ]);
-
         $user = $request->user();
-
-        if (!Hash::check($request->current_password, $user->password)) {
-            throw ValidationException::withMessages([
-                'current_password' => 'Password saat ini tidak sesuai.',
-            ]);
-        }
-
         $user->update(['password' => Hash::make($request->password)]);
 
         return redirect()->route('pengaturan.sekolah.edit')

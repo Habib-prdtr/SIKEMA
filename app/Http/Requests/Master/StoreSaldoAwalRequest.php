@@ -15,8 +15,8 @@ class StoreSaldoAwalRequest extends FormRequest
     {
         return [
             'tahun_ajaran_id' => ['required', 'exists:tahun_ajaran,id', 'unique:saldo_awal,tahun_ajaran_id'],
-            'jumlah'          => ['required', 'integer', 'min:0'],
-            'keterangan'      => ['nullable', 'string'],
+            'jumlah' => ['required', 'integer', 'min:0'],
+            'keterangan' => ['nullable', 'string'],
         ];
     }
 
@@ -24,10 +24,10 @@ class StoreSaldoAwalRequest extends FormRequest
     {
         return [
             'tahun_ajaran_id.required' => 'Tahun ajaran wajib dipilih.',
-            'tahun_ajaran_id.unique'   => 'Saldo awal untuk tahun ajaran ini sudah ada.',
-            'jumlah.required'          => 'Jumlah saldo awal wajib diisi.',
-            'jumlah.integer'           => 'Jumlah harus berupa angka bulat.',
-            'jumlah.min'               => 'Jumlah tidak boleh negatif.',
+            'tahun_ajaran_id.unique' => 'Saldo awal untuk tahun ajaran ini sudah ada.',
+            'jumlah.required' => 'Jumlah saldo awal wajib diisi.',
+            'jumlah.integer' => 'Jumlah harus berupa angka bulat.',
+            'jumlah.min' => 'Jumlah tidak boleh negatif.',
         ];
     }
 }

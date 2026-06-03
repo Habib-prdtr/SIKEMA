@@ -9,6 +9,7 @@ use App\Models\JenisPenerimaan;
 use App\Models\TahunAjaran;
 use App\Services\TagihanService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class JenisPenerimaanController extends Controller
@@ -37,13 +38,17 @@ class JenisPenerimaanController extends Controller
      */
     public function store(StoreJenisPenerimaanRequest $request): RedirectResponse
     {
-        $jp = JenisPenerimaan::create($request->validated());
+        $jp = DB::transaction(function () use ($request) {
+            $jp = JenisPenerimaan::create($request->validated());
 
-        // Jika langsung diaktifkan, generate tagihan untuk semua siswa
-        if ($jp->is_aktif) {
-            $jp->load('tahunAjaran');
-            $this->tagihanService->generateIuran($jp);
-        }
+            // Jika langsung diaktifkan, generate tagihan untuk semua siswa
+            if ($jp->is_aktif) {
+                $jp->load('tahunAjaran');
+                $this->tagihanService->generateIuran($jp);
+            }
+
+            return $jp;
+        });
 
         return redirect()->route('master.jenis-penerimaan.index')
             ->with('sukses', "Jenis penerimaan '{$jp->nama}' berhasil ditambahkan.");
@@ -55,14 +60,16 @@ class JenisPenerimaanController extends Controller
      */
     public function update(UpdateJenisPenerimaanRequest $request, JenisPenerimaan $jenisPenerimaan): RedirectResponse
     {
-        $wasAktif = $jenisPenerimaan->is_aktif;
-        $jenisPenerimaan->update($request->validated());
+        DB::transaction(function () use ($request, $jenisPenerimaan) {
+            $wasAktif = $jenisPenerimaan->is_aktif;
+            $jenisPenerimaan->update($request->validated());
 
-        // Generate tagihan jika baru diaktifkan
-        if (! $wasAktif && $jenisPenerimaan->is_aktif) {
-            $jenisPenerimaan->load('tahunAjaran');
-            $this->tagihanService->generateIuran($jenisPenerimaan);
-        }
+            // Generate tagihan jika baru diaktifkan
+            if (! $wasAktif && $jenisPenerimaan->is_aktif) {
+                $jenisPenerimaan->load('tahunAjaran');
+                $this->tagihanService->generateIuran($jenisPenerimaan);
+            }
+        });
 
         return redirect()->route('master.jenis-penerimaan.index')
             ->with('sukses', "Jenis penerimaan '{$jenisPenerimaan->nama}' berhasil diperbarui.");

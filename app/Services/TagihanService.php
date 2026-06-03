@@ -15,8 +15,7 @@ class TagihanService
      * Dipanggil saat operator mengaktifkan siswa ke tahun ajaran tertentu.
      * JANGAN panggil langsung dari Controller — panggil lewat SiswaTahunAjaranController.
      *
-     * @param  SiswaTahunAjaran $sta Record siswa-tahun-ajaran yang baru dibuat
-     * @return void
+     * @param  SiswaTahunAjaran  $sta  Record siswa-tahun-ajaran yang baru dibuat
      */
     public function generateSpp(SiswaTahunAjaran $sta): void
     {
@@ -40,12 +39,12 @@ class TagihanService
         foreach ($bulanTahun as $bt) {
             $rows[] = [
                 'siswa_tahun_ajaran_id' => $sta->id,
-                'bulan'                 => $bt['bulan'],
-                'tahun'                 => $bt['tahun'],
-                'tagihan'               => $sta->tarif_spp,
-                'terbayar'              => 0,
-                'status'                => 'belum',
-                'updated_at'            => null,
+                'bulan' => $bt['bulan'],
+                'tahun' => $bt['tahun'],
+                'tagihan' => $sta->tarif_spp,
+                'terbayar' => 0,
+                'status' => TagihanSpp::STATUS_BELUM,
+                'updated_at' => null,
             ];
         }
 
@@ -58,8 +57,7 @@ class TagihanService
      * Dipanggil saat operator menambah/mengaktifkan jenis penerimaan (iuran) baru.
      * Hanya dibuat untuk siswa yang belum punya tagihan iuran tersebut.
      *
-     * @param  JenisPenerimaan $jp Jenis penerimaan yang baru diaktifkan
-     * @return void
+     * @param  JenisPenerimaan  $jp  Jenis penerimaan yang baru diaktifkan
      */
     public function generateIuran(JenisPenerimaan $jp): void
     {
@@ -81,11 +79,11 @@ class TagihanService
 
             $rows[] = [
                 'siswa_tahun_ajaran_id' => $staId,
-                'jenis_penerimaan_id'   => $jp->id,
-                'tagihan'               => $jp->tarif,
-                'terbayar'              => 0,
-                'status'                => 'belum',
-                'updated_at'            => null,
+                'jenis_penerimaan_id' => $jp->id,
+                'tagihan' => $jp->tarif,
+                'terbayar' => 0,
+                'status' => TagihanIuran::STATUS_BELUM,
+                'updated_at' => null,
             ];
         }
 

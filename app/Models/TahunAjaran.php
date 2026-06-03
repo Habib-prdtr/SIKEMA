@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasHashids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class TahunAjaran extends Model
 {
+    use HasFactory, HasHashids;
+
     public $timestamps = false;
 
     protected $table = 'tahun_ajaran';
@@ -16,7 +20,7 @@ class TahunAjaran extends Model
     ];
 
     protected $casts = [
-        'is_aktif'   => 'boolean',
+        'is_aktif' => 'boolean',
         'created_at' => 'datetime',
     ];
 

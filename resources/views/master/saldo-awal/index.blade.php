@@ -45,7 +45,7 @@
                                         @endif
                                     </td>
                                     <td class="text-right font-bold text-emerald-700 text-base">
-                                        Rp {{ number_format($saldo->jumlah, 0, ',', '.') }}
+                                        {{ format_rupiah($saldo->jumlah) }}
                                     </td>
                                     <td class="text-gray-500 text-sm">{{ $saldo->keterangan ?? '-' }}</td>
                                     <td class="text-center">

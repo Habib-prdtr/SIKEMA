@@ -32,11 +32,11 @@ class LoginController extends Controller
     public function login(LoginRequest $request): RedirectResponse
     {
         $loginField = $request->login;
-        $password   = $request->password;
+        $password = $request->password;
 
         // Coba login dengan username terlebih dahulu
         $credentials = filter_var($loginField, FILTER_VALIDATE_EMAIL)
-            ? ['email'    => $loginField, 'password' => $password]
+            ? ['email' => $loginField, 'password' => $password]
             : ['username' => $loginField, 'password' => $password];
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {

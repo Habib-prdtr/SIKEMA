@@ -70,11 +70,11 @@
                             <div><p class="text-gray-500">No. Induk</p><p class="font-mono font-semibold">{{ $siswa->siswa->no_induk }}</p></div>
                             <div><p class="text-gray-500">Kelas</p><p class="font-semibold">{{ $siswa->siswa->kelas }}</p></div>
                             <div><p class="text-gray-500">Tahun Ajaran</p><p class="font-semibold">{{ $siswa->tahunAjaran->nama }}</p></div>
-                            <div><p class="text-gray-500">Tarif SPP</p><p class="font-semibold text-emerald-700">Rp {{ number_format($siswa->tarif_spp, 0, ',', '.') }}</p></div>
+                            <div><p class="text-gray-500">Tarif SPP</p><p class="font-semibold text-emerald-700">{{ format_rupiah($siswa->tarif_spp) }}</p></div>
                             @if($siswa->tunggakan_awal > 0)
                                 <div>
                                     <p class="text-gray-500">Sisa Tunggakan</p>
-                                    <p class="font-semibold text-amber-700">Rp {{ number_format($sisaTunggakan, 0, ',', '.') }}</p>
+                                    <p class="font-semibold text-amber-700">{{ format_rupiah($sisaTunggakan) }}</p>
                                 </div>
                             @endif
                         </div>
@@ -88,7 +88,7 @@
                                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <p>Terdapat <strong>tunggakan tahun sebelumnya</strong> sebesar
-                            <strong>Rp {{ number_format($sisaTunggakan, 0, ',', '.') }}</strong>.</p>
+                            <strong>{{ format_rupiah($sisaTunggakan) }}</strong>.</p>
                     </div>
                 @endif
             </div>
@@ -137,7 +137,7 @@
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="font-semibold text-sm">Rp {{ number_format($nominal, 0, ',', '.') }}</p>
+                                        <p class="font-semibold text-sm">{{ format_rupiah($nominal) }}</p>
                                         @if($lunas) <span class="badge-green text-xs">Lunas</span> @endif
                                     </div>
                                 </label>
@@ -168,7 +168,7 @@
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="font-semibold text-sm">Rp {{ number_format($iuran->jenisPenerimaan->nominal, 0, ',', '.') }}</p>
+                                        <p class="font-semibold text-sm">{{ format_rupiah($iuran->jenisPenerimaan->nominal) }}</p>
                                         @if($lunas) <span class="badge-green text-xs">Lunas</span> @endif
                                     </div>
                                 </label>
@@ -190,7 +190,7 @@
                                     class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Cicil/Lunasi Tunggakan</p>
-                                    <p class="text-xs text-amber-700">Sisa: Rp {{ number_format($sisaTunggakan, 0, ',', '.') }}</p>
+                                    <p class="text-xs text-amber-700">Sisa: {{ format_rupiah($sisaTunggakan) }}</p>
                                 </div>
                             </div>
                             <div>

@@ -19,14 +19,12 @@ class TransaksiService
     /**
      * Generate nomor transaksi unik.
      * Format: TRX-0001, TRX-0042, TRX-1234
-     *
-     * @return string
      */
     public function generateNoTransaksi(): string
     {
         $lastId = Transaksi::max('id') ?? 0;
 
-        return 'TRX-' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
+        return 'TRX-'.str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -36,8 +34,7 @@ class TransaksiService
      * yang gagal, semua perubahan di-rollback otomatis.
      *
      * @param  array  $data  Data tervalidasi dari SimpanPenerimaanRequest
-     * @param  User   $user  Operator yang mencatat
-     * @return Transaksi
+     * @param  User  $user  Operator yang mencatat
      */
     public function simpanPenerimaan(array $data, User $user): Transaksi
     {
@@ -49,35 +46,35 @@ class TransaksiService
 
             // Buat header transaksi
             $transaksi = Transaksi::create([
-                'no_transaksi'          => $this->generateNoTransaksi(),
+                'no_transaksi' => $this->generateNoTransaksi(),
                 'siswa_tahun_ajaran_id' => $sta->id,
-                'user_id'               => $user->id,
-                'tanggal'               => $data['tanggal'],
-                'total_bayar'           => $totalBayar,
-                'keterangan'            => $data['keterangan'] ?? null,
+                'user_id' => $user->id,
+                'tanggal' => $data['tanggal'],
+                'total_bayar' => $totalBayar,
+                'keterangan' => $data['keterangan'] ?? null,
             ]);
 
             // Proses setiap item pembayaran
             foreach ($data['items'] as $item) {
-                $jenis   = $item['jenis'];
+                $jenis = $item['jenis'];
                 $nominal = (int) $item['nominal'];
 
                 // Simpan detail transaksi
                 TransaksiDetail::create([
-                    'transaksi_id'        => $transaksi->id,
-                    'jenis'               => $jenis,
+                    'transaksi_id' => $transaksi->id,
+                    'jenis' => $jenis,
                     'jenis_penerimaan_id' => $item['jenis_penerimaan_id'] ?? null,
-                    'bulan'               => $item['bulan'] ?? null,
-                    'tahun'               => $item['tahun'] ?? null,
-                    'nominal'             => $nominal,
+                    'bulan' => $item['bulan'] ?? null,
+                    'tahun' => $item['tahun'] ?? null,
+                    'nominal' => $nominal,
                 ]);
 
                 // Update tagihan yang bersangkutan
                 match ($jenis) {
-                    'spp'       => $this->updateTagihanSpp($sta, $item, $nominal),
-                    'iuran'     => $this->updateTagihanIuran($item, $nominal),
+                    'spp' => $this->updateTagihanSpp($sta, $item, $nominal),
+                    'iuran' => $this->updateTagihanIuran($item, $nominal),
                     'tunggakan' => null, // dihitung via TunggakanService, tidak ada tabel tagihan
-                    default     => null,
+                    default => null,
                 };
             }
 
