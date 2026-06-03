@@ -7,6 +7,7 @@ use App\Http\Requests\Master\StoreSiswaTahunAjaranRequest;
 use App\Models\Siswa;
 use App\Models\SiswaTahunAjaran;
 use App\Models\TahunAjaran;
+use App\Services\MasterDataService;
 use App\Services\TagihanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class SiswaTahunAjaranController extends Controller
 {
     public function __construct(
         private readonly TagihanService $tagihanService,
+        private readonly MasterDataService $masterDataService
     ) {}
 
     /**
@@ -25,14 +27,8 @@ class SiswaTahunAjaranController extends Controller
     {
         $tahunAktif = TahunAjaran::aktif();
 
-        $siswaList = Siswa::where('status', Siswa::STATUS_AKTIF)->with([
-            'tahunAjaran' => function ($query) use ($tahunAktif) {
-                $query->where('tahun_ajaran_id', $tahunAktif?->id)
-                    ->with('transaksi.details');
-            },
-        ])->orderBy('nama')->paginate(20);
-
-        $semua = TahunAjaran::orderByDesc('nama')->get();
+        $siswaList = $this->masterDataService->getSiswaTahunAjaranList($tahunAktif);
+        $semua = $this->masterDataService->getTahunList();
 
         return view('master.siswa-tahun-ajaran.index', compact(
             'siswaList',
@@ -49,11 +45,7 @@ class SiswaTahunAjaranController extends Controller
         $data = $request->validated();
 
         // Cegah duplikasi: satu siswa hanya boleh aktif sekali per tahun ajaran
-        $sudahAda = SiswaTahunAjaran::where('siswa_id', $data['siswa_id'])
-            ->where('tahun_ajaran_id', $data['tahun_ajaran_id'])
-            ->exists();
-
-        if ($sudahAda) {
+        if ($this->masterDataService->cekSiswaSudahAktifTahunIni($data['siswa_id'], $data['tahun_ajaran_id'])) {
             return back()->withErrors([
                 'error' => 'Siswa sudah diaktifkan di tahun ajaran ini.',
             ]);

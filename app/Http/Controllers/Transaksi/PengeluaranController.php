@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Transaksi;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Transaksi\SimpanPengeluaranRequest;
 use App\Models\Pengeluaran;
-use App\Models\PosBiaya;
 use App\Models\Sekolah;
 use App\Models\TahunAjaran;
+use App\Services\TransaksiService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +15,10 @@ use Illuminate\View\View;
 
 class PengeluaranController extends Controller
 {
+    public function __construct(
+        private readonly TransaksiService $transaksiService,
+    ) {}
+
     /**
      * Daftar pengeluaran (riwayat).
      */
@@ -22,28 +26,8 @@ class PengeluaranController extends Controller
     {
         $tahunAktif = TahunAjaran::aktif();
 
-        $query = Pengeluaran::with(['posBiaya', 'user'])
-            ->whereHas('posBiaya', function ($q) use ($tahunAktif) {
-                $q->where('tahun_ajaran_id', $tahunAktif?->id);
-            })
-            ->orderByDesc('tanggal')
-            ->orderByDesc('id');
-
-        // Filter bulan
-        if ($request->filled('bulan')) {
-            $query->where('bulan', $request->bulan);
-        }
-
-        // Filter pos biaya
-        if ($request->filled('pos_biaya_id')) {
-            $query->where('pos_biaya_id', $request->pos_biaya_id);
-        }
-
-        $pengeluaran = $query->paginate(20)->withQueryString();
-        $posList = PosBiaya::where('tahun_ajaran_id', $tahunAktif?->id)
-            ->where('is_aktif', true)
-            ->orderBy('nama')
-            ->get();
+        $pengeluaran = $this->transaksiService->getDaftarPengeluaran($request, $tahunAktif);
+        $posList = $this->transaksiService->getPosBiayaAktif($tahunAktif);
 
         return view('transaksi.pengeluaran.index', compact(
             'pengeluaran',
@@ -58,11 +42,7 @@ class PengeluaranController extends Controller
     public function create(): View
     {
         $tahunAktif = TahunAjaran::aktif();
-
-        $posList = PosBiaya::where('tahun_ajaran_id', $tahunAktif?->id)
-            ->where('is_aktif', true)
-            ->orderBy('nama')
-            ->get();
+        $posList = $this->transaksiService->getPosBiayaAktif($tahunAktif);
 
         return view('transaksi.pengeluaran.create', compact('posList', 'tahunAktif'));
     }

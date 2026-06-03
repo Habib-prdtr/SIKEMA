@@ -7,22 +7,26 @@ use App\Http\Requests\Master\StorePosBiayaRequest;
 use App\Http\Requests\Master\UpdatePosBiayaRequest;
 use App\Models\PosBiaya;
 use App\Models\TahunAjaran;
+use App\Services\MasterDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class PosBiayaController extends Controller
 {
+    protected MasterDataService $masterDataService;
+
+    public function __construct(MasterDataService $masterDataService)
+    {
+        $this->masterDataService = $masterDataService;
+    }
+
     /**
      * Daftar pos biaya untuk tahun ajaran aktif.
      */
     public function index(): View
     {
         $tahunAktif = TahunAjaran::aktif();
-
-        $posBiaya = PosBiaya::where('tahun_ajaran_id', $tahunAktif?->id)
-            ->withSum('pengeluaran', 'jumlah')  // eager load sum untuk realisasi
-            ->orderBy('nama')
-            ->get();
+        $posBiaya = $this->masterDataService->getPosBiayaWithSumPengeluaran($tahunAktif);
 
         return view('master.pos-biaya.index', compact('posBiaya', 'tahunAktif'));
     }
@@ -54,7 +58,7 @@ class PosBiayaController extends Controller
      */
     public function destroy(PosBiaya $posBiaya): RedirectResponse
     {
-        if ($posBiaya->pengeluaran()->exists()) {
+        if ($this->masterDataService->cekPosBiayaAdaPengeluaran($posBiaya)) {
             return back()->withErrors([
                 'error' => "Pos biaya '{$posBiaya->nama}' tidak dapat dihapus karena sudah ada pengeluaran.",
             ]);

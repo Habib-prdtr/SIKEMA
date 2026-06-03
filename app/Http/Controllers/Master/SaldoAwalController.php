@@ -6,19 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\StoreSaldoAwalRequest;
 use App\Http\Requests\Master\UpdateSaldoAwalRequest;
 use App\Models\SaldoAwal;
-use App\Models\TahunAjaran;
+use App\Services\MasterDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class SaldoAwalController extends Controller
 {
+    protected MasterDataService $masterDataService;
+
+    public function __construct(MasterDataService $masterDataService)
+    {
+        $this->masterDataService = $masterDataService;
+    }
+
     /**
      * Tampilkan saldo awal per tahun ajaran.
      */
     public function index(): View
     {
-        $saldoList = SaldoAwal::with('tahunAjaran')->orderByDesc('id')->get();
-        $tahunList = TahunAjaran::orderByDesc('nama')->get();
+        $saldoList = $this->masterDataService->getDaftarSaldoAwal();
+        $tahunList = $this->masterDataService->getTahunList();
 
         return view('master.saldo-awal.index', compact('saldoList', 'tahunList'));
     }

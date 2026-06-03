@@ -6,34 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\StoreSiswaRequest;
 use App\Http\Requests\Master\UpdateSiswaRequest;
 use App\Models\Siswa;
+use App\Services\MasterDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DataSiswaController extends Controller
 {
+    protected MasterDataService $masterDataService;
+
+    public function __construct(MasterDataService $masterDataService)
+    {
+        $this->masterDataService = $masterDataService;
+    }
+
     /**
      * Daftar siswa dengan pagination dan pencarian.
      */
     public function index(Request $request): View
     {
-        $query = Siswa::query();
-
-        // Pencarian berdasarkan nama atau no_induk
-        if ($request->filled('cari')) {
-            $cari = $request->cari;
-            $query->where(function ($q) use ($cari) {
-                $q->where('nama', 'like', "%{$cari}%")
-                    ->orWhere('no_induk', 'like', "%{$cari}%");
-            });
-        }
-
-        // Filter berdasarkan status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $siswa = $query->orderBy('nama')->paginate(20)->withQueryString();
+        $siswa = $this->masterDataService->getDaftarSiswa($request);
 
         return view('master.siswa.index', compact('siswa'));
     }
@@ -81,12 +73,7 @@ class DataSiswaController extends Controller
      */
     public function destroy(Siswa $siswa): RedirectResponse
     {
-        // Cek apakah siswa sudah punya data transaksi
-        $punyaTransaksi = $siswa->tahunAjaran()
-            ->whereHas('transaksi')
-            ->exists();
-
-        if ($punyaTransaksi) {
+        if ($this->masterDataService->cekSiswaPunyaTransaksi($siswa)) {
             return back()->withErrors([
                 'error' => 'Siswa tidak dapat dihapus karena sudah memiliki data transaksi.',
             ]);

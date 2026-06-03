@@ -103,4 +103,73 @@ class TransaksiService
         $tagihan = TagihanIuran::findOrFail($item['tagihan_iuran_id']);
         $tagihan->bayar($nominal);
     }
+
+    // --- PENERIMAAN ---
+    public function getDaftarPenerimaan(\Illuminate\Http\Request $request, ?\App\Models\TahunAjaran $tahunAktif): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $query = Transaksi::with(['siswaTahunAjaran.siswa', 'user'])
+            ->whereHas('siswaTahunAjaran', function ($q) use ($tahunAktif) {
+                $q->where('tahun_ajaran_id', $tahunAktif?->id);
+            })
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id');
+
+        if ($request->filled('cari')) {
+            $cari = $request->cari;
+            $query->where(function ($outer) use ($cari) {
+                $outer->whereHas('siswaTahunAjaran.siswa', function ($q) use ($cari) {
+                    $q->where('nama', 'like', "%{$cari}%")
+                        ->orWhere('no_induk', 'like', "%{$cari}%");
+                })->orWhere('no_transaksi', 'like', "%{$cari}%");
+            });
+        }
+
+        return $query->paginate(20)->withQueryString();
+    }
+
+    public function getSiswaUntukTransaksi(string $noInduk, ?\App\Models\TahunAjaran $tahunAktif): ?SiswaTahunAjaran
+    {
+        $siswaCari = \App\Models\Siswa::where('no_induk', $noInduk)->first();
+        if (!$siswaCari) return null;
+
+        return SiswaTahunAjaran::with([
+            'siswa',
+            'tahunAjaran',
+            'tagihanSpp' => fn ($q) => $q->orderBy('tahun')->orderBy('bulan'),
+            'tagihanIuran' => fn ($q) => $q->with('jenisPenerimaan'),
+        ])
+            ->where('siswa_id', $siswaCari->id)
+            ->where('tahun_ajaran_id', $tahunAktif?->id)
+            ->first();
+    }
+
+    // --- PENGELUARAN ---
+    public function getDaftarPengeluaran(\Illuminate\Http\Request $request, ?\App\Models\TahunAjaran $tahunAktif): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $query = \App\Models\Pengeluaran::with(['posBiaya', 'user'])
+            ->whereHas('posBiaya', function ($q) use ($tahunAktif) {
+                $q->where('tahun_ajaran_id', $tahunAktif?->id);
+            })
+            ->orderByDesc('tanggal')
+            ->orderByDesc('id');
+
+        if ($request->filled('bulan')) {
+            $query->where('bulan', $request->bulan);
+        }
+
+        if ($request->filled('pos_biaya_id')) {
+            $query->where('pos_biaya_id', $request->pos_biaya_id);
+        }
+
+        return $query->paginate(20)->withQueryString();
+    }
+
+    public function getPosBiayaAktif(?\App\Models\TahunAjaran $tahunAktif): \Illuminate\Support\Collection
+    {
+        if (!$tahunAktif) return collect();
+        return \App\Models\PosBiaya::where('tahun_ajaran_id', $tahunAktif->id)
+            ->where('is_aktif', true)
+            ->orderBy('nama')
+            ->get();
+    }
 }

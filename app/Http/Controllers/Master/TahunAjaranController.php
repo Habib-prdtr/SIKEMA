@@ -5,17 +5,25 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\StoreTahunAjaranRequest;
 use App\Models\TahunAjaran;
+use App\Services\MasterDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class TahunAjaranController extends Controller
 {
+    protected MasterDataService $masterDataService;
+
+    public function __construct(MasterDataService $masterDataService)
+    {
+        $this->masterDataService = $masterDataService;
+    }
+
     /**
      * Daftar semua tahun ajaran.
      */
     public function index(): View
     {
-        $tahunAjaran = TahunAjaran::orderByDesc('nama')->get();
+        $tahunAjaran = $this->masterDataService->getTahunList();
 
         return view('master.tahun-ajaran.index', compact('tahunAjaran'));
     }

@@ -7,6 +7,7 @@ use App\Http\Requests\Master\StoreJenisPenerimaanRequest;
 use App\Http\Requests\Master\UpdateJenisPenerimaanRequest;
 use App\Models\JenisPenerimaan;
 use App\Models\TahunAjaran;
+use App\Services\MasterDataService;
 use App\Services\TagihanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class JenisPenerimaanController extends Controller
 {
     public function __construct(
         private readonly TagihanService $tagihanService,
+        private readonly MasterDataService $masterDataService
     ) {}
 
     /**
@@ -24,10 +26,7 @@ class JenisPenerimaanController extends Controller
     public function index(): View
     {
         $tahunAktif = TahunAjaran::aktif();
-
-        $jenisPenerimaan = JenisPenerimaan::where('tahun_ajaran_id', $tahunAktif?->id)
-            ->orderBy('urutan')
-            ->get();
+        $jenisPenerimaan = $this->masterDataService->getJenisPenerimaan($tahunAktif);
 
         return view('master.jenis-penerimaan.index', compact('jenisPenerimaan', 'tahunAktif'));
     }
@@ -80,11 +79,7 @@ class JenisPenerimaanController extends Controller
      */
     public function destroy(JenisPenerimaan $jenisPenerimaan): RedirectResponse
     {
-        $adaPembayaran = $jenisPenerimaan->tagihanIuran()
-            ->where('terbayar', '>', 0)
-            ->exists();
-
-        if ($adaPembayaran) {
+        if ($this->masterDataService->cekJenisPenerimaanAdaPembayaran($jenisPenerimaan)) {
             return back()->withErrors([
                 'error' => "Jenis penerimaan '{$jenisPenerimaan->nama}' tidak dapat dihapus karena sudah ada pembayaran.",
             ]);
