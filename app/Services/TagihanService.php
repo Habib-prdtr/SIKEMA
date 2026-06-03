@@ -43,7 +43,7 @@ class TagihanService
                 'tahun' => $bt['tahun'],
                 'tagihan' => $sta->tarif_spp,
                 'terbayar' => 0,
-                'status' => 'belum',
+                'status' => TagihanSpp::STATUS_BELUM,
                 'updated_at' => null,
             ];
         }
@@ -82,7 +82,7 @@ class TagihanService
                 'jenis_penerimaan_id' => $jp->id,
                 'tagihan' => $jp->tarif,
                 'terbayar' => 0,
-                'status' => 'belum',
+                'status' => TagihanIuran::STATUS_BELUM,
                 'updated_at' => null,
             ];
         }

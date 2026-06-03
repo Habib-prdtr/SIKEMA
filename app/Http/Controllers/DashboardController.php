@@ -56,7 +56,7 @@ class DashboardController extends Controller
         )
             ->where('bulan', now()->month)
             ->where('tahun', now()->year)
-            ->whereIn('status', ['belum', 'cicilan'])
+            ->whereIn('status', [TagihanSpp::STATUS_BELUM, TagihanSpp::STATUS_CICILAN])
             ->count();
 
         // ── Saldo kas: saldo_awal + semua penerimaan - semua pengeluaran ──

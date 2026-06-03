@@ -53,11 +53,11 @@
                                 <tr>
                                     <td class="font-medium text-gray-900">{{ $pb->nama }}</td>
                                     <td class="text-right font-medium">
-                                        Rp {{ number_format($pb->anggaran, 0, ',', '.') }}
+                                        {{ format_rupiah($pb->anggaran) }}
                                     </td>
                                     <td class="text-right">
                                         <span class="{{ $terpakai > $pb->anggaran ? 'text-red-600 font-semibold' : 'text-gray-700' }}">
-                                            Rp {{ number_format($terpakai, 0, ',', '.') }}
+                                            {{ format_rupiah($terpakai) }}
                                         </span>
                                         @if($pb->anggaran > 0)
                                             <span class="text-xs text-gray-400 ml-1">

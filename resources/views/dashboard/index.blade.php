@@ -34,7 +34,7 @@
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Saldo Kas</p>
-                        <p class="text-2xl font-bold text-gray-900 mt-1">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ format_rupiah($totalSaldo) }}</p>
                         <p class="text-xs text-gray-400 mt-1">TA {{ $tahunAktif?->nama ?? '-' }}</p>
                     </div>
                     <div class="w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
@@ -51,7 +51,7 @@
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Penerimaan Bulan Ini</p>
-                        <p class="text-2xl font-bold text-gray-900 mt-1">Rp {{ number_format($totalPenerimaanBulanIni, 0, ',', '.') }}</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ format_rupiah($totalPenerimaanBulanIni) }}</p>
                         <p class="text-xs text-gray-400 mt-1">{{ now()->locale('id')->isoFormat('MMMM YYYY') }}</p>
                     </div>
                     <div class="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
@@ -67,7 +67,7 @@
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Pengeluaran Bulan Ini</p>
-                        <p class="text-2xl font-bold text-gray-900 mt-1">Rp {{ number_format($totalPengeluaranBulanIni, 0, ',', '.') }}</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ format_rupiah($totalPengeluaranBulanIni) }}</p>
                         <p class="text-xs text-gray-400 mt-1">{{ now()->locale('id')->isoFormat('MMMM YYYY') }}</p>
                     </div>
                     <div class="w-11 h-11 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
@@ -107,7 +107,7 @@
                     <p class="font-medium">Terdapat Tunggakan Aktif</p>
                     <p class="text-sm mt-0.5">
                         <strong>{{ $siswaAdaTunggakan }} siswa</strong> memiliki tunggakan tahun sebelumnya
-                        dengan total <strong>Rp {{ number_format($totalTunggakanAwal, 0, ',', '.') }}</strong>.
+                        dengan total <strong>{{ format_rupiah($totalTunggakanAwal) }}</strong>.
                     </p>
                 </div>
             </div>
@@ -153,13 +153,13 @@
                                 <rect x="{{ $x }}" y="{{ $chartH - $pHeight }}"
                                       width="24" height="{{ $pHeight }}"
                                       fill="#059669" rx="3" opacity="0.85">
-                                    <title>Penerimaan: Rp {{ number_format($p, 0, ',', '.') }}</title>
+                                    <title>Penerimaan: {{ format_rupiah($p) }}</title>
                                 </rect>
                                 {{-- Pengeluaran bar --}}
                                 <rect x="{{ $x + 28 }}" y="{{ $chartH - $kHeight }}"
                                       width="24" height="{{ $kHeight }}"
                                       fill="#dc2626" rx="3" opacity="0.75">
-                                    <title>Pengeluaran: Rp {{ number_format($k, 0, ',', '.') }}</title>
+                                    <title>Pengeluaran: {{ format_rupiah($k) }}</title>
                                 </rect>
                                 {{-- Label --}}
                                 <text x="{{ $x + 26 }}" y="{{ $chartH + 16 }}"
@@ -266,7 +266,7 @@
                                     <td>{{ $trx->siswaTahunAjaran->siswa->kelas }}</td>
                                     <td>{{ $trx->tanggal->format('d/m/Y') }}</td>
                                     <td class="text-right font-semibold text-emerald-700">
-                                        Rp {{ number_format($trx->total_bayar, 0, ',', '.') }}
+                                        {{ format_rupiah($trx->total_bayar) }}
                                     </td>
                                     <td>
                                         <a href="{{ route('penerimaan.show', $trx) }}"

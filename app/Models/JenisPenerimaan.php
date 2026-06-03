@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasHashids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class JenisPenerimaan extends Model
 {
+    use HasFactory, HasHashids;
+
     public $timestamps = false;
 
     protected $table = 'jenis_penerimaan';

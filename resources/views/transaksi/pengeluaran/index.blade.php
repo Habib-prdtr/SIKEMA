@@ -80,7 +80,7 @@
                                     <td class="text-gray-500 text-sm max-w-xs truncate">{{ $p->keterangan ?? '-' }}</td>
                                     <td class="text-gray-500 text-sm">{{ $p->user->name }}</td>
                                     <td class="text-right font-semibold text-red-700">
-                                        Rp {{ number_format($p->jumlah, 0, ',', '.') }}
+                                        {{ format_rupiah($p->jumlah) }}
                                     </td>
                                     <td class="text-center">
                                         <a href="{{ route('pengeluaran.show', $p) }}"
@@ -95,7 +95,7 @@
                 <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
                     <p class="text-sm text-gray-500">{{ $pengeluaran->total() }} data</p>
                     <p class="font-semibold text-red-700">
-                        Total: Rp {{ number_format($pengeluaran->sum('jumlah'), 0, ',', '.') }}
+                        Total: {{ format_rupiah($pengeluaran->sum('jumlah')) }}
                     </p>
                 </div>
 

@@ -76,7 +76,7 @@
                                     Cicilan Tunggakan
                                 @endif
                             </td>
-                            <td class="py-2 text-right font-medium">Rp {{ number_format($detail->nominal, 0, ',', '.') }}</td>
+                            <td class="py-2 text-right font-medium">{{ format_rupiah($detail->nominal) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -84,7 +84,7 @@
                     <tr class="border-t-2 border-emerald-600">
                         <td class="pt-3 font-bold text-gray-900 text-base">TOTAL</td>
                         <td class="pt-3 text-right font-bold text-emerald-700 text-xl">
-                            Rp {{ number_format($transaksi->total_bayar, 0, ',', '.') }}
+                            {{ format_rupiah($transaksi->total_bayar) }}
                         </td>
                     </tr>
                 </tfoot>

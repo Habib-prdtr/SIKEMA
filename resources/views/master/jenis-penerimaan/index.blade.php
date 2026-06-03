@@ -53,7 +53,7 @@
                                     <td class="text-center font-bold text-gray-500 w-16">{{ $jp->urutan }}</td>
                                     <td class="font-medium text-gray-900">{{ $jp->nama }}</td>
                                     <td class="text-right font-semibold text-emerald-700">
-                                        Rp {{ number_format($jp->tarif, 0, ',', '.') }}
+                                        {{ format_rupiah($jp->tarif) }}
                                     </td>
                                     <td class="text-gray-500 text-sm max-w-xs truncate">{{ $jp->keterangan ?? '-' }}</td>
                                     <td class="text-center">

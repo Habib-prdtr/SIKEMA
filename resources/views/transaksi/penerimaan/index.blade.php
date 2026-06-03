@@ -76,7 +76,7 @@
                                     <td class="text-gray-500">{{ $trx->tanggal->format('d/m/Y') }}</td>
                                     <td class="text-gray-500 text-sm">{{ $trx->user->name }}</td>
                                     <td class="text-right font-semibold text-emerald-700">
-                                        Rp {{ number_format($trx->total_bayar, 0, ',', '.') }}
+                                        {{ format_rupiah($trx->total_bayar) }}
                                     </td>
                                     <td class="text-center">
                                         <a href="{{ route('penerimaan.show', $trx) }}"
@@ -92,7 +92,7 @@
                 <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
                     <p class="text-sm text-gray-500">{{ $transaksi->total() }} transaksi</p>
                     <p class="font-semibold text-emerald-700">
-                        Total: Rp {{ number_format($transaksi->sum('total_bayar'), 0, ',', '.') }}
+                        Total: {{ format_rupiah($transaksi->sum('total_bayar')) }}
                     </p>
                 </div>
 

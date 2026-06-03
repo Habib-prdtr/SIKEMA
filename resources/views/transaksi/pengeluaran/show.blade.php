@@ -47,7 +47,7 @@
 
             <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">
                 <p class="font-semibold text-red-800">Total Pengeluaran</p>
-                <p class="text-2xl font-bold text-red-700">Rp {{ number_format($pengeluaran->jumlah, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-red-700">{{ format_rupiah($pengeluaran->jumlah) }}</p>
             </div>
 
             <div class="flex justify-between items-end mt-6 pt-4 border-t border-gray-200">

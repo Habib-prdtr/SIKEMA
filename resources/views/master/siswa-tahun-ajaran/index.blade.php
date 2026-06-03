@@ -64,14 +64,14 @@
                                         @endif
                                     </td>
                                     <td class="text-right font-medium">
-                                        {{ $sta ? 'Rp ' . number_format($sta->tarif_spp, 0, ',', '.') : '-' }}
+                                        {{ $sta ? format_rupiah($sta->tarif_spp) : '-' }}
                                     </td>
                                     <td class="text-right">
                                         @if($sta)
                                             @php $sisa = app(App\Services\TunggakanService::class)->hitungSisa($sta); @endphp
                                             @if($sisa > 0)
                                                 <span class="text-amber-700 font-medium">
-                                                    Rp {{ number_format($sisa, 0, ',', '.') }}
+                                                    {{ format_rupiah($sisa) }}
                                                 </span>
                                             @else
                                                 <span class="text-gray-400">-</span>

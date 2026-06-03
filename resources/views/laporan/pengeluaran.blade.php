@@ -44,7 +44,7 @@
         {{-- Summary total --}}
         <div class="card p-5 border-l-4 border-l-red-500">
             <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Pengeluaran</p>
-            <p class="text-3xl font-bold text-red-700 mt-1">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</p>
+            <p class="text-3xl font-bold text-red-700 mt-1">{{ format_rupiah($totalPengeluaran) }}</p>
             <p class="text-xs text-gray-400 mt-1">{{ count($pengeluaran) }} transaksi</p>
         </div>
 
@@ -75,13 +75,13 @@
                             <tr>
                                 <td class="font-medium text-gray-900">{{ $rekap->nama }}</td>
                                 <td class="text-right text-gray-500">
-                                    {{ $rekap->anggaran > 0 ? 'Rp ' . number_format($rekap->anggaran, 0, ',', '.') : '-' }}
+                                    {{ $rekap->anggaran > 0 ? format_rupiah($rekap->anggaran) : '-' }}
                                 </td>
                                 <td class="text-right font-semibold text-red-700">
-                                    Rp {{ number_format($rekap->total, 0, ',', '.') }}
+                                    {{ format_rupiah($rekap->total) }}
                                 </td>
                                 <td class="text-right {{ $sisa < 0 ? 'text-red-600 font-bold' : 'text-gray-700' }}">
-                                    {{ $rekap->anggaran > 0 ? 'Rp ' . number_format($sisa, 0, ',', '.') : '-' }}
+                                    {{ $rekap->anggaran > 0 ? format_rupiah($sisa) : '-' }}
                                 </td>
                                 <td class="w-36">
                                     @if($rekap->anggaran > 0)
@@ -134,7 +134,7 @@
                                     <td class="text-gray-500 max-w-xs truncate">{{ $p->keterangan }}</td>
                                     <td class="text-gray-500">{{ $p->user->name }}</td>
                                     <td class="text-right font-semibold text-red-700">
-                                        Rp {{ number_format($p->jumlah, 0, ',', '.') }}
+                                        {{ format_rupiah($p->jumlah) }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -143,7 +143,7 @@
                             <tr>
                                 <td colspan="5" class="px-4 py-3 text-gray-700">TOTAL</td>
                                 <td class="px-4 py-3 text-right text-red-700 text-base">
-                                    Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}
+                                    {{ format_rupiah($totalPengeluaran) }}
                                 </td>
                             </tr>
                         </tfoot>

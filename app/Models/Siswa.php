@@ -2,10 +2,19 @@
 
 namespace App\Models;
 
+use App\Traits\HasHashids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Siswa extends Model
 {
+    use HasFactory, HasHashids;
+
+    public const STATUS_AKTIF = 'aktif';
+    public const STATUS_LULUS = 'lulus';
+    public const STATUS_PINDAH = 'pindah';
+    public const STATUS_BERHENTI = 'berhenti';
+
     protected $table = 'siswa';
 
     protected $fillable = [

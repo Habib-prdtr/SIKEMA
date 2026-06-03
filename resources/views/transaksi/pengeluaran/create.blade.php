@@ -29,7 +29,7 @@
                             <option value="{{ $pos->id }}" {{ old('pos_biaya_id') == $pos->id ? 'selected' : '' }}>
                                 {{ $pos->nama }}
                                 @if($pos->anggaran > 0)
-                                    (Anggaran: Rp {{ number_format($pos->anggaran, 0, ',', '.') }})
+                                    (Anggaran: {{ format_rupiah($pos->anggaran) }})
                                 @endif
                             </option>
                         @endforeach

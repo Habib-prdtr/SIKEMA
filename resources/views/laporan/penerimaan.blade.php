@@ -50,16 +50,16 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="card p-5 border-l-4 border-l-emerald-500">
                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Penerimaan</p>
-                <p class="text-2xl font-bold text-emerald-700 mt-1">Rp {{ number_format($totalPenerimaan, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-emerald-700 mt-1">{{ format_rupiah($totalPenerimaan) }}</p>
                 <p class="text-xs text-gray-400 mt-1">{{ $transaksi->count() }} transaksi</p>
             </div>
             <div class="card p-5 border-l-4 border-l-blue-500">
                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total SPP</p>
-                <p class="text-2xl font-bold text-blue-700 mt-1">Rp {{ number_format($totalSpp, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-blue-700 mt-1">{{ format_rupiah($totalSpp) }}</p>
             </div>
             <div class="card p-5 border-l-4 border-l-purple-500">
                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Iuran & Tunggakan</p>
-                <p class="text-2xl font-bold text-purple-700 mt-1">Rp {{ number_format($totalIuran + $totalTunggakan, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-purple-700 mt-1">{{ format_rupiah($totalIuran + $totalTunggakan) }}</p>
             </div>
         </div>
 
@@ -111,7 +111,7 @@
                                         @endforeach
                                     </td>
                                     <td class="text-right font-semibold text-emerald-700">
-                                        Rp {{ number_format($trx->total_bayar, 0, ',', '.') }}
+                                        {{ format_rupiah($trx->total_bayar) }}
                                     </td>
                                 </tr>
                             @endforeach
@@ -120,7 +120,7 @@
                             <tr>
                                 <td colspan="6" class="px-4 py-3 text-gray-700">TOTAL</td>
                                 <td class="px-4 py-3 text-right text-emerald-700 text-base">
-                                    Rp {{ number_format($totalPenerimaan, 0, ',', '.') }}
+                                    {{ format_rupiah($totalPenerimaan) }}
                                 </td>
                             </tr>
                         </tfoot>

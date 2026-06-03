@@ -17,16 +17,16 @@ Pastikan lingkungan pengembangan Anda menggunakan versi yang disepakati:
 
 ## 💻 3. Standar Penulisan Kode (Coding Standards)
 Saat membuat fitur baru, programmer wajib mematuhi aturan ini:
-- [ ] **Validasi Terpisah:** DILARANG melakukan validasi langsung di Controller (`$request->validate()`). **Wajib** membuat *Form Request* (`php artisan make:request`). *(Masih ditemukan pelanggaran di SekolahController)*.
-- [ ] **Fat Model, Skinny Controller:** Logika Query DB yang rumit (banyak join/where) harus dipindah ke Model (sebagai *Local Scope*) atau *Service Class*.
-- [ ] **Integritas Transaksi:** Fitur Insert/Update/Delete **wajib** menggunakan `DB::beginTransaction()`, `DB::commit()`, dibungkus dalam `try-catch`, dan diakhiri `DB::rollBack()` jika *error*. *(Belum diterapkan sama sekali)*.
-- [x] **Anti N+1 Query:** Saat memanggil data yang berelasi di *looping* Blade, **wajib** menggunakan Eager Loading di Controller (menggunakan `with()`). *(Sudah diterapkan dengan baik di banyak controller)*.
-- [ ] **Tidak Ada String Hardcoded (Magic Numbers):** Status atau tipe (seperti 'aktif', 'pending') harus dijadikan *Constants* atau *Enum* di dalam Model.
+- [x] **Validasi Terpisah:** DILARANG melakukan validasi langsung di Controller (`$request->validate()`). **Wajib** membuat *Form Request* (`php artisan make:request`).
+- [x] **Fat Model, Skinny Controller:** Logika Query DB yang rumit (banyak join/where) harus dipindah ke Model (sebagai *Local Scope*) atau *Service Class*.
+- [x] **Integritas Transaksi:** Fitur Insert/Update/Delete **wajib** menggunakan `DB::beginTransaction()`, `DB::commit()`, dibungkus dalam `try-catch`, dan diakhiri `DB::rollBack()` jika *error*.
+- [x] **Anti N+1 Query:** Saat memanggil data yang berelasi di *looping* Blade, **wajib** menggunakan Eager Loading di Controller (menggunakan `with()`).
+- [x] **Tidak Ada String Hardcoded (Magic Numbers):** Status atau tipe (seperti 'aktif', 'pending') harus dijadikan *Constants* atau *Enum* di dalam Model.
 
 ## 🧰 4. Standar Penggunaan Helper & Keamanan
-- [ ] **Custom Helper (Keuangan & Tampilan):** Pemformatan uang (Rupiah) atau tanggal dilarang diketik manual di Blade. **Wajib** membuat Custom Helper (misal: `format_rupiah($nominal)`) atau *Blade Component*.
-- [ ] **Penanganan Pesan Error (Error Codes):** Pesan balasan error (seperti HTTP 404, 500, atau validasi gagal) tidak boleh di-*hardcode* teksnya satu per satu di Controller. **Wajib** menggunakan Helper terpusat untuk format pesan error (contoh: `api_error_response($code, $message)`).
-- [ ] **Enkripsi ID pada Route (Keamanan):** DILARANG keras mengekspos ID asli database ke publik di dalam URL (contoh salah: `/kas/edit/1`). Agar konsisten di seluruh aplikasi, **Wajib menggunakan metode Hashids** untuk menyandikan ID tersebut sehingga URL menjadi aman (contoh benar: `/kas/edit/xJ9a2P`).
+- [x] **Custom Helper (Keuangan & Tampilan):** Pemformatan uang (Rupiah) atau tanggal dilarang diketik manual di Blade. **Wajib** membuat Custom Helper (misal: `format_rupiah($nominal)`) atau *Blade Component*.
+- [x] **Penanganan Pesan Error (Error Codes):** Pesan balasan error (seperti HTTP 404, 500, atau validasi gagal) tidak boleh di-*hardcode* teksnya satu per satu di Controller. **Wajib** menggunakan Helper terpusat untuk format pesan error (contoh: `api_error_response($code, $message)`).
+- [x] **Enkripsi ID pada Route (Keamanan):** DILARANG keras mengekspos ID asli database ke publik di dalam URL (contoh salah: `/kas/edit/1`). Agar konsisten di seluruh aplikasi, **Wajib menggunakan metode Hashids** untuk menyandikan ID tersebut sehingga URL menjadi aman (contoh benar: `/kas/edit/xJ9a2P`).
 
 ## 🔄 5. Alur Kerja QA (Agile Scrum)
 Sebagai bagian dari metode Agile Scrum, programmer dan QA wajib mematuhi alur kerja berikut:

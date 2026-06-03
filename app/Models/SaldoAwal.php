@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasHashids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SaldoAwal extends Model
 {
+    use HasFactory, HasHashids;
+
     protected $table = 'saldo_awal';
 
     protected $fillable = [
