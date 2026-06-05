@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('master/siswa-tahun-ajaran')->name('master.siswa-tahun-ajaran.')->group(function () {
         Route::get('/', [SiswaTahunAjaranController::class, 'index'])->name('index');
         Route::post('/', [SiswaTahunAjaranController::class, 'store'])->name('store');
+        Route::put('/{siswaTahunAjaran}', [SiswaTahunAjaranController::class, 'updateSpp'])->name('update');
     });
 
     // ─── Master: Jenis Penerimaan (Iuran) ─────────────────

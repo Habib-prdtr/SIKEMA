@@ -91,4 +91,42 @@ class TagihanService
             TagihanIuran::insert($rows);
         }
     }
+
+    /**
+     * Generate tagihan iuran untuk siswa yang baru diaktifkan.
+     * Membuat tagihan untuk semua jenis penerimaan (iuran) aktif di tahun ajaran tersebut.
+     *
+     * @param  SiswaTahunAjaran  $sta  Record siswa-tahun-ajaran yang baru dibuat
+     */
+    public function generateIuranUntukSiswa(SiswaTahunAjaran $sta): void
+    {
+        // Ambil semua jenis penerimaan (iuran) yang aktif di tahun ajaran ini
+        $jenisPenerimaan = JenisPenerimaan::where('tahun_ajaran_id', $sta->tahun_ajaran_id)
+            ->where('is_aktif', true)
+            ->get();
+
+        $rows = [];
+        foreach ($jenisPenerimaan as $jp) {
+            // Cek apakah sudah ada tagihan untuk iuran ini (untuk menghindari duplikasi)
+            $exists = TagihanIuran::where('siswa_tahun_ajaran_id', $sta->id)
+                ->where('jenis_penerimaan_id', $jp->id)
+                ->exists();
+
+            if (!$exists) {
+                $rows[] = [
+                    'siswa_tahun_ajaran_id' => $sta->id,
+                    'jenis_penerimaan_id' => $jp->id,
+                    'tagihan' => $jp->tarif,
+                    'terbayar' => 0,
+                    'status' => TagihanIuran::STATUS_BELUM,
+                    'updated_at' => null,
+                ];
+            }
+        }
+
+        if (! empty($rows)) {
+            TagihanIuran::insert($rows);
+        }
+    }
 }
+

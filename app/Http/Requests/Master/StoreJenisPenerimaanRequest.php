@@ -11,6 +11,13 @@ class StoreJenisPenerimaanRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'is_aktif' => $this->has('is_aktif'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
