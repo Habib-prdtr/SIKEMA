@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TahunAjaran;
 use App\Services\DashboardService;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -15,7 +16,7 @@ class DashboardController extends Controller
         $this->dashboardService = $dashboardService;
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $tahunAktif = TahunAjaran::aktif();
 
@@ -37,6 +38,46 @@ class DashboardController extends Controller
         
         $transaksiTerbaru = $this->dashboardService->getTransaksiTerbaru($tahunAktif);
 
+        // Tambah daftar siswa untuk pencatatan cepat
+        $daftarSiswa = null;
+        if ($tahunAktif) {
+            $siswaQuery = \App\Models\SiswaTahunAjaran::with(['siswa'])
+                ->join('siswa', 'siswa_tahun_ajaran.siswa_id', '=', 'siswa.id')
+                ->select('siswa_tahun_ajaran.*')
+                ->where('siswa_tahun_ajaran.tahun_ajaran_id', $tahunAktif->id)
+                ->orderBy('siswa.nama');
+
+            if ($request->filled('cari')) {
+                $cari = $request->cari;
+                $siswaQuery->where(function ($q) use ($cari) {
+                    $q->where('siswa.nama', 'like', "%{$cari}%")
+                      ->orWhere('siswa.no_induk', 'like', "%{$cari}%")
+                      ->orWhere('siswa.kelas', 'like', "%{$cari}%");
+                });
+            }
+
+            $daftarSiswa = $siswaQuery->paginate(5)->withQueryString();
+        }
+
+        $siswa = null;
+        $tagihanSpp = collect();
+        $tagihanIuran = collect();
+        $sisaTunggakan = 0;
+
+        if ($request->filled('no_induk') && $tahunAktif) {
+            $transaksiService = app(\App\Services\TransaksiService::class);
+            $tunggakanService = app(\App\Services\TunggakanService::class);
+
+            $sta = $transaksiService->getSiswaUntukTransaksi($request->no_induk, $tahunAktif);
+
+            if ($sta) {
+                $siswa = $sta;
+                $tagihanSpp = $sta->tagihanSpp;
+                $tagihanIuran = $sta->tagihanIuran;
+                $sisaTunggakan = $tunggakanService->hitungSisa($sta);
+            }
+        }
+
         return view('dashboard.index', compact(
             'tahunAktif',
             'jumlahSiswa',
@@ -50,6 +91,11 @@ class DashboardController extends Controller
             'dataPenerimaan',
             'dataPengeluaran',
             'transaksiTerbaru',
+            'daftarSiswa',
+            'siswa',
+            'tagihanSpp',
+            'tagihanIuran',
+            'sisaTunggakan',
         ));
     }
 }

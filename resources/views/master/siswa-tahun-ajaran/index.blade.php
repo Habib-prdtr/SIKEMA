@@ -43,6 +43,7 @@
                                 <th>Status di TA Aktif</th>
                                 <th class="text-right">Tarif SPP</th>
                                 <th class="text-right">Tunggakan Awal</th>
+                                <th class="text-center w-24">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -76,6 +77,19 @@
                                             @else
                                                 <span class="text-gray-400">-</span>
                                             @endif
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($sta)
+                                            <button type="button" data-modal-open="modal-edit-{{ $sta->id }}" 
+                                                class="btn-secondary btn-sm flex items-center justify-center gap-1.5 hover:text-emerald-700 hover:border-emerald-400 mx-auto">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                </svg>
+                                                <span>Edit Tarif</span>
+                                            </button>
                                         @else
                                             <span class="text-gray-400">-</span>
                                         @endif
@@ -160,5 +174,50 @@
         </div>
     </div>
     @endif
+
+    {{-- Modal Edit SPP --}}
+    @foreach($siswaList as $s)
+        @php $sta = $s->tahunAjaran->first(); @endphp
+        @if($sta)
+        <div id="modal-edit-{{ $sta->id }}" class="modal-backdrop hidden">
+            <div class="modal-box max-w-md">
+                <div class="modal-header">
+                    <h3 class="font-semibold text-gray-900">Ubah Tarif SPP</h3>
+                    <button data-modal-close="modal-edit-{{ $sta->id }}" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('master.siswa-tahun-ajaran.update', $sta->id) }}">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body space-y-4">
+                        <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-lg text-sm space-y-1">
+                            <p class="text-gray-500">Nama Siswa: <span class="font-semibold text-emerald-800">{{ $s->nama }}</span></p>
+                            <p class="text-gray-500">No. Induk: <span class="font-mono text-emerald-800">{{ $s->no_induk }}</span></p>
+                            <p class="text-gray-500">Kelas: <span class="text-emerald-800">{{ $s->kelas }}</span></p>
+                        </div>
+                        <div>
+                            <label for="tarif_spp_{{ $sta->id }}" class="form-label">Tarif SPP Baru / Bulan <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-3 inset-y-0 flex items-center text-gray-500 text-sm">Rp</span>
+                                <input id="tarif_spp_{{ $sta->id }}" type="number" name="tarif_spp"
+                                    value="{{ $sta->tarif_spp }}"
+                                    class="form-input pl-9"
+                                    placeholder="0" min="0" step="1000" required>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Perubahan hanya akan mengubah tagihan SPP yang belum dibayar.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" data-modal-close="modal-edit-{{ $sta->id }}" class="btn-secondary">Batal</button>
+                        <button type="submit" class="btn-primary">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endif
+    @endforeach
 
 </x-layouts.app>

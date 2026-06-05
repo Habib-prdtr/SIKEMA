@@ -43,6 +43,7 @@
                                 <th>Urutan</th>
                                 <th>Nama Iuran</th>
                                 <th class="text-right">Tarif</th>
+                                <th class="text-center">Status</th>
                                 <th>Keterangan</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
@@ -54,6 +55,13 @@
                                     <td class="font-medium text-gray-900">{{ $jp->nama }}</td>
                                     <td class="text-right font-semibold text-emerald-700">
                                         {{ format_rupiah($jp->tarif) }}
+                                    </td>
+                                    <td class="text-center">
+                                        @if($jp->is_aktif)
+                                            <span class="badge-green">Aktif</span>
+                                        @else
+                                            <span class="badge-gray">Nonaktif</span>
+                                        @endif
                                     </td>
                                     <td class="text-gray-500 text-sm max-w-xs truncate">{{ $jp->keterangan ?? '-' }}</td>
                                     <td class="text-center">
@@ -114,6 +122,12 @@
                                                     <textarea name="keterangan" rows="2"
                                                         class="form-textarea">{{ $jp->keterangan }}</textarea>
                                                 </div>
+                                                <div class="flex items-center gap-2 pt-2">
+                                                    <input type="checkbox" name="is_aktif" id="edit-is-aktif-{{ $jp->id }}" value="1"
+                                                        {{ $jp->is_aktif ? 'checked' : '' }}
+                                                        class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                                    <label for="edit-is-aktif-{{ $jp->id }}" class="text-sm font-medium text-gray-700">Aktifkan Iuran (Jika aktif, tagihan iuran akan muncul untuk siswa)</label>
+                                                </div>
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" data-modal-close="modal-edit-{{ $jp->id }}" class="btn-secondary">Batal</button>
@@ -171,6 +185,11 @@
                         <label class="form-label">Keterangan</label>
                         <textarea name="keterangan" rows="2" class="form-textarea"
                             placeholder="Keterangan (opsional)">{{ old('keterangan') }}</textarea>
+                    </div>
+                    <div class="flex items-center gap-2 pt-2">
+                        <input type="checkbox" name="is_aktif" id="add-is-aktif" value="1" checked
+                            class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                        <label for="add-is-aktif" class="text-sm font-medium text-gray-700">Aktifkan Iuran (Jika aktif, tagihan iuran akan muncul untuk siswa)</label>
                     </div>
                 </div>
                 <div class="modal-footer">

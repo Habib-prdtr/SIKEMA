@@ -10,6 +10,7 @@ use App\Models\TahunAjaran;
 use App\Services\MasterDataService;
 use App\Services\TagihanService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -66,6 +67,9 @@ class SiswaTahunAjaranController extends Controller
             // Generate 12 tagihan SPP otomatis
             $this->tagihanService->generateSpp($sta);
 
+            // Generate tagihan iuran aktif otomatis
+            $this->tagihanService->generateIuranUntukSiswa($sta);
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -76,5 +80,38 @@ class SiswaTahunAjaranController extends Controller
 
         return redirect()->route('master.siswa-tahun-ajaran.index')
             ->with('sukses', "Siswa {$siswa->nama} berhasil diaktifkan. 12 tagihan SPP telah dibuat.");
+    }
+
+    /**
+     * Update tarif SPP siswa di tahun ajaran aktif.
+     */
+    public function updateSpp(Request $request, SiswaTahunAjaran $siswaTahunAjaran): RedirectResponse
+    {
+        $data = $request->validate([
+            'tarif_spp' => 'required|integer|min:0',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Update tarif SPP di record siswa_tahun_ajaran
+            $siswaTahunAjaran->update([
+                'tarif_spp' => $data['tarif_spp'],
+            ]);
+
+            // Update tagihan SPP yang statusnya masih 'belum'
+            $siswaTahunAjaran->tagihanSpp()
+                ->where('status', 'belum')
+                ->update([
+                    'tagihan' => $data['tarif_spp'],
+                ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Gagal memperbarui tarif SPP: ' . $e->getMessage()]);
+        }
+
+        return redirect()->route('master.siswa-tahun-ajaran.index')
+            ->with('sukses', "Tarif SPP untuk siswa {$siswaTahunAjaran->siswa->nama} berhasil diperbarui.");
     }
 }

@@ -53,12 +53,33 @@ class PenerimaanController extends Controller
             }
         }
 
+        $daftarSiswa = null;
+        if ($tahunAktif) {
+            $siswaQuery = \App\Models\SiswaTahunAjaran::with(['siswa'])
+                ->join('siswa', 'siswa_tahun_ajaran.siswa_id', '=', 'siswa.id')
+                ->select('siswa_tahun_ajaran.*')
+                ->where('siswa_tahun_ajaran.tahun_ajaran_id', $tahunAktif->id)
+                ->orderBy('siswa.nama');
+
+            if ($request->filled('cari')) {
+                $cari = $request->cari;
+                $siswaQuery->where(function ($q) use ($cari) {
+                    $q->where('siswa.nama', 'like', "%{$cari}%")
+                      ->orWhere('siswa.no_induk', 'like', "%{$cari}%")
+                      ->orWhere('siswa.kelas', 'like', "%{$cari}%");
+                });
+            }
+
+            $daftarSiswa = $siswaQuery->paginate(5)->withQueryString();
+        }
+
         return view('transaksi.penerimaan.create', compact(
             'tahunAktif',
             'siswa',
             'tagihanSpp',
             'tagihanIuran',
             'sisaTunggakan',
+            'daftarSiswa',
         ));
     }
 
