@@ -130,22 +130,23 @@
                             <option value="">-- Pilih Siswa --</option>
                             @foreach($siswaList as $s)
                                 @if(!$s->tahunAjaran->first() && $s->status === 'aktif')
-                                    <option value="{{ $s->id }}">{{ $s->no_induk }} — {{ $s->nama }} ({{ $s->kelas }})</option>
+                                    <option value="{{ $s->id }}" data-kelas="{{ $s->kelas }}">{{ $s->no_induk }} — {{ $s->nama }} ({{ $s->kelas }})</option>
                                 @endif
                             @endforeach
                         </select>
                         @error('siswa_id')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        <label for="tarif_spp" class="form-label">Tarif SPP / Bulan <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <span class="absolute left-3 inset-y-0 flex items-center text-gray-500 text-sm">Rp</span>
-                            <input id="tarif_spp" type="number" name="tarif_spp"
-                                value="{{ old('tarif_spp') }}"
-                                class="form-input pl-9 @error('tarif_spp') border-red-400 @enderror"
-                                placeholder="0" min="0" step="1000" required>
-                        </div>
-                        @error('tarif_spp')<p class="form-error">{{ $message }}</p>@enderror
+                        <label for="master_tarif_spp_id" class="form-label">Tarif SPP / Bulan <span class="text-red-500">*</span></label>
+                        <select id="master_tarif_spp_id" name="master_tarif_spp_id" class="form-select @error('master_tarif_spp_id') border-red-400 @enderror" required>
+                            <option value="">-- Pilih Tarif SPP --</option>
+                            @foreach($tarifSppList as $tarifSpp)
+                                <option value="{{ $tarifSpp->id }}" data-kelas="{{ $tarifSpp->kelas }}" {{ old('master_tarif_spp_id') == $tarifSpp->id ? 'selected' : '' }}>
+                                    {{ $tarifSpp->kelas }} — {{ format_rupiah($tarifSpp->tarif) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('master_tarif_spp_id')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label for="tunggakan_awal" class="form-label">Tunggakan Awal</label>
@@ -199,14 +200,15 @@
                             <p class="text-gray-500">Kelas: <span class="text-emerald-800">{{ $s->kelas }}</span></p>
                         </div>
                         <div>
-                            <label for="tarif_spp_{{ $sta->id }}" class="form-label">Tarif SPP Baru / Bulan <span class="text-red-500">*</span></label>
-                            <div class="relative">
-                                <span class="absolute left-3 inset-y-0 flex items-center text-gray-500 text-sm">Rp</span>
-                                <input id="tarif_spp_{{ $sta->id }}" type="number" name="tarif_spp"
-                                    value="{{ $sta->tarif_spp }}"
-                                    class="form-input pl-9"
-                                    placeholder="0" min="0" step="1000" required>
-                            </div>
+                            <label for="master_tarif_spp_id_{{ $sta->id }}" class="form-label">Tarif SPP Baru / Bulan <span class="text-red-500">*</span></label>
+                            <select id="master_tarif_spp_id_{{ $sta->id }}" name="master_tarif_spp_id" class="form-select @error('master_tarif_spp_id') border-red-400 @enderror" required>
+                                <option value="">-- Pilih Tarif SPP --</option>
+                                @foreach($tarifSppList as $tarifSpp)
+                                    <option value="{{ $tarifSpp->id }}" {{ $sta->tarif_spp == $tarifSpp->tarif ? 'selected' : '' }}>
+                                        {{ $tarifSpp->kelas }} — {{ format_rupiah($tarifSpp->tarif) }}
+                                    </option>
+                                @endforeach
+                            </select>
                             <p class="text-xs text-gray-400 mt-1">Perubahan hanya akan mengubah tagihan SPP yang belum dibayar.</p>
                         </div>
                     </div>
@@ -219,5 +221,60 @@
         </div>
         @endif
     @endforeach
+
+    <script>
+        document.getElementById('siswa_id')?.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const studentKelas = selectedOption.getAttribute('data-kelas'); // e.g. "7A"
+            if (studentKelas) {
+                const tarifSppSelect = document.getElementById('master_tarif_spp_id');
+                if (!tarifSppSelect) return;
+                
+                // Try digit matching first (e.g. "7A" matching "7" or "Kelas 7")
+                const match = studentKelas.match(/\d+/);
+                if (match) {
+                    const gradeNum = match[0];
+                    for (let i = 0; i < tarifSppSelect.options.length; i++) {
+                        const opt = tarifSppSelect.options[i];
+                        const optText = (opt.getAttribute('data-kelas') || opt.text).toLowerCase();
+                        const optMatch = optText.match(/\d+/);
+                        if (optMatch && optMatch[0] === gradeNum) {
+                            tarifSppSelect.selectedIndex = i;
+                            return;
+                        }
+                    }
+                }
+                
+                // Fallback: search for Roman numerals (VII, VIII, IX)
+                const romanMap = { 'vii': '7', 'viii': '8', 'ix': '9', 'x': '10', 'xi': '11', 'xii': '12' };
+                let normalizedStudent = studentKelas.toLowerCase();
+                for (const [roman, num] of Object.entries(romanMap)) {
+                    if (normalizedStudent.includes(roman)) {
+                        normalizedStudent = normalizedStudent.replace(roman, num);
+                        break;
+                    }
+                }
+                
+                const studentMatch = normalizedStudent.match(/\d+/);
+                const searchNum = studentMatch ? studentMatch[0] : null;
+
+                for (let i = 0; i < tarifSppSelect.options.length; i++) {
+                    const opt = tarifSppSelect.options[i];
+                    let optText = (opt.getAttribute('data-kelas') || opt.text).toLowerCase();
+                    for (const [roman, num] of Object.entries(romanMap)) {
+                        if (optText.includes(roman)) {
+                            optText = optText.replace(roman, num);
+                            break;
+                        }
+                    }
+                    const optMatch = optText.match(/\d+/);
+                    if (searchNum && optMatch && optMatch[0] === searchNum) {
+                        tarifSppSelect.selectedIndex = i;
+                        return;
+                    }
+                }
+            }
+        });
+    </script>
 
 </x-layouts.app>

@@ -29,6 +29,7 @@ class DashboardController extends Controller
         $totalTunggakanAwal = $tunggakanData['totalTunggakanAwal'];
         
         $sppBelumLunas = $this->dashboardService->getSppBelumLunasBulanIni($tahunAktif);
+        $sppTerlewatBelumLunas = $this->dashboardService->getSppTerlewatBelumLunas($tahunAktif);
         $totalSaldo = $this->dashboardService->getTotalSaldo($tahunAktif);
         
         $grafikData = $this->dashboardService->getGrafikBulanan($tahunAktif);
@@ -86,6 +87,7 @@ class DashboardController extends Controller
             'siswaAdaTunggakan',
             'totalTunggakanAwal',
             'sppBelumLunas',
+            'sppTerlewatBelumLunas',
             'totalSaldo',
             'bulanLabels',
             'dataPenerimaan',

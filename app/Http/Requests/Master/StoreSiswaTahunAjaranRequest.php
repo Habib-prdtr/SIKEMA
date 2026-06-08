@@ -16,7 +16,7 @@ class StoreSiswaTahunAjaranRequest extends FormRequest
         return [
             'siswa_id' => ['required', 'exists:siswa,id'],
             'tahun_ajaran_id' => ['required', 'exists:tahun_ajaran,id'],
-            'tarif_spp' => ['required', 'integer', 'min:0'],
+            'master_tarif_spp_id' => ['required', 'exists:master_tarif_spp,id'],
             'tunggakan_awal' => ['nullable', 'integer', 'min:0'],
         ];
     }
@@ -28,9 +28,8 @@ class StoreSiswaTahunAjaranRequest extends FormRequest
             'siswa_id.exists' => 'Siswa tidak ditemukan.',
             'tahun_ajaran_id.required' => 'Tahun ajaran wajib dipilih.',
             'tahun_ajaran_id.exists' => 'Tahun ajaran tidak ditemukan.',
-            'tarif_spp.required' => 'Tarif SPP wajib diisi.',
-            'tarif_spp.integer' => 'Tarif SPP harus berupa angka bulat.',
-            'tarif_spp.min' => 'Tarif SPP tidak boleh negatif.',
+            'master_tarif_spp_id.required' => 'Tarif SPP wajib dipilih.',
+            'master_tarif_spp_id.exists' => 'Tarif SPP tidak ditemukan.',
             'tunggakan_awal.integer' => 'Tunggakan awal harus berupa angka bulat.',
             'tunggakan_awal.min' => 'Tunggakan awal tidak boleh negatif.',
         ];

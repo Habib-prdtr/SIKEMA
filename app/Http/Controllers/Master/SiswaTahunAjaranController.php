@@ -31,10 +31,18 @@ class SiswaTahunAjaranController extends Controller
         $siswaList = $this->masterDataService->getSiswaTahunAjaranList($tahunAktif);
         $semua = $this->masterDataService->getTahunList();
 
+        $tarifSppList = collect();
+        if ($tahunAktif) {
+            $tarifSppList = \App\Models\MasterTarifSpp::where('tahun_ajaran_id', $tahunAktif->id)
+                ->orderBy('kelas')
+                ->get();
+        }
+
         return view('master.siswa-tahun-ajaran.index', compact(
             'siswaList',
             'tahunAktif',
             'semua',
+            'tarifSppList',
         ));
     }
 
@@ -52,12 +60,15 @@ class SiswaTahunAjaranController extends Controller
             ]);
         }
 
+        $masterTarif = \App\Models\MasterTarifSpp::findOrFail($data['master_tarif_spp_id']);
+        $tarifSpp = $masterTarif->tarif;
+
         DB::beginTransaction();
         try {
             $sta = SiswaTahunAjaran::create([
                 'siswa_id' => $data['siswa_id'],
                 'tahun_ajaran_id' => $data['tahun_ajaran_id'],
-                'tarif_spp' => $data['tarif_spp'],
+                'tarif_spp' => $tarifSpp,
                 'tunggakan_awal' => $data['tunggakan_awal'] ?? 0,
             ]);
 
@@ -88,21 +99,24 @@ class SiswaTahunAjaranController extends Controller
     public function updateSpp(Request $request, SiswaTahunAjaran $siswaTahunAjaran): RedirectResponse
     {
         $data = $request->validate([
-            'tarif_spp' => 'required|integer|min:0',
+            'master_tarif_spp_id' => 'required|exists:master_tarif_spp,id',
         ]);
+
+        $masterTarif = \App\Models\MasterTarifSpp::findOrFail($data['master_tarif_spp_id']);
+        $tarifSpp = $masterTarif->tarif;
 
         DB::beginTransaction();
         try {
             // Update tarif SPP di record siswa_tahun_ajaran
             $siswaTahunAjaran->update([
-                'tarif_spp' => $data['tarif_spp'],
+                'tarif_spp' => $tarifSpp,
             ]);
 
             // Update tagihan SPP yang statusnya masih 'belum'
             $siswaTahunAjaran->tagihanSpp()
                 ->where('status', 'belum')
                 ->update([
-                    'tagihan' => $data['tarif_spp'],
+                    'tagihan' => $tarifSpp,
                 ]);
 
             DB::commit();

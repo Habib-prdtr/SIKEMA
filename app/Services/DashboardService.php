@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Pengeluaran;
+use App\Models\SaldoAwal;
 use App\Models\SiswaTahunAjaran;
 use App\Models\TagihanSpp;
 use App\Models\TahunAjaran;
@@ -82,9 +83,12 @@ class DashboardService
     {
         if (!$tahunAktif) return 0;
 
-        $saldoAwal = $tahunAktif->saldoAwal?->jumlah ?? 0;
-        $totalPenerimaan = Transaksi::whereHas('siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))->sum('total_bayar');
-        $totalPengeluaran = Pengeluaran::whereHas('posBiaya', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))->sum('jumlah');
+        // Ambil semua tahun ajaran yang secara kronologis (nama) kurang dari atau sama dengan tahun aktif saat ini
+        $tahunIds = TahunAjaran::where('nama', '<=', $tahunAktif->nama)->pluck('id');
+
+        $saldoAwal = SaldoAwal::whereIn('tahun_ajaran_id', $tahunIds)->sum('jumlah');
+        $totalPenerimaan = Transaksi::whereHas('siswaTahunAjaran', fn ($q) => $q->whereIn('tahun_ajaran_id', $tahunIds))->sum('total_bayar');
+        $totalPengeluaran = Pengeluaran::whereHas('posBiaya', fn ($q) => $q->whereIn('tahun_ajaran_id', $tahunIds))->sum('jumlah');
 
         return $saldoAwal + $totalPenerimaan - $totalPengeluaran;
     }
@@ -130,5 +134,25 @@ class DashboardService
             ->orderByDesc('id')
             ->limit(5)
             ->get();
+    }
+
+    /**
+     * Hitung jumlah siswa yang belum melunasi SPP bulan-bulan sebelumnya (terlewat).
+     */
+    public function getSppTerlewatBelumLunas(?TahunAjaran $tahunAktif): int
+    {
+        if (!$tahunAktif) return 0;
+
+        return TagihanSpp::whereHas('siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
+            ->whereIn('status', [TagihanSpp::STATUS_BELUM, TagihanSpp::STATUS_CICILAN])
+            ->where(function ($q) {
+                $q->where('tahun', '<', now()->year)
+                  ->orWhere(function ($sub) {
+                      $sub->where('tahun', now()->year)
+                          ->where('bulan', '<', now()->month);
+                  });
+            })
+            ->distinct('siswa_tahun_ajaran_id')
+            ->count('siswa_tahun_ajaran_id');
     }
 }

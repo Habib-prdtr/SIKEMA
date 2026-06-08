@@ -62,6 +62,14 @@ Route::middleware('auth')->group(function () {
         Route::put('/{siswaTahunAjaran}', [SiswaTahunAjaranController::class, 'updateSpp'])->name('update');
     });
 
+    // ─── Master: Tarif SPP ────────────────────────────────
+    Route::prefix('master/tarif-spp')->name('master.tarif-spp.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'store'])->name('store');
+        Route::put('/{tarifSpp}', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'update'])->name('update');
+        Route::delete('/{tarifSpp}', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'destroy'])->name('destroy');
+    });
+
     // ─── Master: Jenis Penerimaan (Iuran) ─────────────────
     Route::prefix('master/jenis-penerimaan')->name('master.jenis-penerimaan.')->group(function () {
         Route::get('/', [JenisPenerimaanController::class, 'index'])->name('index');
