@@ -60,6 +60,21 @@
             </div>
         @endif
 
+        @if ($sppTerlewatBelumLunas > 0)
+            <div class="alert-error">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <p class="font-medium">Terdapat Tagihan SPP Terlewat (Menunggak)</p>
+                    <p class="text-sm mt-0.5">
+                        <strong>{{ $sppTerlewatBelumLunas }} siswa</strong> memiliki satu atau lebih tagihan SPP bulan lalu yang sudah terlewat dan belum dilunasi.
+                    </p>
+                </div>
+            </div>
+        @endif
+
         {{-- ── Main Grid: Left Search, Right Cards ──────────────── --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
             {{-- Left Column: Quick Student Search --}}
@@ -257,9 +272,12 @@
                                                 $lunas   = $spp->status === 'lunas';
                                                 $nama    = \Carbon\Carbon::createFromDate($spp->tahun, $spp->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
                                                 $nominal = $spp->status === 'lunas' ? $spp->tagihan : $spp->sisa();
+                                                
+                                                // Check if the SPP month has passed (is in the past relative to current year and month)
+                                                $isTerlewat = !$lunas && (($spp->tahun < now()->year) || ($spp->tahun == now()->year && $spp->bulan < now()->month));
                                             @endphp
                                             <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
-                                                {{ $lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50' }}">
+                                                {{ $lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : ($isTerlewat ? 'border-red-200 bg-red-50/30 hover:border-red-400 hover:bg-red-50' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50') }}">
                                                 <div class="flex items-center gap-3">
                                                     <input type="checkbox" name="items[spp][]" value="{{ $spp->id }}"
                                                         data-tagihan-nominal="{{ $nominal }}"
@@ -267,14 +285,20 @@
                                                         class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
                                                     <div>
                                                         <p class="text-sm font-medium text-gray-900">SPP {{ $nama }}</p>
-                                                        <p class="text-xs text-gray-500">
-                                                            {{ $spp->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : 'Belum dibayar') }}
+                                                        <p class="text-xs {{ $isTerlewat ? 'text-red-600 font-medium' : 'text-gray-500' }}">
+                                                            {{ $spp->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : ($isTerlewat ? 'Terlewat / Belum dibayar' : 'Belum dibayar')) }}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div class="text-right">
-                                                    <p class="font-semibold text-sm">{{ format_rupiah($nominal) }}</p>
-                                                    @if($lunas) <span class="badge-green text-xs">Lunas</span> @endif
+                                                    <p class="font-semibold text-sm {{ $isTerlewat ? 'text-red-700' : '' }}">{{ format_rupiah($nominal) }}</p>
+                                                    @if($lunas) 
+                                                        <span class="badge-green text-xs">Lunas</span> 
+                                                    @elseif($isTerlewat)
+                                                        <span class="badge-red text-xs">Terlewat</span>
+                                                    @else
+                                                        <span class="badge-yellow text-xs">Belum Bayar</span>
+                                                    @endif
                                                 </div>
                                             </label>
                                         @endforeach
