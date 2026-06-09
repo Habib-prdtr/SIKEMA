@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\StoreSiswaTahunAjaranRequest;
+use App\Http\Requests\Master\UpdateSiswaTahunAjaranSppRequest;
 use App\Models\Siswa;
 use App\Models\SiswaTahunAjaran;
 use App\Models\TahunAjaran;
@@ -96,11 +97,9 @@ class SiswaTahunAjaranController extends Controller
     /**
      * Update tarif SPP siswa di tahun ajaran aktif.
      */
-    public function updateSpp(Request $request, SiswaTahunAjaran $siswaTahunAjaran): RedirectResponse
+    public function updateSpp(UpdateSiswaTahunAjaranSppRequest $request, SiswaTahunAjaran $siswaTahunAjaran): RedirectResponse
     {
-        $data = $request->validate([
-            'master_tarif_spp_id' => 'required|exists:master_tarif_spp,id',
-        ]);
+        $data = $request->validated();
 
         $masterTarif = \App\Models\MasterTarifSpp::findOrFail($data['master_tarif_spp_id']);
         $tarifSpp = $masterTarif->tarif;

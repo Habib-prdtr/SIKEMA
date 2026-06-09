@@ -17,10 +17,19 @@ class MasterDataSeeder extends Seeder
     {
         DB::transaction(function () {
             // 1. Tahun Ajaran
-            $tahunAktif = TahunAjaran::create([
-                'nama' => '2024/2025',
-                'is_aktif' => true,
-            ]);
+            $tahunAktif = TahunAjaran::firstOrCreate(
+                ['nama' => '2024/2025'],
+                ['is_aktif' => true]
+            );
+
+            // Populate Tahun Ajaran dari 2025/2026 sampai 2049/2050
+            for ($year = 2025; $year <= 2049; $year++) {
+                $nextYear = $year + 1;
+                TahunAjaran::firstOrCreate(
+                    ['nama' => "{$year}/{$nextYear}"],
+                    ['is_aktif' => false]
+                );
+            }
 
             // 2. Data Siswa
             $siswaList = [
@@ -31,12 +40,21 @@ class MasterDataSeeder extends Seeder
             ];
 
             foreach ($siswaList as $siswaData) {
-                $siswa = Siswa::create($siswaData);
+                $siswa = Siswa::firstOrCreate(
+                    ['no_induk' => $siswaData['no_induk']],
+                    [
+                        'nama' => $siswaData['nama'],
+                        'kelas' => $siswaData['kelas'],
+                        'status' => $siswaData['status'],
+                        'jenis_kelamin' => $siswaData['jenis_kelamin']
+                    ]
+                );
 
                 // Daftarkan siswa ke tahun ajaran aktif
-                SiswaTahunAjaran::create([
+                SiswaTahunAjaran::firstOrCreate([
                     'siswa_id' => $siswa->id,
                     'tahun_ajaran_id' => $tahunAktif->id,
+                ], [
                     'tarif_spp' => 150000,
                     'tunggakan_awal' => $siswa->nama == 'Siti Aminah' ? 300000 : 0, // Siti punya tunggakan
                 ]);
@@ -50,7 +68,13 @@ class MasterDataSeeder extends Seeder
             ];
 
             foreach ($jenisPenerimaan as $jp) {
-                JenisPenerimaan::create($jp);
+                JenisPenerimaan::firstOrCreate([
+                    'tahun_ajaran_id' => $jp['tahun_ajaran_id'],
+                    'urutan' => $jp['urutan']
+                ], [
+                    'nama' => $jp['nama'],
+                    'tarif' => $jp['tarif']
+                ]);
             }
 
             // 4. Pos Biaya (untuk pengeluaran)
@@ -62,12 +86,18 @@ class MasterDataSeeder extends Seeder
             ];
 
             foreach ($posBiaya as $pb) {
-                PosBiaya::create($pb);
+                PosBiaya::firstOrCreate([
+                    'nama' => $pb['nama'],
+                    'tahun_ajaran_id' => $pb['tahun_ajaran_id']
+                ], [
+                    'anggaran' => $pb['anggaran']
+                ]);
             }
 
             // 5. Saldo Awal Tahun
-            SaldoAwal::create([
-                'tahun_ajaran_id' => $tahunAktif->id,
+            SaldoAwal::firstOrCreate([
+                'tahun_ajaran_id' => $tahunAktif->id
+            ], [
                 'jumlah' => 150000000, // Rp 150 juta saldo awal
                 'keterangan' => 'Sisa saldo dari tahun ajaran 2023/2024',
             ]);
