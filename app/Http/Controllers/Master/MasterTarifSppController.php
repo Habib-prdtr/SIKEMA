@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Master\StoreTarifSppRequest;
+use App\Http\Requests\Master\UpdateTarifSppRequest;
 use App\Models\MasterTarifSpp;
 use App\Models\TahunAjaran;
 use Illuminate\Http\RedirectResponse;
@@ -31,18 +33,9 @@ class MasterTarifSppController extends Controller
     /**
      * Simpan tarif SPP baru.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreTarifSppRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
-            'kelas' => 'required|string|max:50',
-            'tarif' => 'required|integer|min:0',
-        ], [
-            'kelas.required' => 'Nama/Tingkat Kelas wajib diisi.',
-            'tarif.required' => 'Tarif wajib diisi.',
-            'tarif.integer' => 'Tarif harus berupa angka.',
-            'tarif.min' => 'Tarif tidak boleh negatif.',
-        ]);
+        $data = $request->validated();
 
         // Cegah duplikasi kelas di tahun ajaran yang sama
         $exists = MasterTarifSpp::where('tahun_ajaran_id', $data['tahun_ajaran_id'])
@@ -62,17 +55,9 @@ class MasterTarifSppController extends Controller
     /**
      * Update tarif SPP.
      */
-    public function update(Request $request, MasterTarifSpp $tarifSpp): RedirectResponse
+    public function update(UpdateTarifSppRequest $request, MasterTarifSpp $tarifSpp): RedirectResponse
     {
-        $data = $request->validate([
-            'kelas' => 'required|string|max:50',
-            'tarif' => 'required|integer|min:0',
-        ], [
-            'kelas.required' => 'Nama/Tingkat Kelas wajib diisi.',
-            'tarif.required' => 'Tarif wajib diisi.',
-            'tarif.integer' => 'Tarif harus berupa angka.',
-            'tarif.min' => 'Tarif tidak boleh negatif.',
-        ]);
+        $data = $request->validated();
 
         // Cegah duplikasi kelas (abaikan diri sendiri)
         $exists = MasterTarifSpp::where('tahun_ajaran_id', $tarifSpp->tahun_ajaran_id)
