@@ -13,12 +13,17 @@
                 </p>
             </div>
             @if($tahunAktif)
-                <button data-modal-open="modal-aktivasi" class="btn-primary">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Aktifkan Siswa
-                </button>
+                <div class="flex gap-2">
+                    <button data-modal-open="modal-aktivasi-semua" class="btn-secondary">
+                        Aktifkan Semua
+                    </button>
+                    <button data-modal-open="modal-aktivasi" class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Aktifkan Siswa
+                    </button>
+                </div>
             @endif
         </div>
 
@@ -83,7 +88,7 @@
                                     </td>
                                     <td class="text-center">
                                         @if($sta)
-                                            <button type="button" data-modal-open="modal-edit-{{ $sta->id }}" 
+                                            <button type="button" data-modal-open="modal-edit-{{ $sta->id }}"
                                                 class="btn-secondary btn-sm flex items-center justify-center gap-1.5 hover:text-emerald-700 hover:border-emerald-400 mx-auto">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -176,6 +181,81 @@
     </div>
     @endif
 
+    {{-- Modal Aktivasi Semua --}}
+    @if($tahunAktif)
+    <div id="modal-aktivasi-semua" class="modal-backdrop hidden">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header">
+                <h3 class="font-semibold text-gray-900">Aktifkan Siswa per Kelas — TA {{ $tahunAktif->nama }}</h3>
+                <button data-modal-close="modal-aktivasi-semua" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('master.siswa-tahun-ajaran.storeAll') }}">
+                @csrf
+                <input type="hidden" name="tahun_ajaran_id" value="{{ $tahunAktif->id }}">
+                <div class="modal-body space-y-4">
+                    <p class="text-sm text-gray-600">Sistem akan mencoba mengaktifkan seluruh siswa yang berstatus "Aktif" pada kelas yang dipilih dan belum terdaftar di tahun ajaran ini.</p>
+                    
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-xs text-amber-800">
+                        <p class="font-semibold">Catatan:</p>
+                        <p>Aktivasi massal ini secara otomatis menyetel tunggakan awal siswa menjadi <strong>0</strong>. Jika ada siswa yang memiliki tunggakan, silakan edit data tunggakan siswa tersebut secara terpisah setelah proses ini selesai.</p>
+                    </div>
+
+                    <div>
+                        <label for="kelas_all" class="form-label">Pilih Kelas <span class="text-red-500">*</span></label>
+                        <select id="kelas_all" name="kelas" class="form-select" required>
+                            <option value="">-- Pilih Kelas --</option>
+                            @foreach($daftarKelas as $kelas)
+                                <option value="{{ $kelas }}">{{ $kelas }}</option>
+                            @endforeach
+                        </select>
+                        @error('kelas')<p class="form-error">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="master_tarif_spp_id_all" class="form-label">Tarif SPP / Bulan <span class="text-red-500">*</span></label>
+                        <select id="master_tarif_spp_id_all" name="master_tarif_spp_id" class="form-select" required>
+                            <option value="">-- Pilih Tarif SPP --</option>
+                            @foreach($tarifSppList as $tarifSpp)
+                                <option value="{{ $tarifSpp->id }}" data-kelas="{{ $tarifSpp->kelas }}">
+                                    {{ $tarifSpp->kelas }} — {{ format_rupiah($tarifSpp->tarif) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('master_tarif_spp_id')<p class="form-error">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" data-modal-close="modal-aktivasi-semua" class="btn-secondary">Batal</button>
+                    <button type="submit" class="btn-primary">Aktifkan Per Kelas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
+    
+    {{-- ... (inside script tag at the bottom) ... --}}
+    <script>
+        // Existing script...
+
+        document.getElementById('kelas_all')?.addEventListener('change', function() {
+            const selectedKelas = this.value;
+            const tarifSppSelect = document.getElementById('master_tarif_spp_id_all');
+            
+            for (let i = 0; i < tarifSppSelect.options.length; i++) {
+                const opt = tarifSppSelect.options[i];
+                if (opt.getAttribute('data-kelas') === selectedKelas) {
+                    tarifSppSelect.selectedIndex = i;
+                    return;
+                }
+            }
+            tarifSppSelect.selectedIndex = 0;
+        });
+    </script>
+
+
     {{-- Modal Edit SPP --}}
     @foreach($siswaList as $s)
         @php $sta = $s->tahunAjaran->first(); @endphp
@@ -229,7 +309,7 @@
             if (studentKelas) {
                 const tarifSppSelect = document.getElementById('master_tarif_spp_id');
                 if (!tarifSppSelect) return;
-                
+
                 // Try digit matching first (e.g. "7A" matching "7" or "Kelas 7")
                 const match = studentKelas.match(/\d+/);
                 if (match) {
@@ -244,7 +324,7 @@
                         }
                     }
                 }
-                
+
                 // Fallback: search for Roman numerals (VII, VIII, IX)
                 const romanMap = { 'vii': '7', 'viii': '8', 'ix': '9', 'x': '10', 'xi': '11', 'xii': '12' };
                 let normalizedStudent = studentKelas.toLowerCase();
@@ -254,7 +334,7 @@
                         break;
                     }
                 }
-                
+
                 const studentMatch = normalizedStudent.match(/\d+/);
                 const searchNum = studentMatch ? studentMatch[0] : null;
 
