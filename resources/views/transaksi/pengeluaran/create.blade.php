@@ -50,7 +50,7 @@
                         <input id="jumlah" type="number" name="jumlah"
                             value="{{ old('jumlah') }}"
                             class="form-input pl-9 @error('jumlah') border-red-400 @enderror"
-                            placeholder="0" min="1" step="1000" required>
+                            placeholder="0" min="0" step="1000" required>
                     </div>
                     @error('jumlah')<p class="form-error">{{ $message }}</p>@enderror
                 </div>
