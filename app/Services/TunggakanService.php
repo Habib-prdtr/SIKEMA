@@ -29,4 +29,14 @@ class TunggakanService
         // Tidak boleh negatif (lebih bayar tidak mungkin terjadi karena validasi di form)
         return max(0, $sisa);
     }
+
+    public function hitungTotalTunggakanSpp(SiswaTahunAjaran $sta): int
+    {
+        return $sta->tagihanSpp->sum(fn ($t) => $t->sisa());
+    }
+
+    public function hitungTotalTunggakanNonSpp(SiswaTahunAjaran $sta): int
+    {
+        return $sta->tagihanIuran->sum(fn ($t) => $t->sisa());
+    }
 }

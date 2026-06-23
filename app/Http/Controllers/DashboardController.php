@@ -23,20 +23,20 @@ class DashboardController extends Controller
         $jumlahSiswa = $this->dashboardService->getJumlahSiswa($tahunAktif);
         $totalPenerimaanBulanIni = $this->dashboardService->getTotalPenerimaanBulanIni($tahunAktif);
         $totalPengeluaranBulanIni = $this->dashboardService->getTotalPengeluaranBulanIni($tahunAktif);
-        
+
         $tunggakanData = $this->dashboardService->getTunggakanData($tahunAktif);
         $siswaAdaTunggakan = $tunggakanData['siswaAdaTunggakan'];
         $totalTunggakanAwal = $tunggakanData['totalTunggakanAwal'];
-        
+
         $sppBelumLunas = $this->dashboardService->getSppBelumLunasBulanIni($tahunAktif);
         $sppTerlewatBelumLunas = $this->dashboardService->getSppTerlewatBelumLunas($tahunAktif);
         $totalSaldo = $this->dashboardService->getTotalSaldo($tahunAktif);
-        
+
         $grafikData = $this->dashboardService->getGrafikBulanan($tahunAktif);
         $bulanLabels = $grafikData['bulanLabels'];
         $dataPenerimaan = $grafikData['dataPenerimaan'];
         $dataPengeluaran = $grafikData['dataPengeluaran'];
-        
+
         $transaksiTerbaru = $this->dashboardService->getTransaksiTerbaru($tahunAktif);
 
         // Tambah daftar siswa untuk pencatatan cepat
@@ -49,11 +49,12 @@ class DashboardController extends Controller
                 ->orderBy('siswa.nama');
 
             if ($request->filled('cari')) {
+                $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
                 $cari = $request->cari;
-                $siswaQuery->where(function ($q) use ($cari) {
-                    $q->where('siswa.nama', 'like', "%{$cari}%")
-                      ->orWhere('siswa.no_induk', 'like', "%{$cari}%")
-                      ->orWhere('siswa.kelas', 'like', "%{$cari}%");
+                $siswaQuery->where(function ($q) use ($like,$cari) {
+                    $q->where('siswa.nama', $like, "%{$cari}%")
+                      ->orWhere('siswa.no_induk', $like, "%{$cari}%")
+                      ->orWhere('siswa.kelas', $like, "%{$cari}%");
                 });
             }
 

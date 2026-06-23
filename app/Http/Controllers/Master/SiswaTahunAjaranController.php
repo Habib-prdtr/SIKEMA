@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\StoreAllSiswaTahunAjaranRequest;
 use App\Http\Requests\Master\StoreSiswaTahunAjaranRequest;
 use App\Http\Requests\Master\UpdateSiswaTahunAjaranSppRequest;
+use App\Http\Requests\Master\UpdateSiswaTahunAjaranTunggakanRequest;
 use App\Models\Siswa;
 use App\Models\SiswaTahunAjaran;
 use App\Models\TahunAjaran;
 use App\Services\MasterDataService;
 use App\Services\TagihanService;
+use App\Services\TunggakanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,19 +22,24 @@ class SiswaTahunAjaranController extends Controller
 {
     public function __construct(
         private readonly TagihanService $tagihanService,
-        private readonly MasterDataService $masterDataService
+        private readonly MasterDataService $masterDataService,
+        private readonly TunggakanService $tunggakanService
     ) {}
 
     /**
      * Daftar siswa dan status aktivasi mereka di tahun ajaran aktif.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $tahunAktif = TahunAjaran::aktif();
 
-        $siswaList = $this->masterDataService->getSiswaTahunAjaranList($tahunAktif);
+        $siswaList = $this->masterDataService->getSiswaTahunAjaranList(
+            $tahunAktif,
+            $request->query('cari'),
+            $request->query('kelas')
+        );
         $semua = $this->masterDataService->getTahunList();
-        
+
         // Fetch distinct classes
         $daftarKelas = \App\Models\Siswa::distinct()->orderBy('kelas')->pluck('kelas')->filter();
 
@@ -123,11 +130,26 @@ class SiswaTahunAjaranController extends Controller
                     continue;
                 }
 
+                // Cari data tahun ajaran sebelumnya untuk hitung sisa tunggakan
+                // Mencari tahun ajaran dengan ID lebih kecil dari ID saat ini
+                $previousSta = SiswaTahunAjaran::where('siswa_id', $siswa->id)
+                    ->whereHas('tahunAjaran', function ($query) use ($tahunAjaranId) {
+                        $query->where('id', '<', $tahunAjaranId);
+                    })
+                    ->with('transaksi.details')
+                    ->latest()
+                    ->first();
+
+                $tunggakanAwal = 0;
+                if ($previousSta) {
+                    $tunggakanAwal = $this->tunggakanService->hitungSisa($previousSta);
+                }
+
                 $sta = SiswaTahunAjaran::create([
                     'siswa_id' => $siswa->id,
                     'tahun_ajaran_id' => $tahunAjaranId,
                     'tarif_spp' => $tarifSpp,
-                    'tunggakan_awal' => 0,
+                    'tunggakan_awal' => $tunggakanAwal,
                 ]);
 
                 $sta->load('tahunAjaran');
@@ -177,5 +199,20 @@ class SiswaTahunAjaranController extends Controller
 
         return redirect()->route('master.siswa-tahun-ajaran.index')
             ->with('sukses', "Tarif SPP untuk siswa {$siswaTahunAjaran->siswa->nama} berhasil diperbarui.");
+    }
+
+    /**
+     * Update tunggakan awal siswa.
+     */
+    public function updateTunggakanAwal(UpdateSiswaTahunAjaranTunggakanRequest $request, SiswaTahunAjaran $siswaTahunAjaran): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $siswaTahunAjaran->update([
+            'tunggakan_awal' => $data['tunggakan_awal'],
+        ]);
+
+        return redirect()->route('master.siswa-tahun-ajaran.index')
+            ->with('sukses', "Tunggakan awal siswa {$siswaTahunAjaran->siswa->nama} berhasil diperbarui.");
     }
 }

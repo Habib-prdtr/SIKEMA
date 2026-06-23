@@ -62,11 +62,12 @@ class PenerimaanController extends Controller
                 ->orderBy('siswa.nama');
 
             if ($request->filled('cari')) {
+                $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
                 $cari = $request->cari;
-                $siswaQuery->where(function ($q) use ($cari) {
-                    $q->where('siswa.nama', 'like', "%{$cari}%")
-                      ->orWhere('siswa.no_induk', 'like', "%{$cari}%")
-                      ->orWhere('siswa.kelas', 'like', "%{$cari}%");
+                $siswaQuery->where(function ($q) use ($like,$cari) {
+                    $q->where('siswa.nama', $like, "%{$cari}%")
+                      ->orWhere('siswa.no_induk', $like, "%{$cari}%")
+                      ->orWhere('siswa.kelas', $like, "%{$cari}%");
                 });
             }
 
