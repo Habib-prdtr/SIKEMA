@@ -117,7 +117,9 @@ Route::middleware('auth')->group(function () {
     // ─── Laporan ──────────────────────────────────────────
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/penerimaan', [LaporanPenerimaanController::class, 'index'])->name('penerimaan');
+        Route::get('/penerimaan/export', [LaporanPenerimaanController::class, 'export'])->name('penerimaan.export');
         Route::get('/pengeluaran', [LaporanPengeluaranController::class, 'index'])->name('pengeluaran');
+        Route::get('/pengeluaran/export', [LaporanPengeluaranController::class, 'export'])->name('pengeluaran.export');
     });
 
     // ─── Pengaturan ───────────────────────────────────────
