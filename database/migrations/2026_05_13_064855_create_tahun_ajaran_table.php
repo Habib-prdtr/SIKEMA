@@ -20,7 +20,7 @@ return new class extends Migration
             // Hanya satu tahun ajaran yang aktif dalam satu waktu
             $table->boolean('is_aktif')->default(false);
 
-            $table->timestamp('created_at')->nullable();
+            $table->timestamp('created_at')->nullable()->useCurrent();
         });
     }
 

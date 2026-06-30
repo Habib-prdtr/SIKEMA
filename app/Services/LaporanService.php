@@ -4,9 +4,13 @@ namespace App\Services;
 
 use App\Models\Pengeluaran;
 use App\Models\PosBiaya;
+use App\Models\Sekolah;
 use App\Models\TahunAjaran;
 use App\Models\Transaksi;
+use App\Utils\ExcelExportUtil;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use function Termwind\style;
 
 class LaporanService
 {
@@ -111,5 +115,74 @@ class LaporanService
             'rekapPerPos'
         );
     }
-}
 
+    public function exportPenerimaanToExcel(Request $request, ?TahunAjaran $tahunAktif): Spreadsheet
+    {
+        $data = $this->getLaporanPenerimaan($request, $tahunAktif);
+
+        $tahunAjaranId = $request->get('tahun_ajaran_id', $tahunAktif?->id);
+        $tahunAjaran = TahunAjaran::find($tahunAjaranId);
+
+        $periode = ($request->filled('bulan') ? \Carbon\Carbon::create(null, $request->bulan)->locale('id')->isoFormat('MMMM') . ' ' : '') .
+                   ($tahunAjaran?->nama ?? ($tahunAktif?->nama ?? '-'));
+
+        return ExcelExportUtil::createMultiSheetReport([
+            [
+                'title' => 'Laporan Penerimaan',
+                'periode' => $periode,
+                'columns' => ['No', 'Tanggal', 'Siswa', 'Jenis', 'Nominal'],
+                'data' => $data['transaksi'],
+                'mapper' => function ($sheet, $t, $row, $index) {
+                    $sheet->setCellValue('A' . $row, $index);
+                    $sheet->setCellValue('B' . $row, format_tanggal($t->tanggal));
+                    $sheet->setCellValue('C' . $row, $t->siswaTahunAjaran->siswa->nama);
+                    $sheet->setCellValue('D' . $row, $t->details->pluck('jenisPenerimaan.nama')->join(', '));
+                    $sheet->setCellValue('E' . $row, $t->total_bayar);
+                },
+                'totalRow' => ['col' => 'E', 'label' => 'TOTAL PENERIMAAN', 'value' => $data['totalPenerimaan']]
+            ]
+        ]);
+    }
+
+    public function exportPengeluaranToExcel(Request $request, ?TahunAjaran $tahunAktif): Spreadsheet
+    {
+        $data = $this->getLaporanPengeluaran($request, $tahunAktif);
+
+        $tahunAjaranId = $request->get('tahun_ajaran_id', $tahunAktif?->id);
+        $tahunAjaran = TahunAjaran::find($tahunAjaranId);
+
+        $periode = ($request->filled('bulan') ? \Carbon\Carbon::create(null, $request->bulan)->locale('id')->isoFormat('MMMM') . ' ' : '') .
+                   ($tahunAjaran?->nama ?? ($tahunAktif?->nama ?? '-'));
+
+        return ExcelExportUtil::createMultiSheetReport([
+            [
+                'title' => 'Rekap Pengeluaran per Pos',
+                'periode' => $periode,
+                'columns' => ['No', 'Pos Biaya', 'Anggaran', 'Total Terpakai'],
+                'data' => $data['rekapPerPos'],
+                'mapper' => function ($sheet, $r, $row, $index) {
+                    $sheet->setCellValue('A' . $row, $index);
+                    $sheet->setCellValue('B' . $row, $r->nama);
+                    $sheet->setCellValue('C' . $row, $r->anggaran);
+                    $sheet->setCellValue('D' . $row, $r->total);
+                },
+                'totalRow' => ['col' => 'D', 'label' => 'TOTAL', 'value' => $data['totalPengeluaran']]
+            ],
+            [
+                'title' => 'Detail Pengeluaran',
+                'periode' => $periode,
+                'columns' => ['No', 'Tanggal', 'Pos Biaya', 'Keterangan', 'Nominal'],
+                'data' => $data['pengeluaran'],
+                'mapper' => function ($sheet, $p, $row, $index) {
+                    $sheet->setCellValue('A' . $row, $index);
+                    $sheet->setCellValue('B' . $row, format_tanggal($p->tanggal));
+                    $sheet->setCellValue('C' . $row, $p->posBiaya->nama);
+                    $sheet->setCellValue('D' . $row, $p->keterangan);
+                    $sheet->setCellValue('E' . $row, $p->jumlah);
+                },
+                'totalRow' => ['col' => 'E', 'label' => 'TOTAL', 'value' => $data['totalPengeluaran']]
+            ]
+        ]);
+    }
+
+}

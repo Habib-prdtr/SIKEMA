@@ -8,7 +8,6 @@ use App\Http\Requests\Master\UpdateTarifSppRequest;
 use App\Models\MasterTarifSpp;
 use App\Models\TahunAjaran;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class MasterTarifSppController extends Controller
@@ -20,6 +19,18 @@ class MasterTarifSppController extends Controller
     {
         $tahunAktif = TahunAjaran::aktif();
         $tarifSpp = collect();
+        $daftarTahunAjaran = TahunAjaran::where('id', '!=', $tahunAktif?->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $tahunSebelumnya = $daftarTahunAjaran->first();
+        $tarifSppSebelumnya = collect();
+
+        if ($tahunSebelumnya) {
+            $tarifSppSebelumnya = MasterTarifSpp::where('tahun_ajaran_id', $tahunSebelumnya->id)
+                ->orderBy('kelas')
+                ->get();
+        }
 
         if ($tahunAktif) {
             $tarifSpp = MasterTarifSpp::where('tahun_ajaran_id', $tahunAktif->id)
@@ -27,7 +38,48 @@ class MasterTarifSppController extends Controller
                 ->get();
         }
 
-        return view('master.tarif-spp.index', compact('tarifSpp', 'tahunAktif'));
+        return view('master.tarif-spp.index', compact('tarifSpp', 'tahunAktif', 'daftarTahunAjaran', 'tahunSebelumnya', 'tarifSppSebelumnya'));
+    }
+
+    /**
+     * Extract tarif SPP dari tahun ajaran sebelumnya.
+     */
+    public function extract(): RedirectResponse
+    {
+        $tahunAktif = TahunAjaran::aktif();
+
+        if (!$tahunAktif) {
+            return back()->withErrors(['error' => 'Tidak ada tahun ajaran aktif.']);
+        }
+
+        $tahunSebelumnya = TahunAjaran::where('id', '!=', $tahunAktif->id)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$tahunSebelumnya) {
+            return back()->withErrors(['error' => 'Tidak ada tahun ajaran sebelumnya untuk diekstrak.']);
+        }
+
+        $tarifLama = MasterTarifSpp::where('tahun_ajaran_id', $tahunSebelumnya->id)->get();
+
+        if ($tarifLama->isEmpty()) {
+            return back()->withErrors(['error' => 'Tidak ada tarif SPP pada tahun ajaran sebelumnya.']);
+        }
+
+        foreach ($tarifLama as $tarif) {
+            MasterTarifSpp::updateOrCreate(
+                [
+                    'tahun_ajaran_id' => $tahunAktif->id,
+                    'kelas' => $tarif->kelas,
+                ],
+                [
+                    'tarif' => $tarif->tarif,
+                ]
+            );
+        }
+
+        return redirect()->route('master.tarif-spp.index')
+            ->with('sukses', "Tarif SPP berhasil diekstrak dari tahun ajaran {$tahunSebelumnya->nama}.");
     }
 
     /**

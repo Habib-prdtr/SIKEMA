@@ -18,12 +18,13 @@ class MasterDataService
     public function getDaftarSiswa(Request $request): LengthAwarePaginator
     {
         $query = Siswa::query();
+        $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
 
         if ($request->filled('cari')) {
             $cari = $request->cari;
-            $query->where(function ($q) use ($cari) {
-                $q->where('nama', 'like', "%{$cari}%")
-                    ->orWhere('no_induk', 'like', "%{$cari}%");
+            $query->where(function ($q) use ($like, $cari) {
+                $q->where('nama', $like, "%{$cari}%")
+                    ->orWhere('no_induk', $like, "%{$cari}%");
             });
         }
 
@@ -97,9 +98,23 @@ class MasterDataService
         return TahunAjaran::orderByDesc('nama')->get();
     }
 
-    public function getSiswaTahunAjaranList(?TahunAjaran $tahunAktif): LengthAwarePaginator
+    public function getSiswaTahunAjaranList(?TahunAjaran $tahunAktif, ?string $cari, ?string $kelas): LengthAwarePaginator
     {
-        return Siswa::where('status', Siswa::STATUS_AKTIF)->with([
+        $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+        $query = Siswa::where('status', Siswa::STATUS_AKTIF);
+
+        if ($cari) {
+            $query->where(function ($q) use ($like,$cari) {
+                $q->where('nama', $like, "%{$cari}%")
+                    ->orWhere('no_induk', $like, "%{$cari}%");
+            });
+        }
+
+        if ($kelas) {
+            $query->where('kelas', $kelas);
+        }
+
+        return $query->with([
             'tahunAjaran' => function ($query) use ($tahunAktif) {
                 $query->where('tahun_ajaran_id', $tahunAktif?->id)
                     ->with('transaksi.details');
