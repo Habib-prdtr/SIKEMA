@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,13 @@ use Illuminate\View\View;
 
 class LoginController extends Controller
 {
+    protected AuthService $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     /**
      * Tampilkan halaman login.
      */
@@ -31,15 +39,8 @@ class LoginController extends Controller
      */
     public function login(LoginRequest $request): RedirectResponse
     {
-        $loginField = $request->login;
-        $password = $request->password;
-
-        // Coba login dengan username terlebih dahulu
-        $credentials = filter_var($loginField, FILTER_VALIDATE_EMAIL)
-            ? ['email' => $loginField, 'password' => $password]
-            : ['username' => $loginField, 'password' => $password];
-
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        // Pendelegasian logika bisnis (pengecekan login) ke AuthService
+        if ($this->authService->attemptLogin($request->login, $request->password, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             return redirect()->intended(route('dashboard'));
@@ -57,7 +58,8 @@ class LoginController extends Controller
      */
     public function logout(Request $request): RedirectResponse
     {
-        Auth::logout();
+        // Pendelegasian logika logout ke AuthService
+        $this->authService->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
