@@ -143,6 +143,27 @@ class TransaksiService
             ->first();
     }
 
+    public function cariSiswaTahunAjaran(?\App\Models\TahunAjaran $tahunAktif, ?string $keyword = null, int $perPage = 5): ?\Illuminate\Pagination\LengthAwarePaginator
+    {
+        if (!$tahunAktif) return null;
+
+        $siswaQuery = SiswaTahunAjaran::with(['siswa'])
+            ->join('siswa', 'siswa_tahun_ajaran.siswa_id', '=', 'siswa.id')
+            ->select('siswa_tahun_ajaran.*')
+            ->where('siswa_tahun_ajaran.tahun_ajaran_id', $tahunAktif->id)
+            ->orderBy('siswa.nama');
+
+        if ($keyword) {
+            $siswaQuery->where(function ($q) use ($keyword) {
+                $q->where('siswa.nama', 'like', "%{$keyword}%")
+                  ->orWhere('siswa.no_induk', 'like', "%{$keyword}%")
+                  ->orWhere('siswa.kelas', 'like', "%{$keyword}%");
+            });
+        }
+
+        return $siswaQuery->paginate($perPage)->withQueryString();
+    }
+
     // --- PENGELUARAN ---
     public function getDaftarPengeluaran(\Illuminate\Http\Request $request, ?\App\Models\TahunAjaran $tahunAktif): \Illuminate\Pagination\LengthAwarePaginator
     {
@@ -171,5 +192,10 @@ class TransaksiService
             ->where('is_aktif', true)
             ->orderBy('nama')
             ->get();
+    }
+
+    public function simpanPengeluaran(array $data): \App\Models\Pengeluaran
+    {
+        return \App\Models\Pengeluaran::create($data);
     }
 }

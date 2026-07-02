@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('master/siswa')->name('master.siswa.')->group(function () {
         Route::get('/', [DataSiswaController::class, 'index'])->name('index');
         Route::get('/tambah', [DataSiswaController::class, 'create'])->name('create');
+        Route::get('/cek-no-induk', [DataSiswaController::class, 'cekNoInduk'])->name('cek-no-induk');
         Route::post('/', [DataSiswaController::class, 'store'])->name('store');
         Route::get('/import', [DataSiswaController::class, 'showImportForm'])->name('import.form');
         Route::post('/import', [DataSiswaController::class, 'import'])->name('import');

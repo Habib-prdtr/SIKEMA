@@ -33,6 +33,7 @@
                             value="{{ old('no_induk', $siswa->no_induk ?? '') }}"
                             class="form-input @error('no_induk') border-red-400 @enderror"
                             placeholder="Contoh: 2025001" maxlength="20" required>
+                        <p id="no-induk-feedback" class="mt-1 text-xs font-medium hidden"></p>
                         @error('no_induk')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
 
@@ -107,4 +108,57 @@
         </div>
 
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const noIndukInput = document.getElementById('no_induk');
+            const feedback = document.getElementById('no-induk-feedback');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            let debounceTimeout;
+
+            noIndukInput.addEventListener('input', function() {
+                clearTimeout(debounceTimeout);
+                const val = this.value.trim();
+
+                if (!val) {
+                    feedback.classList.add('hidden');
+                    noIndukInput.classList.remove('border-red-400', 'border-emerald-400');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    return;
+                }
+
+                debounceTimeout = setTimeout(() => {
+                    const ignoreId = "{{ $siswa->id ?? '' }}";
+                    let url = `{{ route('master.siswa.cek-no-induk') }}?no_induk=${encodeURIComponent(val)}`;
+                    if (ignoreId) {
+                        url += `&ignore_id=${ignoreId}`;
+                    }
+
+                    fetch(url)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                feedback.textContent = '❌ Nomor induk ini sudah digunakan!';
+                                feedback.className = 'mt-1 text-xs font-medium text-red-600';
+                                feedback.classList.remove('hidden');
+                                noIndukInput.classList.add('border-red-400');
+                                noIndukInput.classList.remove('border-emerald-400');
+                                submitBtn.disabled = true;
+                                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            } else {
+                                feedback.textContent = '✔ Nomor induk tersedia.';
+                                feedback.className = 'mt-1 text-xs font-medium text-emerald-600';
+                                feedback.classList.remove('hidden');
+                                noIndukInput.classList.remove('border-red-400');
+                                noIndukInput.classList.add('border-emerald-400');
+                                submitBtn.disabled = false;
+                                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            }
+                        })
+                        .catch(err => console.error(err));
+                }, 300);
+            });
+        });
+    </script>
 </x-layouts.app>

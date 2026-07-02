@@ -35,7 +35,7 @@ class SaldoAwalController extends Controller
      */
     public function store(StoreSaldoAwalRequest $request): RedirectResponse
     {
-        SaldoAwal::create($request->validated());
+        $this->masterDataService->simpanSaldoAwal($request->validated());
 
         return redirect()->route('master.saldo-awal.index')
             ->with('sukses', 'Saldo awal berhasil disimpan.');
@@ -46,7 +46,7 @@ class SaldoAwalController extends Controller
      */
     public function update(UpdateSaldoAwalRequest $request, SaldoAwal $saldoAwal): RedirectResponse
     {
-        $saldoAwal->update($request->validated());
+        $this->masterDataService->updateSaldoAwal($saldoAwal, $request->validated());
 
         return redirect()->route('master.saldo-awal.index')
             ->with('sukses', 'Saldo awal berhasil diperbarui.');

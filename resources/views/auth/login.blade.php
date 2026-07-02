@@ -13,6 +13,17 @@
             <p class="text-gray-500 mt-1 text-sm">Sistem Informasi Keuangan Madrasah</p>
         </div>
 
+        {{-- Sukses --}}
+        @if(session('sukses'))
+            <div class="mb-5 p-4 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl flex items-center gap-3">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm font-medium">{{ session('sukses') }}</p>
+            </div>
+        @endif
+
         {{-- Error --}}
         @if($errors->any())
             <div class="alert-error mb-5">

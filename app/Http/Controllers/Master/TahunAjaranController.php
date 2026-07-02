@@ -33,7 +33,7 @@ class TahunAjaranController extends Controller
      */
     public function store(StoreTahunAjaranRequest $request): RedirectResponse
     {
-        TahunAjaran::create($request->validated());
+        $this->masterDataService->simpanTahunAjaran($request->validated());
 
         return redirect()->route('master.tahun-ajaran.index')
             ->with('sukses', 'Tahun ajaran berhasil ditambahkan.');
@@ -45,7 +45,7 @@ class TahunAjaranController extends Controller
      */
     public function setAktif(TahunAjaran $tahunAjaran): RedirectResponse
     {
-        $tahunAjaran->setAktif();
+        $this->masterDataService->aktifkanTahunAjaran($tahunAjaran);
 
         return redirect()->route('master.tahun-ajaran.index')
             ->with('sukses', "Tahun ajaran {$tahunAjaran->nama} kini aktif.");

@@ -69,7 +69,28 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const msg  = btn.dataset.confirmDelete || 'Yakin ingin menghapus data ini?';
             const form = document.getElementById(btn.dataset.formId);
-            if (confirm(msg)) form?.submit();
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Konfirmasi Hapus',
+                    text: msg,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444', // red-500
+                    cancelButtonColor: '#6b7280', // gray-500
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-2xl',
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form?.submit();
+                    }
+                });
+            } else {
+                if (confirm(msg)) form?.submit();
+            }
         });
     });
 
