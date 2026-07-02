@@ -7,11 +7,16 @@ use App\Http\Requests\Master\StoreTarifSppRequest;
 use App\Http\Requests\Master\UpdateTarifSppRequest;
 use App\Models\MasterTarifSpp;
 use App\Models\TahunAjaran;
+use App\Services\MasterDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class MasterTarifSppController extends Controller
 {
+    public function __construct(
+        private readonly MasterDataService $masterDataService
+    ) {}
+
     /**
      * Tampilkan daftar tarif SPP.
      */
@@ -90,15 +95,11 @@ class MasterTarifSppController extends Controller
         $data = $request->validated();
 
         // Cegah duplikasi kelas di tahun ajaran yang sama
-        $exists = MasterTarifSpp::where('tahun_ajaran_id', $data['tahun_ajaran_id'])
-            ->where('kelas', $data['kelas'])
-            ->exists();
-
-        if ($exists) {
+        if ($this->masterDataService->cekTarifSppExists($data['tahun_ajaran_id'], $data['kelas'])) {
             return back()->withErrors(['error' => 'Tarif SPP untuk kelas tersebut sudah didefinisikan pada tahun ajaran ini.']);
         }
 
-        MasterTarifSpp::create($data);
+        $this->masterDataService->simpanTarifSpp($data);
 
         return redirect()->route('master.tarif-spp.index')
             ->with('sukses', "Tarif SPP kelas '{$data['kelas']}' berhasil ditambahkan.");
@@ -112,16 +113,11 @@ class MasterTarifSppController extends Controller
         $data = $request->validated();
 
         // Cegah duplikasi kelas (abaikan diri sendiri)
-        $exists = MasterTarifSpp::where('tahun_ajaran_id', $tarifSpp->tahun_ajaran_id)
-            ->where('kelas', $data['kelas'])
-            ->where('id', '!=', $tarifSpp->id)
-            ->exists();
-
-        if ($exists) {
+        if ($this->masterDataService->cekTarifSppExists($tarifSpp->tahun_ajaran_id, $data['kelas'], $tarifSpp->id)) {
             return back()->withErrors(['error' => 'Tarif SPP untuk kelas tersebut sudah didefinisikan pada tahun ajaran ini.']);
         }
 
-        $tarifSpp->update($data);
+        $this->masterDataService->updateTarifSpp($tarifSpp, $data);
 
         return redirect()->route('master.tarif-spp.index')
             ->with('sukses', "Tarif SPP kelas '{$data['kelas']}' berhasil diperbarui.");
@@ -133,7 +129,7 @@ class MasterTarifSppController extends Controller
     public function destroy(MasterTarifSpp $tarifSpp): RedirectResponse
     {
         $kelas = $tarifSpp->kelas;
-        $tarifSpp->delete();
+        $this->masterDataService->hapusTarifSpp($tarifSpp);
 
         return redirect()->route('master.tarif-spp.index')
             ->with('sukses', "Tarif SPP kelas '{$kelas}' berhasil dihapus.");

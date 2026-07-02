@@ -30,13 +30,26 @@ class StoreJenisPenerimaanRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $tahunAjaranId = $this->input('tahun_ajaran_id');
+            if ($tahunAjaranId) {
+                $count = \App\Models\JenisPenerimaan::where('tahun_ajaran_id', $tahunAjaranId)->count();
+                if ($count >= 15) {
+                    $validator->errors()->add('nama', 'Batas maksimal penyimpanan jenis iuran yang diperbolehkan di madrasah adalah 15 jenis iuran per tahun ajaran. Penambahan jenis iuran ke-16 ditolak.');
+                }
+            }
+        });
+    }
+
     public function messages(): array
     {
         return [
             'tahun_ajaran_id.required' => 'Tahun ajaran wajib dipilih.',
             'urutan.required' => 'Urutan wajib diisi.',
             'urutan.min' => 'Urutan minimal 1.',
-            'urutan.max' => 'Maksimal 15 jenis iuran per tahun ajaran.',
+            'urutan.max' => 'Urutan maksimal 15.',
             'nama.required' => 'Nama iuran wajib diisi.',
             'tarif.required' => 'Tarif wajib diisi.',
             'tarif.integer' => 'Tarif harus berupa angka bulat.',

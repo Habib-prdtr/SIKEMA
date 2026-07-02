@@ -11,7 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Illuminate\Support\Facades\DB;
 
 class DataSiswaController extends Controller
 {
@@ -41,11 +40,26 @@ class DataSiswaController extends Controller
     }
 
     /**
+     * Cek apakah no induk sudah terdaftar (AJAX).
+     */
+    public function cekNoInduk(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $noInduk = $request->query('no_induk');
+        $ignoreId = $request->query('ignore_id');
+        
+        $exists = $this->masterDataService->cekNoIndukExist((string) $noInduk, $ignoreId ? (int) $ignoreId : null);
+        
+        return response()->json([
+            'exists' => $exists
+        ]);
+    }
+
+    /**
      * Simpan siswa baru.
      */
     public function store(StoreSiswaRequest $request): RedirectResponse
     {
-        Siswa::create($request->validated());
+        $this->masterDataService->simpanDataSiswa($request->validated());
 
         return redirect()->route('master.siswa.index')
             ->with('sukses', 'Data siswa berhasil ditambahkan.');
@@ -64,7 +78,7 @@ class DataSiswaController extends Controller
      */
     public function update(UpdateSiswaRequest $request, Siswa $siswa): RedirectResponse
     {
-        $siswa->update($request->validated());
+        $this->masterDataService->updateDataSiswa($siswa, $request->validated());
 
         return redirect()->route('master.siswa.index')
             ->with('sukses', 'Data siswa berhasil diperbarui.');
@@ -81,9 +95,8 @@ class DataSiswaController extends Controller
             ]);
         }
 
-        // Cascade delete: siswa_tahun_ajaran → tagihan_spp/iuran akan ikut terhapus
-        $siswa->delete();
- 
+        $this->masterDataService->hapusDataSiswa($siswa);
+
         return redirect()->route('master.siswa.index')
             ->with('sukses', 'Data siswa berhasil dihapus.');
     }
@@ -118,115 +131,14 @@ class DataSiswaController extends Controller
             $worksheet = $spreadsheet->getSheetByName('Siswa') ?: $spreadsheet->getActiveSheet();
             $rows = $worksheet->toArray();
             
-            if (count($rows) <= 1) {
-                return back()->withErrors(['error' => 'File Excel kosong atau tidak memiliki baris data.']);
-            }
-            
-            $headers = array_map(function($h) {
-                return strtolower(trim((string)$h));
-            }, $rows[0]);
-            
-            $colIndex = [
-                'no_induk' => -1,
-                'nama' => -1,
-                'kelas' => -1,
-                'asrama' => -1,
-                'jenis_kelamin' => -1,
-                'tanggal_masuk' => -1,
-            ];
-            
-            foreach ($headers as $index => $header) {
-                if (str_contains($header, 'no_induk') || $header === 'nis' || $header === 'nisn' || str_contains($header, 'induk') || str_contains($header, 'nomor induk')) {
-                    $colIndex['no_induk'] = $index;
-                } elseif (str_contains($header, 'nama') || str_contains($header, 'siswa')) {
-                    $colIndex['nama'] = $index;
-                } elseif (str_contains($header, 'kelas')) {
-                    $colIndex['kelas'] = $index;
-                } elseif (str_contains($header, 'asrama')) {
-                    $colIndex['asrama'] = $index;
-                } elseif (str_contains($header, 'jenis kelamin') || str_contains($header, 'jk') || str_contains($header, 'sex') || str_contains($header, 'gender') || str_contains($header, 'l/p')) {
-                    $colIndex['jenis_kelamin'] = $index;
-                } elseif (str_contains($header, 'tanggal') || str_contains($header, 'tgl') || str_contains($header, 'masuk')) {
-                    $colIndex['tanggal_masuk'] = $index;
-                }
-            }
-            
-            // Fallback to default indexes if headers are not found
-            if ($colIndex['no_induk'] === -1) $colIndex['no_induk'] = 0;
-            if ($colIndex['nama'] === -1) $colIndex['nama'] = 1;
-            if ($colIndex['kelas'] === -1) $colIndex['kelas'] = 2;
-            if ($colIndex['asrama'] === -1) $colIndex['asrama'] = 3;
-            if ($colIndex['jenis_kelamin'] === -1) $colIndex['jenis_kelamin'] = 4;
-            if ($colIndex['tanggal_masuk'] === -1) $colIndex['tanggal_masuk'] = 5;
-            
-            $importedCount = 0;
-            $errors = [];
-            
-            DB::beginTransaction();
-            
-            for ($i = 1; $i < count($rows); $i++) {
-                $row = $rows[$i];
-                
-                if (empty(array_filter($row))) {
-                    continue;
-                }
-                
-                $noInduk = trim((string)($row[$colIndex['no_induk']] ?? ''));
-                $nama = trim((string)($row[$colIndex['nama']] ?? ''));
-                $kelas = trim((string)($row[$colIndex['kelas']] ?? ''));
-                $asrama = trim((string)($row[$colIndex['asrama']] ?? ''));
-                $jkRaw = strtoupper(trim((string)($row[$colIndex['jenis_kelamin']] ?? '')));
-                $tglMasukRaw = trim((string)($row[$colIndex['tanggal_masuk']] ?? ''));
-                
-                if (!$noInduk || !$nama || !$kelas) {
-                    $errors[] = "Baris " . ($i + 1) . ": No Induk, Nama, dan Kelas wajib diisi.";
-                    continue;
-                }
-                
-                $jk = 'L';
-                if ($jkRaw === 'P' || str_contains(strtolower($jkRaw), 'perempuan') || str_contains(strtolower($jkRaw), 'putri') || str_contains(strtolower($jkRaw), 'p')) {
-                    $jk = 'P';
-                }
-                
-                $tanggalMasuk = null;
-                if ($tglMasukRaw) {
-                    if (is_numeric($tglMasukRaw)) {
-                        $tanggalMasuk = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tglMasukRaw)->format('Y-m-d');
-                    } else {
-                        $time = strtotime($tglMasukRaw);
-                        if ($time) {
-                            $tanggalMasuk = date('Y-m-d', $time);
-                        }
-                    }
-                }
-                
-                Siswa::updateOrCreate(
-                    ['no_induk' => $noInduk],
-                    [
-                        'nama' => $nama,
-                        'kelas' => $kelas,
-                        'asrama' => $asrama ?: null,
-                        'jenis_kelamin' => $jk,
-                        'tanggal_masuk' => $tanggalMasuk,
-                        'status' => 'aktif',
-                    ]
-                );
-                
-                $importedCount++;
-            }
-            
-            if (!empty($errors)) {
-                DB::rollBack();
-                return back()->withErrors($errors);
-            }
-            
-            DB::commit();
+            $importedCount = $this->masterDataService->importDataSiswa($rows);
             
             return redirect()->route('master.siswa.index')
                 ->with('sukses', "Berhasil mengimpor {$importedCount} data siswa.");
                 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors());
         } catch (\Exception $e) {
-            DB::rollBack();
             return back()->withErrors(['error' => 'Gagal membaca atau memproses file Excel: ' . $e->getMessage()]);
         }
     }

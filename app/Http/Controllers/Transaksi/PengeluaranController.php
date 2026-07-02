@@ -60,7 +60,7 @@ class PengeluaranController extends Controller
         $data['tahun'] = $tanggal->year;
         $data['user_id'] = $request->user()->id;
 
-        $pengeluaran = Pengeluaran::create($data);
+        $pengeluaran = $this->transaksiService->simpanPengeluaran($data);
 
         return redirect()->route('pengeluaran.show', $pengeluaran)
             ->with('sukses', 'Pengeluaran berhasil dicatat.');

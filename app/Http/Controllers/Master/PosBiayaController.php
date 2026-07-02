@@ -36,7 +36,7 @@ class PosBiayaController extends Controller
      */
     public function store(StorePosBiayaRequest $request): RedirectResponse
     {
-        PosBiaya::create($request->validated());
+        $this->masterDataService->simpanPosBiaya($request->validated());
 
         return redirect()->route('master.pos-biaya.index')
             ->with('sukses', 'Pos biaya berhasil ditambahkan.');
@@ -47,7 +47,7 @@ class PosBiayaController extends Controller
      */
     public function update(UpdatePosBiayaRequest $request, PosBiaya $posBiaya): RedirectResponse
     {
-        $posBiaya->update($request->validated());
+        $this->masterDataService->updatePosBiaya($posBiaya, $request->validated());
 
         return redirect()->route('master.pos-biaya.index')
             ->with('sukses', 'Pos biaya berhasil diperbarui.');
@@ -65,7 +65,7 @@ class PosBiayaController extends Controller
         }
 
         $nama = $posBiaya->nama;
-        $posBiaya->delete();
+        $this->masterDataService->hapusPosBiaya($posBiaya);
 
         return redirect()->route('master.pos-biaya.index')
             ->with('sukses', "Pos biaya '{$nama}' berhasil dihapus.");

@@ -41,14 +41,9 @@ class SiswaTahunAjaranController extends Controller
         $semua = $this->masterDataService->getTahunList();
 
         // Fetch distinct classes
-        $daftarKelas = \App\Models\Siswa::distinct()->orderBy('kelas')->pluck('kelas')->filter();
+        $daftarKelas = $this->masterDataService->getDaftarKelasSiswa();
 
-        $tarifSppList = collect();
-        if ($tahunAktif) {
-            $tarifSppList = \App\Models\MasterTarifSpp::where('tahun_ajaran_id', $tahunAktif->id)
-                ->orderBy('kelas')
-                ->get();
-        }
+        $tarifSppList = $this->masterDataService->getTarifSpp($tahunAktif);
 
         return view('master.siswa-tahun-ajaran.index', compact(
             'siswaList',
@@ -73,34 +68,11 @@ class SiswaTahunAjaranController extends Controller
             ]);
         }
 
-        $masterTarif = \App\Models\MasterTarifSpp::findOrFail($data['master_tarif_spp_id']);
-        $tarifSpp = $masterTarif->tarif;
-
-        DB::beginTransaction();
         try {
-            $sta = SiswaTahunAjaran::create([
-                'siswa_id' => $data['siswa_id'],
-                'tahun_ajaran_id' => $data['tahun_ajaran_id'],
-                'tarif_spp' => $tarifSpp,
-                'tunggakan_awal' => $data['tunggakan_awal'] ?? 0,
-            ]);
-
-            // Load relasi tahunAjaran agar TagihanService bisa ambil nama tahun
-            $sta->load('tahunAjaran');
-
-            // Generate 12 tagihan SPP otomatis
-            $this->tagihanService->generateSpp($sta);
-
-            // Generate tagihan iuran aktif otomatis
-            $this->tagihanService->generateIuranUntukSiswa($sta);
-
-            DB::commit();
+            $siswa = $this->masterDataService->aktifkanSiswa($data, $this->tagihanService);
         } catch (\Exception $e) {
-            DB::rollBack();
             return back()->withErrors(['error' => 'Gagal mengaktifkan siswa: ' . $e->getMessage()]);
         }
-
-        $siswa = Siswa::find($data['siswa_id']);
 
         return redirect()->route('master.siswa-tahun-ajaran.index')
             ->with('sukses', "Siswa {$siswa->nama} berhasil diaktifkan. 12 tagihan SPP telah dibuat.");
@@ -112,8 +84,8 @@ class SiswaTahunAjaranController extends Controller
     public function storeAll(StoreAllSiswaTahunAjaranRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $tahunAjaranId = $data['tahun_ajaran_id'];
         $kelas = $data['kelas'];
+        $tahunAjaranId = $data['tahun_ajaran_id'];
         $masterTarif = \App\Models\MasterTarifSpp::findOrFail($data['master_tarif_spp_id']);
         $tarifSpp = $masterTarif->tarif;
 
@@ -121,8 +93,8 @@ class SiswaTahunAjaranController extends Controller
             ->where('kelas', $kelas)
             ->get();
 
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
             $count = 0;
             foreach ($semuaSiswaAktifDiKelas as $siswa) {
                 // Skip if already activated
@@ -159,7 +131,6 @@ class SiswaTahunAjaranController extends Controller
             }
             DB::commit();
         } catch (\Exception $e) {
-            DB::rollBack();
             return back()->withErrors(['error' => 'Gagal mengaktifkan siswa: ' . $e->getMessage()]);
         }
 
@@ -172,28 +143,9 @@ class SiswaTahunAjaranController extends Controller
      */
     public function updateSpp(UpdateSiswaTahunAjaranSppRequest $request, SiswaTahunAjaran $siswaTahunAjaran): RedirectResponse
     {
-        $data = $request->validated();
-
-        $masterTarif = \App\Models\MasterTarifSpp::findOrFail($data['master_tarif_spp_id']);
-        $tarifSpp = $masterTarif->tarif;
-
-        DB::beginTransaction();
         try {
-            // Update tarif SPP di record siswa_tahun_ajaran
-            $siswaTahunAjaran->update([
-                'tarif_spp' => $tarifSpp,
-            ]);
-
-            // Update tagihan SPP yang statusnya masih 'belum'
-            $siswaTahunAjaran->tagihanSpp()
-                ->where('status', 'belum')
-                ->update([
-                    'tagihan' => $tarifSpp,
-                ]);
-
-            DB::commit();
+            $this->masterDataService->updateSppSiswa($siswaTahunAjaran, $request->validated());
         } catch (\Exception $e) {
-            DB::rollBack();
             return back()->withErrors(['error' => 'Gagal memperbarui tarif SPP: ' . $e->getMessage()]);
         }
 
