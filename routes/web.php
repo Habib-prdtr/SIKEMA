@@ -63,12 +63,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [SiswaTahunAjaranController::class, 'store'])->name('store');
         Route::post('/aktifkan-semua', [SiswaTahunAjaranController::class, 'storeAll'])->name('storeAll');
         Route::put('/{siswaTahunAjaran}', [SiswaTahunAjaranController::class, 'updateSpp'])->name('update');
+        Route::patch('/{siswaTahunAjaran}/tunggakan', [SiswaTahunAjaranController::class, 'updateTunggakanAwal'])->name('update.tunggakan');
     });
 
     // ─── Master: Tarif SPP ────────────────────────────────
     Route::prefix('master/tarif-spp')->name('master.tarif-spp.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'index'])->name('index');
         Route::post('/', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'store'])->name('store');
+        Route::post('/extract', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'extract'])->name('extract');
         Route::put('/{tarifSpp}', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'update'])->name('update');
         Route::delete('/{tarifSpp}', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'destroy'])->name('destroy');
     });
@@ -115,7 +117,9 @@ Route::middleware('auth')->group(function () {
     // ─── Laporan ──────────────────────────────────────────
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/penerimaan', [LaporanPenerimaanController::class, 'index'])->name('penerimaan');
+        Route::get('/penerimaan/export', [LaporanPenerimaanController::class, 'export'])->name('penerimaan.export');
         Route::get('/pengeluaran', [LaporanPengeluaranController::class, 'index'])->name('pengeluaran');
+        Route::get('/pengeluaran/export', [LaporanPengeluaranController::class, 'export'])->name('pengeluaran.export');
     });
 
     // ─── Pengaturan ───────────────────────────────────────

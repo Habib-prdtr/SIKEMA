@@ -7,6 +7,8 @@ use App\Models\TahunAjaran;
 use App\Services\LaporanService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LaporanPenerimaanController extends Controller
 {
@@ -28,5 +30,24 @@ class LaporanPenerimaanController extends Controller
         $data = $this->laporanService->getLaporanPenerimaan($request, $tahunAktif);
 
         return view('laporan.penerimaan', $data);
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $tahunAktif = TahunAjaran::aktif();
+        $spreadsheet = $this->laporanService->exportPenerimaanToExcel($request, $tahunAktif);
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Laporan_Penerimaan_' . date('Y-m-d_His') . '.xlsx';
+
+        $response = new StreamedResponse(function () use ($writer) {
+            $writer->save('php://output');
+        });
+
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment;filename="' . $fileName . '"');
+        $response->headers->set('Cache-Control', 'max-age=0');
+
+        return $response;
     }
 }

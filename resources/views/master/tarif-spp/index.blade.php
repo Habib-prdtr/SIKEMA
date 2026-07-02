@@ -8,12 +8,22 @@
                 <p class="text-gray-500 text-sm mt-0.5">Kelola tarif pembayaran SPP bulanan berdasarkan tingkat kelas</p>
             </div>
             @if($tahunAktif)
-                <button data-modal-open="modal-tambah" class="btn-primary">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Tambah Tarif
-                </button>
+                <div class="flex gap-2">
+                    @if($tarifSpp->isEmpty() && $daftarTahunAjaran->isNotEmpty())
+                        <button data-modal-open="modal-extract" class="btn-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Extract dari Tahun Sebelumnya
+                        </button>
+                    @endif
+                    <button data-modal-open="modal-tambah" class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Tambah Tarif
+                    </button>
+                </div>
             @endif
         </div>
 
@@ -154,6 +164,50 @@
             </form>
         </div>
     </div>
+
+    {{-- Modal Extract --}}
+    @if($tahunAktif && $tarifSpp->isEmpty() && $tahunSebelumnya)
+    <div id="modal-extract" class="modal-backdrop hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="font-semibold text-gray-900">Konfirmasi Extract</h3>
+                <button data-modal-close="modal-extract" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('master.tarif-spp.extract') }}">
+                @csrf
+                <div class="modal-body space-y-4">
+                    <p class="text-sm text-gray-600">Apakah Anda yakin ingin melakukan extract tarif SPP dari tahun ajaran <strong>{{ $tahunSebelumnya->nama }}</strong>? Berikut data yang akan diekstrak:</p>
+                    <div class="table-wrapper text-sm">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Kelas</th>
+                                    <th class="text-right">Tarif</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($tarifSppSebelumnya as $t)
+                                    <tr>
+                                        <td>{{ $t->kelas }}</td>
+                                        <td class="text-right">{{ format_rupiah($t->tarif) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" data-modal-close="modal-extract" class="btn-secondary">Batal</button>
+                    <button type="submit" class="btn-primary">Yakin, Extract</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
     @endif
 
 </x-layouts.app>
