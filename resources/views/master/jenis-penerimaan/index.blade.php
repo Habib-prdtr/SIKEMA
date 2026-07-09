@@ -7,7 +7,7 @@
                 <h1 class="text-2xl font-bold text-gray-900">Jenis Penerimaan (Iuran)</h1>
                 <p class="text-gray-500 text-sm mt-0.5">Kelola jenis iuran selain SPP</p>
             </div>
-            @if($tahunAktif)
+            @if($tahunFilter)
                 <button data-modal-open="modal-tambah" class="btn-primary">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -17,12 +17,33 @@
             @endif
         </div>
 
-        @if(!$tahunAktif)
+        {{-- Filter --}}
+        <form method="GET" action="{{ route('master.jenis-penerimaan.index') }}" class="card p-4">
+            <div class="flex items-end gap-3">
+                <div class="w-64">
+                    <label class="form-label text-xs font-semibold text-gray-500 mb-1">Pilih Tahun Ajaran</label>
+                    <select name="tahun_ajaran_id" class="form-select" onchange="this.form.submit()">
+                        @foreach($tahunList as $ta)
+                            <option value="{{ $ta->id }}" {{ $selectedTahunId == $ta->id ? 'selected' : '' }}>
+                                {{ $ta->nama }} {{ $ta->is_aktif ? '(Aktif)' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @if($selectedTahunId != $tahunAktif?->id)
+                    <a href="{{ route('master.jenis-penerimaan.index') }}" class="btn-secondary">
+                        Reset ke Tahun Aktif
+                    </a>
+                @endif
+            </div>
+        </form>
+
+        @if(!$tahunFilter)
             <div class="alert-warning">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <p>Aktifkan tahun ajaran terlebih dahulu untuk menambah jenis penerimaan.</p>
+                <p>Aktifkan atau pilih tahun ajaran terlebih dahulu untuk mengelola jenis penerimaan.</p>
             </div>
         @endif
 
@@ -43,6 +64,7 @@
                                 <th>Urutan</th>
                                 <th>Nama Iuran</th>
                                 <th class="text-right">Tarif</th>
+                                <th class="text-right">Total Terkumpul</th>
                                 <th class="text-center">Status</th>
                                 <th>Keterangan</th>
                                 <th class="text-center">Aksi</th>
@@ -55,6 +77,16 @@
                                     <td class="font-medium text-gray-900">{{ $jp->nama }}</td>
                                     <td class="text-right font-semibold text-emerald-700">
                                         {{ format_rupiah($jp->tarif) }}
+                                    </td>
+                                    <td class="text-right">
+                                        <a href="{{ route('master.jenis-penerimaan.pembayar', $jp) }}" 
+                                           class="inline-flex items-center gap-1 font-bold text-emerald-700 hover:text-emerald-800 hover:underline cursor-pointer"
+                                           title="Lihat rincian pembayar">
+                                            <span>{{ format_rupiah($jp->total_terkumpul ?? 0) }}</span>
+                                            <svg class="w-3.5 h-3.5 opacity-60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                            </svg>
+                                        </a>
                                     </td>
                                     <td class="text-center">
                                         @if($jp->is_aktif)
@@ -145,7 +177,7 @@
     </div>
 
     {{-- Modal Tambah --}}
-    @if($tahunAktif)
+    @if($tahunFilter)
     <div id="modal-tambah" class="modal-backdrop hidden">
         <div class="modal-box">
             <div class="modal-header">
@@ -158,7 +190,7 @@
             </div>
             <form method="POST" action="{{ route('master.jenis-penerimaan.store') }}">
                 @csrf
-                <input type="hidden" name="tahun_ajaran_id" value="{{ $tahunAktif->id }}">
+                <input type="hidden" name="tahun_ajaran_id" value="{{ $tahunFilter->id }}">
                 <div class="modal-body space-y-4">
                     <div>
                         <label class="form-label">Nama Iuran <span class="text-red-500">*</span></label>

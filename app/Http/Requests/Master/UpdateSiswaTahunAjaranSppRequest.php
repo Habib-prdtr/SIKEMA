@@ -21,6 +21,8 @@ class UpdateSiswaTahunAjaranSppRequest extends FormRequest
     {
         return [
             'master_tarif_spp_id' => ['required', 'exists:master_tarif_spp,id'],
+            'dispensasi_id' => ['nullable', 'exists:dispensasi,id'],
+            'durasi_dispensasi' => ['nullable', 'integer', 'min:1', 'max:12'],
         ];
     }
 

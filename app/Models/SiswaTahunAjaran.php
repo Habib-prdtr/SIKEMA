@@ -14,11 +14,15 @@ class SiswaTahunAjaran extends Model
         'siswa_id',
         'tahun_ajaran_id',
         'tarif_spp',
+        'dispensasi_id',
+        'durasi_dispensasi',
         'tunggakan_awal',
     ];
 
     protected $casts = [
         'tarif_spp' => 'integer',
+        'dispensasi_id' => 'integer',
+        'durasi_dispensasi' => 'integer',
         'tunggakan_awal' => 'integer',
         'created_at' => 'datetime',
     ];
@@ -26,6 +30,11 @@ class SiswaTahunAjaran extends Model
     // =========================================================
     // Relasi
     // =========================================================
+
+    public function dispensasi()
+    {
+        return $this->belongsTo(Dispensasi::class);
+    }
 
     public function siswa()
     {

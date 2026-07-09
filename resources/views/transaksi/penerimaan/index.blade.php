@@ -2,21 +2,55 @@
     <x-slot:pageTitle>Penerimaan / Riwayat</x-slot:pageTitle>
 
     <div class="space-y-5">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between no-print">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Riwayat Penerimaan</h1>
-                <p class="text-gray-500 text-sm mt-0.5">Daftar semua transaksi penerimaan</p>
+                <h1 class="text-2xl font-bold text-gray-900">Riwayat & Laporan Penerimaan</h1>
+                <p class="text-gray-500 text-sm mt-0.5">Rekap dan daftar transaksi penerimaan</p>
             </div>
-            <a href="{{ route('penerimaan.catat') }}" class="btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Catat Penerimaan
-            </a>
+            <div class="flex gap-2">
+                <a href="{{ route('laporan.penerimaan.export', request()->all()) }}" class="btn-secondary">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export Excel
+                </a>
+                <button id="btn-print" class="btn-secondary">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    Cetak / PDF
+                </button>
+                <a href="{{ route('penerimaan.catat') }}" class="btn-primary">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Catat Penerimaan
+                </a>
+            </div>
+        </div>
+
+        {{-- Summary Cards --}}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="card p-5 border-l-4 border-l-emerald-500">
+                <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Penerimaan</p>
+                <p class="text-2xl font-bold text-emerald-700 mt-1">{{ format_rupiah($totalPenerimaan) }}</p>
+                <p class="text-xs text-gray-400 mt-1">Periode terpilih</p>
+            </div>
+            <div class="card p-5 border-l-4 border-l-blue-500">
+                <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total SPP</p>
+                <p class="text-2xl font-bold text-blue-700 mt-1">{{ format_rupiah($totalSpp) }}</p>
+                <p class="text-xs text-gray-400 mt-1">Pembayaran SPP</p>
+            </div>
+            <div class="card p-5 border-l-4 border-l-purple-500">
+                <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Iuran & Tunggakan</p>
+                <p class="text-2xl font-bold text-purple-700 mt-1">{{ format_rupiah($totalIuran + $totalTunggakan) }}</p>
+                <p class="text-xs text-gray-400 mt-1">Pembayaran Iuran & Tunggakan</p>
+            </div>
         </div>
 
         {{-- Filter --}}
-        <form method="GET" action="{{ route('penerimaan.index') }}" class="card p-4">
+        <form method="GET" action="{{ route('penerimaan.index') }}" class="card p-4 no-print">
             <div class="flex flex-wrap gap-3">
                 <div class="flex-1 min-w-40">
                     <input type="text" name="cari" value="{{ request('cari') }}"
@@ -64,7 +98,7 @@
                                 <th>Tanggal</th>
                                 <th>Operator</th>
                                 <th class="text-right">Total Bayar</th>
-                                <th class="text-center">Aksi</th>
+                                <th class="text-center no-print">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,7 +112,7 @@
                                     <td class="text-right font-semibold text-emerald-700">
                                         {{ format_rupiah($trx->total_bayar) }}
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center no-print">
                                         <a href="{{ route('penerimaan.show', $trx) }}"
                                             class="btn-secondary btn-sm">Detail / Cetak</a>
                                     </td>
@@ -89,19 +123,25 @@
                 </div>
 
                 {{-- Footer total --}}
-                <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+                <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between no-print">
                     <p class="text-sm text-gray-500">{{ $transaksi->total() }} transaksi</p>
                     <p class="font-semibold text-emerald-700">
-                        Total: {{ format_rupiah($transaksi->sum('total_bayar')) }}
+                        Total Halaman Ini: {{ format_rupiah($transaksi->sum('total_bayar')) }}
                     </p>
                 </div>
 
                 @if($transaksi->hasPages())
-                    <div class="px-5 py-4 border-t border-gray-100">
+                    <div class="px-5 py-4 border-t border-gray-100 no-print">
                         {{ $transaksi->withQueryString()->links() }}
                     </div>
                 @endif
             @endif
         </div>
     </div>
+
+    <script>
+        document.getElementById('btn-print')?.addEventListener('click', function() {
+            window.print();
+        });
+    </script>
 </x-layouts.app>

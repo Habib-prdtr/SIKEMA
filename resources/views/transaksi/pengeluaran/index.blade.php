@@ -2,21 +2,98 @@
     <x-slot:pageTitle>Pengeluaran / Riwayat</x-slot:pageTitle>
 
     <div class="space-y-5">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between no-print">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Riwayat Pengeluaran</h1>
-                <p class="text-gray-500 text-sm mt-0.5">Daftar semua pengeluaran kas</p>
+                <h1 class="text-2xl font-bold text-gray-900">Riwayat & Laporan Pengeluaran</h1>
+                <p class="text-gray-500 text-sm mt-0.5">Rekap dan daftar pengeluaran kas</p>
             </div>
-            <a href="{{ route('pengeluaran.catat') }}" class="btn-primary">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Catat Pengeluaran
-            </a>
+            <div class="flex gap-2">
+                <a href="{{ route('laporan.pengeluaran.export', request()->all()) }}" class="btn-secondary">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export Excel
+                </a>
+                <button id="btn-print" class="btn-secondary">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    Cetak / PDF
+                </button>
+                <a href="{{ route('pengeluaran.catat') }}" class="btn-primary">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Catat Pengeluaran
+                </a>
+            </div>
         </div>
 
+        {{-- Summary total --}}
+        <div class="card p-5 border-l-4 border-l-red-500">
+            <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Pengeluaran</p>
+            <p class="text-3xl font-bold text-red-700 mt-1">{{ format_rupiah($totalPengeluaran) }}</p>
+            <p class="text-xs text-gray-400 mt-1">Periode terpilih</p>
+        </div>
+
+        {{-- Rekap per Pos --}}
+        @if($rekapPerPos->isNotEmpty())
+        <div class="card">
+            <div class="p-4 border-b border-gray-100">
+                <h3 class="font-semibold text-gray-900 text-base">Rekap per Pos Biaya</h3>
+            </div>
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Pos Biaya</th>
+                            <th class="text-right">Anggaran</th>
+                            <th class="text-right">Terpakai</th>
+                            <th class="text-right">Sisa</th>
+                            <th>Persentase</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($rekapPerPos as $rekap)
+                            @php
+                                $sisa  = ($rekap->anggaran ?? 0) - $rekap->total;
+                                $pct   = $rekap->anggaran > 0 ? min(100, $rekap->total / $rekap->anggaran * 100) : 0;
+                                $color = $pct >= 100 ? 'bg-red-500' : ($pct >= 75 ? 'bg-amber-500' : 'bg-emerald-500');
+                            @endphp
+                            <tr>
+                                <td class="font-medium text-gray-900">{{ $rekap->nama }}</td>
+                                <td class="text-right text-gray-500">
+                                    {{ $rekap->anggaran > 0 ? format_rupiah($rekap->anggaran) : '-' }}
+                                </td>
+                                <td class="text-right font-semibold text-red-700">
+                                    {{ format_rupiah($rekap->total) }}
+                                </td>
+                                <td class="text-right {{ $sisa < 0 ? 'text-red-600 font-bold' : 'text-gray-700' }}">
+                                    {{ $rekap->anggaran > 0 ? format_rupiah($sisa) : '-' }}
+                                </td>
+                                <td class="w-36">
+                                    @if($rekap->anggaran > 0)
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                                <div class="{{ $color }} h-2 rounded-full" style="width:{{ $pct }}%"></div>
+                                            </div>
+                                            <span class="text-xs text-gray-500 w-10 text-right">{{ number_format($pct, 0) }}%</span>
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-gray-400">-</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
         {{-- Filter --}}
-        <form method="GET" action="{{ route('pengeluaran.index') }}" class="card p-4">
+        <form method="GET" action="{{ route('pengeluaran.index') }}" class="card p-4 no-print">
             <div class="flex flex-wrap gap-3">
                 <div class="flex-1 min-w-40">
                     <select name="pos_biaya_id" class="form-select">
@@ -69,7 +146,7 @@
                                 <th>Keterangan</th>
                                 <th>Operator</th>
                                 <th class="text-right">Jumlah</th>
-                                <th class="text-center">Aksi</th>
+                                <th class="text-center no-print">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -82,7 +159,7 @@
                                     <td class="text-right font-semibold text-red-700">
                                         {{ format_rupiah($p->jumlah) }}
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center no-print">
                                         <a href="{{ route('pengeluaran.show', $p) }}"
                                             class="btn-secondary btn-sm">Detail</a>
                                     </td>
@@ -92,19 +169,25 @@
                     </table>
                 </div>
 
-                <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+                <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between no-print">
                     <p class="text-sm text-gray-500">{{ $pengeluaran->total() }} data</p>
                     <p class="font-semibold text-red-700">
-                        Total: {{ format_rupiah($pengeluaran->sum('jumlah')) }}
+                        Total Halaman Ini: {{ format_rupiah($pengeluaran->sum('jumlah')) }}
                     </p>
                 </div>
 
                 @if($pengeluaran->hasPages())
-                    <div class="px-5 py-4 border-t border-gray-100">
+                    <div class="px-5 py-4 border-t border-gray-100 no-print">
                         {{ $pengeluaran->withQueryString()->links() }}
                     </div>
                 @endif
             @endif
         </div>
     </div>
+
+    <script>
+        document.getElementById('btn-print')?.addEventListener('click', function() {
+            window.print();
+        });
+    </script>
 </x-layouts.app>

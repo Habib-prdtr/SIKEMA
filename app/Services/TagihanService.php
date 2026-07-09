@@ -35,13 +35,30 @@ class TagihanService
             $bulanTahun[] = ['bulan' => $bulan, 'tahun' => $tahunAwal + 1];
         }
 
+        // Load dispensasi jika ada
+        $sta->loadMissing('dispensasi');
+        $dispensasi = $sta->dispensasi;
+        $durasiDispensasi = $sta->durasi_dispensasi ?? 0;
+
         $rows = [];
-        foreach ($bulanTahun as $bt) {
+        foreach ($bulanTahun as $index => $bt) {
+            $tagihanNominal = $sta->tarif_spp;
+
+            // Jika dalam masa durasi dispensasi, potong tagihan SPP
+            if ($dispensasi && $index < $durasiDispensasi) {
+                if ($dispensasi->tipe_potongan === 'persen') {
+                    $potongan = ($sta->tarif_spp * $dispensasi->nilai_potongan) / 100;
+                    $tagihanNominal = max(0, $sta->tarif_spp - $potongan);
+                } elseif ($dispensasi->tipe_potongan === 'nominal') {
+                    $tagihanNominal = max(0, $sta->tarif_spp - $dispensasi->nilai_potongan);
+                }
+            }
+
             $rows[] = [
                 'siswa_tahun_ajaran_id' => $sta->id,
                 'bulan' => $bt['bulan'],
                 'tahun' => $bt['tahun'],
-                'tagihan' => $sta->tarif_spp,
+                'tagihan' => $tagihanNominal,
                 'terbayar' => 0,
                 'status' => TagihanSpp::STATUS_BELUM,
                 'updated_at' => null,

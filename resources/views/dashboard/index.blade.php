@@ -69,7 +69,8 @@
                 <div>
                     <p class="font-medium">Terdapat Tagihan SPP Terlewat (Menunggak)</p>
                     <p class="text-sm mt-0.5">
-                        <strong>{{ $sppTerlewatBelumLunas }} siswa</strong> memiliki satu atau lebih tagihan SPP bulan lalu yang sudah terlewat dan belum dilunasi.
+                        <strong>{{ $sppTerlewatBelumLunas }} siswa</strong> memiliki satu atau lebih tagihan SPP bulan
+                        lalu yang sudah terlewat dan belum dilunasi.
                     </p>
                 </div>
             </div>
@@ -79,19 +80,24 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
             {{-- Left Column: Quick Student Search --}}
             <div class="md:col-span-2 space-y-4">
-                @if($tahunAktif)
+                @if ($tahunAktif)
                     <div class="card p-5 bg-white rounded-xl shadow-sm border border-gray-200 space-y-4">
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                        <div
+                            class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
                             <div class="space-y-1">
                                 <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
                                     Pencatatan Penerimaan Cepat
                                 </h3>
-                                <p class="text-gray-500 text-xs">Cari nama, kelas, atau nomor induk siswa untuk langsung mencatat pembayaran.</p>
+                                <p class="text-gray-500 text-xs">Cari nama, kelas, atau nomor induk siswa untuk langsung
+                                    mencatat pembayaran.</p>
                             </div>
-                            <form method="GET" action="{{ route('dashboard') }}" class="flex gap-2 w-full md:max-w-md">
+                            <form method="GET" action="{{ route('dashboard') }}"
+                                class="flex gap-2 w-full md:max-w-md">
                                 <div class="relative flex-1">
                                     <span class="absolute left-3 inset-y-0 flex items-center text-gray-400">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,13 +105,14 @@
                                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                         </svg>
                                     </span>
-                                    <input type="text" name="cari" value="{{ request('cari') }}" class="form-input pl-9 w-full text-gray-900"
+                                    <input type="text" name="cari" value="{{ request('cari') }}"
+                                        class="form-input pl-9 w-full text-gray-900"
                                         placeholder="Ketik nama, no. induk, atau kelas...">
                                 </div>
                                 <button type="submit" class="btn-primary shrink-0">
                                     Cari
                                 </button>
-                                @if(request('cari'))
+                                @if (request('cari'))
                                     <a href="{{ route('dashboard') }}" class="btn-secondary flex items-center">
                                         Reset
                                     </a>
@@ -113,7 +120,7 @@
                             </form>
                         </div>
 
-                        @if($daftarSiswa && $daftarSiswa->isNotEmpty())
+                        @if ($daftarSiswa && $daftarSiswa->isNotEmpty())
                             <div class="table-wrapper">
                                 <table class="table">
                                     <thead>
@@ -125,16 +132,17 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($daftarSiswa as $s)
+                                        @foreach ($daftarSiswa as $s)
                                             @php
                                                 $isTerpilih = isset($siswa) && $siswa->id === $s->id;
                                             @endphp
                                             <tr class="{{ $isTerpilih ? 'bg-emerald-50/50' : '' }}">
-                                                <td class="font-mono text-xs font-medium text-gray-600">{{ $s->siswa->no_induk }}</td>
+                                                <td class="font-mono text-xs font-medium text-gray-600">
+                                                    {{ $s->siswa->no_induk }}</td>
                                                 <td class="font-medium text-gray-900">
                                                     <div class="flex items-center gap-2">
                                                         <span>{{ $s->siswa->nama }}</span>
-                                                        @if($isTerpilih)
+                                                        @if ($isTerpilih)
                                                             <span class="badge-green text-xs">
                                                                 Terpilih
                                                             </span>
@@ -143,8 +151,10 @@
                                                 </td>
                                                 <td>{{ $s->siswa->kelas }}</td>
                                                 <td class="text-center">
-                                                    @if($isTerpilih)
-                                                        <button type="button" class="btn-secondary btn-sm opacity-60 cursor-not-allowed w-full" disabled>
+                                                    @if ($isTerpilih)
+                                                        <button type="button"
+                                                            class="btn-secondary btn-sm opacity-60 cursor-not-allowed w-full"
+                                                            disabled>
                                                             Terpilih
                                                         </button>
                                                     @else
@@ -161,20 +171,23 @@
                             </div>
 
                             {{-- Pagination --}}
-                            @if($daftarSiswa->hasPages())
+                            @if ($daftarSiswa->hasPages())
                                 <div class="pt-2">
                                     {{ $daftarSiswa->links() }}
                                 </div>
                             @endif
                         @else
-                            <div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div
+                                class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                                 <p class="text-sm font-medium">Tidak ada data siswa ditemukan.</p>
-                                @if($tahunAktif)
-                                    <p class="text-xs text-gray-400 mt-1">Pastikan siswa sudah diaktifkan di Tahun Ajaran {{ $tahunAktif->nama }}.</p>
+                                @if ($tahunAktif)
+                                    <p class="text-xs text-gray-400 mt-1">Pastikan siswa sudah diaktifkan di Tahun
+                                        Ajaran {{ $tahunAktif->nama }}.</p>
                                 @endif
                             </div>
                         @endif
@@ -182,237 +195,287 @@
                 @endif
 
                 @isset($siswa)
-                {{-- STEP 2: Info Siswa --}}
-                <div class="card animate-pulse-once">
-                    <div class="card-header">
-                        <h3 class="font-semibold text-gray-900 flex items-center gap-2">
-                            <span class="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                            Data Siswa
-                        </h3>
-                        <span class="badge-green">Ditemukan</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                            <div class="flex items-start gap-4">
-                                <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0">
-                                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                    </svg>
-                                </div>
-                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm flex-1">
-                                    <div><p class="text-gray-500">Nama</p><p class="font-semibold text-gray-900">{{ $siswa->siswa->nama }}</p></div>
-                                    <div><p class="text-gray-500">No. Induk</p><p class="font-mono font-semibold">{{ $siswa->siswa->no_induk }}</p></div>
-                                    <div><p class="text-gray-500">Kelas</p><p class="font-semibold">{{ $siswa->siswa->kelas }}</p></div>
-                                    <div><p class="text-gray-500">Tahun Ajaran</p><p class="font-semibold">{{ $siswa->tahunAjaran->nama }}</p></div>
-                                    <div><p class="text-gray-500">Tarif SPP</p><p class="font-semibold text-emerald-700">{{ format_rupiah($siswa->tarif_spp) }}</p></div>
-                                    @if($siswa->tunggakan_awal > 0)
+                    {{-- STEP 2: Info Siswa --}}
+                    <div class="card animate-pulse-once">
+                        <div class="card-header">
+                            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                                <span
+                                    class="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                                Data Siswa
+                            </h3>
+                            <span class="badge-green">Ditemukan</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+                                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm flex-1">
                                         <div>
-                                            <p class="text-gray-500">Sisa Tunggakan</p>
-                                            <p class="font-semibold text-amber-700">{{ format_rupiah($sisaTunggakan) }}</p>
+                                            <p class="text-gray-500">Nama</p>
+                                            <p class="font-semibold text-gray-900">{{ $siswa->siswa->nama }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">No. Induk</p>
+                                            <p class="font-mono font-semibold">{{ $siswa->siswa->no_induk }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">Kelas</p>
+                                            <p class="font-semibold">{{ $siswa->siswa->kelas }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">Tahun Ajaran</p>
+                                            <p class="font-semibold">{{ $siswa->tahunAjaran->nama }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">Tarif SPP</p>
+                                            <p class="font-semibold text-emerald-700">
+                                                {{ format_rupiah($siswa->tarif_spp) }}</p>
+                                        </div>
+                                        @if ($siswa->tunggakan_awal > 0)
+                                            <div>
+                                                <p class="text-gray-500">Sisa Tunggakan</p>
+                                                <p class="font-semibold text-amber-700">
+                                                    {{ format_rupiah($sisaTunggakan) }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if ($siswa->tunggakan_awal > 0 && $sisaTunggakan > 0)
+                                <div class="alert-warning mt-4">
+                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p>Terdapat <strong>tunggakan tahun sebelumnya</strong> sebesar
+                                        <strong>{{ format_rupiah($sisaTunggakan) }}</strong>.
+                                    </p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- STEP 3: Form Pembayaran --}}
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                                <span
+                                    class="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                                Pilih Pembayaran
+                            </h3>
+                        </div>
+                        <form id="form-penerimaan" method="POST" action="{{ route('penerimaan.store') }}">
+                            @csrf
+                            <input type="hidden" name="siswa_tahun_ajaran_id" value="{{ $siswa->id }}">
+                            <input type="hidden" id="total-bayar-input" name="total_bayar" value="0">
+
+                            <div class="card-body space-y-5">
+                                @php
+                                    $defaultTab = 'spp';
+                                @endphp
+
+                                {{-- Tab Navigation (Boxed Segmented Selector) --}}
+                                <div class="grid grid-cols-2 gap-3 mb-2">
+                                    <button type="button" onclick="switchTab('spp')" id="tab-btn-spp"
+                                        class="tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1
+                                    border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50">
+                                        <span class="block text-base">SPP Bulanan</span>
+                                        <span class="tab-desc block text-xs font-normal text-gray-500 mt-0.5">Daftar SPP
+                                            per bulan</span>
+                                    </button>
+                                    <button type="button" onclick="switchTab('iuran')" id="tab-btn-iuran"
+                                        class="tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1
+                                    border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50">
+                                        <span class="block text-base">Iuran / Lainnya</span>
+                                        <span class="tab-desc block text-xs font-normal text-gray-500 mt-0.5">Iuran &
+                                            tunggakan lain</span>
+                                    </button>
+                                </div>
+
+                                {{-- SPP Section --}}
+                                <div id="section-spp" class="space-y-3 hidden">
+                                    @if ($tagihanSpp->isNotEmpty())
+                                        <div class="space-y-2">
+                                            @foreach ($tagihanSpp as $spp)
+                                                @php
+                                                    $lunas = $spp->status === 'lunas';
+                                                    $nama = \Carbon\Carbon::createFromDate($spp->tahun, $spp->bulan, 1)
+                                                        ->locale('id')
+                                                        ->isoFormat('MMMM YYYY');
+                                                    $nominal = $spp->status === 'lunas' ? $spp->tagihan : $spp->sisa();
+
+                                                    // Check if the SPP month has passed (is in the past relative to current year and month)
+                                                    $isTerlewat =
+                                                        !$lunas &&
+                                                        ($spp->tahun < now()->year ||
+                                                            ($spp->tahun == now()->year && $spp->bulan < now()->month));
+                                                @endphp
+                                                <label
+                                                    class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
+                                                {{ $lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : ($isTerlewat ? 'border-red-200 bg-red-50/30 hover:border-red-400 hover:bg-red-50' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50') }}">
+                                                    <div class="flex items-center gap-3">
+                                                        <input type="checkbox" name="items[spp][]"
+                                                            value="{{ $spp->id }}"
+                                                            data-tagihan-nominal="{{ $nominal }}"
+                                                            {{ $lunas ? 'disabled' : '' }}
+                                                            class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                                        <div>
+                                                            <p class="text-sm font-medium text-gray-900">SPP
+                                                                {{ $nama }}</p>
+                                                            <p
+                                                                class="text-xs {{ $isTerlewat ? 'text-red-600 font-medium' : 'text-gray-500' }}">
+                                                                {{ $spp->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : ($isTerlewat ? 'Terlewat / Belum dibayar' : 'Belum dibayar')) }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <p
+                                                            class="font-semibold text-sm {{ $isTerlewat ? 'text-red-700' : '' }}">
+                                                            {{ format_rupiah($nominal) }}</p>
+                                                        @if ($lunas)
+                                                            <span class="badge-green text-xs">Lunas</span>
+                                                        @elseif($isTerlewat)
+                                                            <span class="badge-red text-xs">Terlewat</span>
+                                                        @else
+                                                            <span class="badge-yellow text-xs">Belum Bayar</span>
+                                                        @endif
+                                                    </div>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div
+                                            class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                            <p class="text-sm font-medium">Tidak ada tagihan SPP untuk siswa ini.</p>
                                         </div>
                                     @endif
                                 </div>
-                            </div>
-                        </div>
 
-                        @if($siswa->tunggakan_awal > 0 && $sisaTunggakan > 0)
-                            <div class="alert-warning mt-4">
-                                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <p>Terdapat <strong>tunggakan tahun sebelumnya</strong> sebesar
-                                    <strong>{{ format_rupiah($sisaTunggakan) }}</strong>.</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- STEP 3: Form Pembayaran --}}
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="font-semibold text-gray-900 flex items-center gap-2">
-                            <span class="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                            Pilih Pembayaran
-                        </h3>
-                    </div>
-                    <form id="form-penerimaan" method="POST" action="{{ route('penerimaan.store') }}">
-                        @csrf
-                        <input type="hidden" name="siswa_tahun_ajaran_id" value="{{ $siswa->id }}">
-                        <input type="hidden" id="total-bayar-input" name="total_bayar" value="0">
-
-                        <div class="card-body space-y-5">
-                            @php
-                                $defaultTab = 'spp';
-                            @endphp
-
-                            {{-- Tab Navigation (Boxed Segmented Selector) --}}
-                            <div class="grid grid-cols-2 gap-3 mb-2">
-                                <button type="button" onclick="switchTab('spp')" id="tab-btn-spp"
-                                    class="tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1
-                                    border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50">
-                                    <span class="block text-base">SPP Bulanan</span>
-                                    <span class="tab-desc block text-xs font-normal text-gray-500 mt-0.5">Daftar SPP per bulan</span>
-                                </button>
-                                <button type="button" onclick="switchTab('iuran')" id="tab-btn-iuran"
-                                    class="tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1
-                                    border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50">
-                                    <span class="block text-base">Iuran / Lainnya</span>
-                                    <span class="tab-desc block text-xs font-normal text-gray-500 mt-0.5">Iuran & tunggakan lain</span>
-                                </button>
-                            </div>
-
-                            {{-- SPP Section --}}
-                            <div id="section-spp" class="space-y-3 hidden">
-                                @if($tagihanSpp->isNotEmpty())
-                                    <div class="space-y-2">
-                                        @foreach($tagihanSpp as $spp)
-                                            @php
-                                                $lunas   = $spp->status === 'lunas';
-                                                $nama    = \Carbon\Carbon::createFromDate($spp->tahun, $spp->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
-                                                $nominal = $spp->status === 'lunas' ? $spp->tagihan : $spp->sisa();
-                                                
-                                                // Check if the SPP month has passed (is in the past relative to current year and month)
-                                                $isTerlewat = !$lunas && (($spp->tahun < now()->year) || ($spp->tahun == now()->year && $spp->bulan < now()->month));
-                                            @endphp
-                                            <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
-                                                {{ $lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : ($isTerlewat ? 'border-red-200 bg-red-50/30 hover:border-red-400 hover:bg-red-50' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50') }}">
-                                                <div class="flex items-center gap-3">
-                                                    <input type="checkbox" name="items[spp][]" value="{{ $spp->id }}"
-                                                        data-tagihan-nominal="{{ $nominal }}"
-                                                        {{ $lunas ? 'disabled' : '' }}
-                                                        class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
-                                                    <div>
-                                                        <p class="text-sm font-medium text-gray-900">SPP {{ $nama }}</p>
-                                                        <p class="text-xs {{ $isTerlewat ? 'text-red-600 font-medium' : 'text-gray-500' }}">
-                                                            {{ $spp->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : ($isTerlewat ? 'Terlewat / Belum dibayar' : 'Belum dibayar')) }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div class="text-right">
-                                                    <p class="font-semibold text-sm {{ $isTerlewat ? 'text-red-700' : '' }}">{{ format_rupiah($nominal) }}</p>
-                                                    @if($lunas) 
-                                                        <span class="badge-green text-xs">Lunas</span> 
-                                                    @elseif($isTerlewat)
-                                                        <span class="badge-red text-xs">Terlewat</span>
-                                                    @else
-                                                        <span class="badge-yellow text-xs">Belum Bayar</span>
-                                                    @endif
-                                                </div>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                        <p class="text-sm font-medium">Tidak ada tagihan SPP untuk siswa ini.</p>
-                                    </div>
-                                @endif
-                            </div>
-
-                            {{-- Iuran & Lainnya Section --}}
-                            <div id="section-iuran" class="space-y-4 hidden">
-                                {{-- Iuran --}}
-                                @if($tagihanIuran->isNotEmpty())
-                                    <div class="space-y-2">
-                                        @foreach($tagihanIuran as $iuran)
-                                            @php
-                                                $lunas = $iuran->status === 'lunas';
-                                                $nominal = $lunas ? $iuran->tagihan : $iuran->sisa();
-                                            @endphp
-                                            <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
+                                {{-- Iuran & Lainnya Section --}}
+                                <div id="section-iuran" class="space-y-4 hidden">
+                                    {{-- Iuran --}}
+                                    @if ($tagihanIuran->isNotEmpty())
+                                        <div class="space-y-2">
+                                            @foreach ($tagihanIuran as $iuran)
+                                                @php
+                                                    $lunas = $iuran->status === 'lunas';
+                                                    $nominal = $lunas ? $iuran->tagihan : $iuran->sisa();
+                                                @endphp
+                                                <label
+                                                    class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
                                                 {{ $lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50' }}">
-                                                <div class="flex items-center gap-3">
-                                                    <input type="checkbox" name="items[iuran][]" value="{{ $iuran->id }}"
-                                                        data-tagihan-nominal="{{ $nominal }}"
-                                                        {{ $lunas ? 'disabled' : '' }}
-                                                        class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
-                                                    <label class="flex-1 cursor-pointer">
-                                                        <span class="text-sm font-medium text-gray-900 block">{{ $iuran->jenisPenerimaan->nama }}</span>
-                                                        <span class="text-xs text-gray-500 block">
-                                                            {{ $iuran->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : 'Belum dibayar') }}
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="text-right">
-                                                    <p class="font-semibold text-sm">{{ format_rupiah($nominal) }}</p>
-                                                    @if($lunas) <span class="badge-green text-xs">Lunas</span> @endif
-                                                </div>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                @endif
+                                                    <div class="flex items-center gap-3">
+                                                        <input type="checkbox" name="items[iuran][]"
+                                                            value="{{ $iuran->id }}"
+                                                            data-tagihan-nominal="{{ $nominal }}"
+                                                            {{ $lunas ? 'disabled' : '' }}
+                                                            class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                                        <label class="flex-1 cursor-pointer">
+                                                            <span
+                                                                class="text-sm font-medium text-gray-900 block">{{ $iuran->jenisPenerimaan->nama }}</span>
+                                                            <span class="text-xs text-gray-500 block">
+                                                                {{ $iuran->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : 'Belum dibayar') }}
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                    <div class="text-right">
+                                                        <p class="font-semibold text-sm">{{ format_rupiah($nominal) }}</p>
+                                                        @if ($lunas)
+                                                            <span class="badge-green text-xs">Lunas</span>
+                                                        @endif
+                                                    </div>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    @endif
 
-                                {{-- Tunggakan --}}
-                                @if($sisaTunggakan > 0)
-                                    <div class="p-3 rounded-lg border border-amber-200 bg-amber-50 flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <input type="checkbox" name="items[tunggakan]" value="1"
-                                                data-tagihan-nominal="{{ $sisaTunggakan }}"
-                                                class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                    {{-- Tunggakan --}}
+                                    @if ($sisaTunggakan > 0)
+                                        <div
+                                            class="p-3 rounded-lg border border-amber-200 bg-amber-50 flex items-center justify-between">
+                                            <div class="flex items-center gap-3">
+                                                <input type="checkbox" name="items[tunggakan]" value="1"
+                                                    data-tagihan-nominal="{{ $sisaTunggakan }}"
+                                                    class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">Cicil/Lunasi Tunggakan</p>
+                                                    <p class="text-xs text-amber-700">Sisa:
+                                                        {{ format_rupiah($sisaTunggakan) }}</p>
+                                                </div>
+                                            </div>
                                             <div>
-                                                <p class="text-sm font-medium text-gray-900">Cicil/Lunasi Tunggakan</p>
-                                                <p class="text-xs text-amber-700">Sisa: {{ format_rupiah($sisaTunggakan) }}</p>
+                                                <input type="number" name="nominal_tunggakan"
+                                                    value="{{ $sisaTunggakan }}"
+                                                    class="form-input w-36 text-right text-sm" min="1000"
+                                                    max="{{ $sisaTunggakan }}" step="1000"
+                                                    placeholder="Nominal cicil">
                                             </div>
                                         </div>
+                                    @endif
+
+                                    {{-- Jika Keduanya Kosong --}}
+                                    @if ($tagihanIuran->isEmpty() && $sisaTunggakan == 0)
+                                        <div
+                                            class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                            <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <p class="text-sm font-medium">Tidak ada tagihan iuran atau tunggakan.</p>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                {{-- Element dummy untuk mencegah error JS --}}
+                                <div id="section-tunggakan" class="hidden"></div>
+
+                                {{-- Total, Info, & Catatan (Hidden on load) --}}
+                                <div id="section-checkout" class="space-y-5 hidden">
+                                    <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
                                         <div>
-                                            <input type="number" name="nominal_tunggakan" value="{{ $sisaTunggakan }}"
-                                                class="form-input w-36 text-right text-sm" min="1000" max="{{ $sisaTunggakan }}"
-                                                step="1000" placeholder="Nominal cicil">
+                                            <p class="text-sm text-gray-500">Total Pembayaran</p>
+                                            <p id="total-bayar-display" class="text-2xl font-bold text-emerald-700">Rp 0
+                                            </p>
+                                        </div>
+                                        <div class="text-right text-xs text-gray-400">
+                                            <p>Tanggal: {{ now()->format('d/m/Y') }}</p>
+                                            <p>Operator: {{ auth()->user()->name }}</p>
                                         </div>
                                     </div>
-                                @endif
 
-                                {{-- Jika Keduanya Kosong --}}
-                                @if($tagihanIuran->isEmpty() && $sisaTunggakan == 0)
-                                    <div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                        <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                        <p class="text-sm font-medium">Tidak ada tagihan iuran atau tunggakan.</p>
-                                    </div>
-                                @endif
-                            </div>
-
-                            {{-- Element dummy untuk mencegah error JS --}}
-                            <div id="section-tunggakan" class="hidden"></div>
-
-                            {{-- Total, Info, & Catatan (Hidden on load) --}}
-                            <div id="section-checkout" class="space-y-5 hidden">
-                                <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+                                    {{-- Catatan --}}
                                     <div>
-                                        <p class="text-sm text-gray-500">Total Pembayaran</p>
-                                        <p id="total-bayar-display" class="text-2xl font-bold text-emerald-700">Rp 0</p>
+                                        <label class="form-label">Catatan (opsional)</label>
+                                        <textarea name="catatan" rows="2" class="form-textarea" placeholder="Catatan tambahan...">{{ old('catatan') }}</textarea>
                                     </div>
-                                    <div class="text-right text-xs text-gray-400">
-                                        <p>Tanggal: {{ now()->format('d/m/Y') }}</p>
-                                        <p>Operator: {{ auth()->user()->name }}</p>
-                                    </div>
-                                </div>
-
-                                {{-- Catatan --}}
-                                <div>
-                                    <label class="form-label">Catatan (opsional)</label>
-                                    <textarea name="catatan" rows="2" class="form-textarea"
-                                        placeholder="Catatan tambahan...">{{ old('catatan') }}</textarea>
                                 </div>
                             </div>
-                        </div>
 
-                        {{-- Action Buttons Footer (Hidden on load) --}}
-                        <div id="section-actions" class="px-6 py-4 border-t border-gray-100 flex items-center gap-3 hidden">
-                            <button type="submit" class="btn-primary"
-                                onclick="return document.getElementById('total-bayar-input').value > 0 || (alert('Pilih minimal 1 item pembayaran'), false)">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                Proses Pembayaran
-                            </button>
-                            <a href="{{ route('dashboard') }}" class="btn-secondary">Reset</a>
-                        </div>
-                    </form>
-                </div>
+                            {{-- Action Buttons Footer (Hidden on load) --}}
+                            <div id="section-actions"
+                                class="px-6 py-4 border-t border-gray-100 flex items-center gap-3 hidden">
+                                <button type="submit" class="btn-primary"
+                                    onclick="return document.getElementById('total-bayar-input').value > 0 || (alert('Pilih minimal 1 item pembayaran'), false)">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Proses Pembayaran
+                                </button>
+                                <a href="{{ route('dashboard') }}" class="btn-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
                 @endisset
             </div>
 
@@ -427,7 +490,8 @@
                             <p class="text-xs text-gray-400 mt-1">TA {{ $tahunAktif?->nama ?? '-' }}</p>
                         </div>
                         <div class="w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                             </svg>
@@ -439,12 +503,16 @@
                 <div class="card p-5">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Penerimaan Bulan Ini</p>
-                            <p class="text-2xl font-bold text-gray-900 mt-1">{{ format_rupiah($totalPenerimaanBulanIni) }}</p>
-                            <p class="text-xs text-gray-400 mt-1">{{ now()->locale('id')->isoFormat('MMMM YYYY') }}</p>
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Penerimaan Bulan Ini
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900 mt-1">
+                                {{ format_rupiah($totalPenerimaanBulanIni) }}</p>
+                            <p class="text-xs text-gray-400 mt-1">{{ now()->locale('id')->isoFormat('MMMM YYYY') }}
+                            </p>
                         </div>
                         <div class="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
-                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
@@ -456,12 +524,16 @@
                 <div class="card p-5">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Pengeluaran Bulan Ini</p>
-                            <p class="text-2xl font-bold text-gray-900 mt-1">{{ format_rupiah($totalPengeluaranBulanIni) }}</p>
-                            <p class="text-xs text-gray-400 mt-1">{{ now()->locale('id')->isoFormat('MMMM YYYY') }}</p>
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Pengeluaran Bulan Ini
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900 mt-1">
+                                {{ format_rupiah($totalPengeluaranBulanIni) }}</p>
+                            <p class="text-xs text-gray-400 mt-1">{{ now()->locale('id')->isoFormat('MMMM YYYY') }}
+                            </p>
                         </div>
                         <div class="w-11 h-11 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M13 17H5m0 0V9m0 8l8-8 4 4 6-6" />
                             </svg>
@@ -478,7 +550,8 @@
                             <p class="text-xs text-gray-400 mt-1">Terdaftar tahun ini</p>
                         </div>
                         <div class="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
@@ -682,12 +755,14 @@
             const iuranBtn = document.getElementById('tab-btn-iuran');
 
             if (sppBtn) {
-                sppBtn.className = "tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1 border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50";
+                sppBtn.className =
+                    "tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1 border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50";
                 const desc = sppBtn.querySelector('.tab-desc');
                 if (desc) desc.className = "tab-desc block text-xs font-normal text-gray-500 mt-0.5";
             }
             if (iuranBtn) {
-                iuranBtn.className = "tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1 border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50";
+                iuranBtn.className =
+                    "tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1 border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50";
                 const desc = iuranBtn.querySelector('.tab-desc');
                 if (desc) desc.className = "tab-desc block text-xs font-normal text-gray-500 mt-0.5";
             }
@@ -695,7 +770,8 @@
             // Set active tab button style
             const activeBtn = document.getElementById('tab-btn-' + tabName);
             if (activeBtn) {
-                activeBtn.className = "tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none border-emerald-600 bg-emerald-50 text-emerald-800 font-semibold shadow-sm flex-1";
+                activeBtn.className =
+                    "tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none border-emerald-600 bg-emerald-50 text-emerald-800 font-semibold shadow-sm flex-1";
                 const desc = activeBtn.querySelector('.tab-desc');
                 if (desc) desc.className = "tab-desc block text-xs font-normal text-emerald-600 mt-0.5";
             }

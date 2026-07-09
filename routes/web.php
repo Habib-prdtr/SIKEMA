@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Laporan\LaporanPenerimaanController;
 use App\Http\Controllers\Laporan\LaporanPengeluaranController;
+use App\Http\Controllers\Laporan\RekapitulasiController;
 use App\Http\Controllers\Master\DataSiswaController;
 use App\Http\Controllers\Master\JenisPenerimaanController;
 use App\Http\Controllers\Master\PosBiayaController;
@@ -82,6 +83,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [JenisPenerimaanController::class, 'store'])->name('store');
         Route::put('/{jenisPenerimaan}', [JenisPenerimaanController::class, 'update'])->name('update');
         Route::delete('/{jenisPenerimaan}', [JenisPenerimaanController::class, 'destroy'])->name('destroy');
+        Route::get('/{jenisPenerimaan}/pembayar', [JenisPenerimaanController::class, 'pembayar'])->name('pembayar');
     });
 
     // ─── Master: Pos Biaya ────────────────────────────────
@@ -97,6 +99,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [SaldoAwalController::class, 'index'])->name('index');
         Route::post('/', [SaldoAwalController::class, 'store'])->name('store');
         Route::put('/{saldoAwal}', [SaldoAwalController::class, 'update'])->name('update');
+    });
+
+    // ─── Master: Dispensasi ───────────────────────────────
+    Route::prefix('master/dispensasi')->name('master.dispensasi.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Master\DispensasiController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Master\DispensasiController::class, 'store'])->name('store');
+        Route::put('/{dispensasi}', [\App\Http\Controllers\Master\DispensasiController::class, 'update'])->name('update');
+        Route::delete('/{dispensasi}', [\App\Http\Controllers\Master\DispensasiController::class, 'destroy'])->name('destroy');
     });
 
     // ─── Transaksi: Penerimaan ────────────────────────────
@@ -121,6 +131,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/penerimaan/export', [LaporanPenerimaanController::class, 'export'])->name('penerimaan.export');
         Route::get('/pengeluaran', [LaporanPengeluaranController::class, 'index'])->name('pengeluaran');
         Route::get('/pengeluaran/export', [LaporanPengeluaranController::class, 'export'])->name('pengeluaran.export');
+        Route::get('/rekapitulasi', [RekapitulasiController::class, 'index'])->name('rekapitulasi');
+        Route::get('/rekapitulasi/export', [RekapitulasiController::class, 'export'])->name('rekapitulasi.export');
     });
 
     // ─── Pengaturan ───────────────────────────────────────
