@@ -190,6 +190,7 @@ class MasterDataService
     {
         if (!$tahunAktif) return collect();
         return JenisPenerimaan::where('tahun_ajaran_id', $tahunAktif->id)
+            ->withSum('tagihanIuran as total_terkumpul', 'terbayar')
             ->orderBy('urutan')
             ->get();
     }
@@ -303,6 +304,39 @@ class MasterDataService
     public function aktifkanTahunAjaran(\App\Models\TahunAjaran $tahunAjaran): void
     {
         \Illuminate\Support\Facades\DB::transaction(function () use ($tahunAjaran) {
+            $currentActive = \App\Models\TahunAjaran::where('is_aktif', true)->first();
+
+            // Kenaikan Kelas Otomatis ketika berganti ke tahun ajaran yang lebih baru
+            if ($currentActive && $tahunAjaran->id > $currentActive->id) {
+                $siswaList = \App\Models\Siswa::where('status', \App\Models\Siswa::STATUS_AKTIF)->get();
+                foreach ($siswaList as $s) {
+                    $currentKelas = $s->kelas;
+
+                    // 1. Kenaikan kelas berbasis angka romawi (SMP/SMA/Sederajat)
+                    if (preg_match('/^VIII(.*)/i', $currentKelas, $matches)) {
+                        $s->update(['kelas' => 'IX' . $matches[1]]);
+                    } elseif (preg_match('/^VII(.*)/i', $currentKelas, $matches)) {
+                        $s->update(['kelas' => 'VIII' . $matches[1]]);
+                    } elseif (preg_match('/^IX(.*)/i', $currentKelas, $matches)) {
+                        $s->update(['status' => 'lulus']);
+                    } elseif (preg_match('/^XI(.*)/i', $currentKelas, $matches)) {
+                        $s->update(['kelas' => 'XII' . $matches[1]]);
+                    } elseif (preg_match('/^X(.*)/i', $currentKelas, $matches)) {
+                        $s->update(['kelas' => 'XI' . $matches[1]]);
+                    } elseif (preg_match('/^XII(.*)/i', $currentKelas, $matches)) {
+                        $s->update(['status' => 'lulus']);
+                    }
+                    // 2. Kenaikan kelas berbasis angka biasa
+                    elseif (preg_match('/^7(.*)/', $currentKelas, $matches)) {
+                        $s->update(['kelas' => '8' . $matches[1]]);
+                    } elseif (preg_match('/^8(.*)/', $currentKelas, $matches)) {
+                        $s->update(['kelas' => '9' . $matches[1]]);
+                    } elseif (preg_match('/^9(.*)/', $currentKelas)) {
+                        $s->update(['status' => 'lulus']);
+                    }
+                }
+            }
+
             \App\Models\TahunAjaran::where('id', '!=', $tahunAjaran->id)
                 ->update(['is_aktif' => false]);
 
@@ -323,7 +357,11 @@ class MasterDataService
         }
 
         if ($kelas) {
-            $query->where('kelas', $kelas);
+            if (in_array($kelas, ['7', '8', '9'])) {
+                $query->where('kelas', $like, "{$kelas}%");
+            } else {
+                $query->where('kelas', $kelas);
+            }
         }
 
         return $query->with([
@@ -349,6 +387,8 @@ class MasterDataService
                 'siswa_id' => $data['siswa_id'],
                 'tahun_ajaran_id' => $data['tahun_ajaran_id'],
                 'tarif_spp' => $tarifSpp,
+                'dispensasi_id' => $data['dispensasi_id'] ?? null,
+                'durasi_dispensasi' => $data['durasi_dispensasi'] ?? null,
                 'tunggakan_awal' => $data['tunggakan_awal'] ?? 0,
             ]);
 
@@ -399,17 +439,45 @@ class MasterDataService
     {
         $masterTarif = \App\Models\MasterTarifSpp::findOrFail($data['master_tarif_spp_id']);
         $tarifSpp = $masterTarif->tarif;
+        $dispensasiId = $data['dispensasi_id'] ?? null;
+        $durasiDispensasi = $data['durasi_dispensasi'] ?? null;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($siswaTahunAjaran, $tarifSpp) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($siswaTahunAjaran, $tarifSpp, $dispensasiId, $durasiDispensasi) {
             $siswaTahunAjaran->update([
                 'tarif_spp' => $tarifSpp,
+                'dispensasi_id' => $dispensasiId,
+                'durasi_dispensasi' => $durasiDispensasi,
             ]);
 
-            $siswaTahunAjaran->tagihanSpp()
-                ->where('status', 'belum')
-                ->update([
-                    'tagihan' => $tarifSpp,
+            // Load dispensasi relation
+            $siswaTahunAjaran->loadMissing('dispensasi');
+            $dispensasi = $siswaTahunAjaran->dispensasi;
+            $durasi = $siswaTahunAjaran->durasi_dispensasi ?? 0;
+
+            // Fetch SPP bills ordered chronologically
+            $bills = $siswaTahunAjaran->tagihanSpp()->orderBy('tahun')->orderBy('bulan')->get();
+
+            foreach ($bills as $index => $bill) {
+                if ($bill->status !== 'belum') {
+                    continue; // Skip paid bills
+                }
+
+                $tagihanNominal = $tarifSpp;
+
+                // Apply dispensation discount if inside the duration
+                if ($dispensasi && $index < $durasi) {
+                    if ($dispensasi->tipe_potongan === 'persen') {
+                        $potongan = ($tarifSpp * $dispensasi->nilai_potongan) / 100;
+                        $tagihanNominal = max(0, $tarifSpp - $potongan);
+                    } elseif ($dispensasi->tipe_potongan === 'nominal') {
+                        $tagihanNominal = max(0, $tarifSpp - $dispensasi->nilai_potongan);
+                    }
+                }
+
+                $bill->update([
+                    'tagihan' => $tagihanNominal,
                 ]);
+            }
         });
     }
 
@@ -448,7 +516,56 @@ class MasterDataService
 
     public function updateTarifSpp(\App\Models\MasterTarifSpp $tarifSpp, array $data): bool
     {
-        return $tarifSpp->update($data);
+        $newTarif = $data['tarif'] ?? $tarifSpp->tarif;
+        $tarifGrade = $this->getGradeFromKelas($tarifSpp->kelas);
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($tarifSpp, $data, $newTarif, $tarifGrade) {
+            $updated = $tarifSpp->update($data);
+
+            if ($updated && $tarifGrade !== null) {
+                // Cari dan perbarui siswa yang terdaftar pada grade/kelas yang sesuai di tahun ajaran yang sama
+                $siswaTahunAjaranList = \App\Models\SiswaTahunAjaran::where('tahun_ajaran_id', $tarifSpp->tahun_ajaran_id)
+                    ->with('siswa')
+                    ->get();
+
+                foreach ($siswaTahunAjaranList as $sta) {
+                    $siswaKelas = $sta->siswa->kelas ?? null;
+                    if ($siswaKelas && $this->getGradeFromKelas($siswaKelas) === $tarifGrade) {
+                        $sta->update(['tarif_spp' => $newTarif]);
+                        
+                        $sta->tagihanSpp()
+                            ->where('status', \App\Models\TagihanSpp::STATUS_BELUM)
+                            ->update(['tagihan' => $newTarif]);
+                    }
+                }
+            }
+
+            return $updated;
+        });
+    }
+
+    private function getGradeFromKelas(?string $kelas): ?int
+    {
+        if (!$kelas) return null;
+        
+        if (preg_match('/\d+/', $kelas, $matches)) {
+            return (int) $matches[0];
+        }
+        
+        $romanMap = [
+            'viii' => 8, 'vii' => 7, 'xii' => 12, 'iii' => 3,
+            'xi' => 11, 'ix' => 9, 'vi' => 6, 'ii' => 2,
+            'iv' => 4, 'x' => 10, 'v' => 5, 'i' => 1
+        ];
+        
+        $normalized = strtolower($kelas);
+        foreach ($romanMap as $roman => $num) {
+            if (strpos($normalized, $roman) !== false) {
+                return $num;
+            }
+        }
+        
+        return null;
     }
 
     public function hapusTarifSpp(\App\Models\MasterTarifSpp $tarifSpp): bool

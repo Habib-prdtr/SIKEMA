@@ -17,6 +17,8 @@ class StoreSiswaTahunAjaranRequest extends FormRequest
             'siswa_id' => ['required', 'exists:siswa,id'],
             'tahun_ajaran_id' => ['required', 'exists:tahun_ajaran,id'],
             'master_tarif_spp_id' => ['required', 'exists:master_tarif_spp,id'],
+            'dispensasi_id' => ['nullable', 'exists:dispensasi,id'],
+            'durasi_dispensasi' => ['nullable', 'integer', 'min:1', 'max:12'],
             'tunggakan_awal' => ['nullable', 'integer', 'min:0'],
         ];
     }

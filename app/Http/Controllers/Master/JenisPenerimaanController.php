@@ -10,6 +10,7 @@ use App\Models\TahunAjaran;
 use App\Services\MasterDataService;
 use App\Services\TagihanService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class JenisPenerimaanController extends Controller
@@ -20,14 +21,25 @@ class JenisPenerimaanController extends Controller
     ) {}
 
     /**
-     * Daftar jenis penerimaan untuk tahun ajaran aktif.
+     * Daftar jenis penerimaan untuk tahun ajaran aktif atau terpilih.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $tahunList = TahunAjaran::orderByDesc('nama')->get();
         $tahunAktif = TahunAjaran::aktif();
-        $jenisPenerimaan = $this->masterDataService->getJenisPenerimaan($tahunAktif);
 
-        return view('master.jenis-penerimaan.index', compact('jenisPenerimaan', 'tahunAktif'));
+        $selectedTahunId = $request->get('tahun_ajaran_id', $tahunAktif?->id);
+        $tahunFilter = $selectedTahunId ? TahunAjaran::find($selectedTahunId) : $tahunAktif;
+
+        $jenisPenerimaan = $this->masterDataService->getJenisPenerimaan($tahunFilter);
+
+        return view('master.jenis-penerimaan.index', compact(
+            'jenisPenerimaan',
+            'tahunAktif',
+            'tahunList',
+            'selectedTahunId',
+            'tahunFilter'
+        ));
     }
 
     /**
@@ -70,5 +82,32 @@ class JenisPenerimaanController extends Controller
 
         return redirect()->route('master.jenis-penerimaan.index')
             ->with('sukses', "Jenis penerimaan '{$nama}' berhasil dihapus.");
+    }
+
+    /**
+     * Tampilkan rincian siswa yang sudah membayar jenis penerimaan ini.
+     */
+    public function pembayar(JenisPenerimaan $jenisPenerimaan): View
+    {
+        $tagihanList = $jenisPenerimaan->tagihanIuran()
+            ->with(['siswaTahunAjaran.siswa'])
+            ->where('terbayar', '>', 0)
+            ->get();
+
+        $totalTerkumpul = $tagihanList->sum('terbayar');
+
+        // Statistik pendukung
+        $totalSiswa = $jenisPenerimaan->tagihanIuran()->count();
+        $lunasCount = $jenisPenerimaan->tagihanIuran()->where('status', 'lunas')->count();
+        $belumCount = $jenisPenerimaan->tagihanIuran()->where('status', '!=', 'lunas')->count();
+
+        return view('master.jenis-penerimaan.pembayar', compact(
+            'jenisPenerimaan',
+            'tagihanList',
+            'totalTerkumpul',
+            'totalSiswa',
+            'lunasCount',
+            'belumCount'
+        ));
     }
 }

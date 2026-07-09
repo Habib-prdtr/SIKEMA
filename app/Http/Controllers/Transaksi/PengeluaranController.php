@@ -29,10 +29,17 @@ class PengeluaranController extends Controller
         $pengeluaran = $this->transaksiService->getDaftarPengeluaran($request, $tahunAktif);
         $posList = $this->transaksiService->getPosBiayaAktif($tahunAktif);
 
+        // Load report summaries from LaporanService
+        $laporanData = app(\App\Services\LaporanService::class)->getLaporanPengeluaran($request, $tahunAktif);
+        $totalPengeluaran = $laporanData['totalPengeluaran'];
+        $rekapPerPos = $laporanData['rekapPerPos'];
+
         return view('transaksi.pengeluaran.index', compact(
             'pengeluaran',
             'posList',
             'tahunAktif',
+            'totalPengeluaran',
+            'rekapPerPos'
         ));
     }
 

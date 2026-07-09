@@ -28,7 +28,21 @@ class PenerimaanController extends Controller
         $tahunAktif = TahunAjaran::aktif();
         $transaksi = $this->transaksiService->getDaftarPenerimaan($request, $tahunAktif);
 
-        return view('transaksi.penerimaan.index', compact('transaksi', 'tahunAktif'));
+        // Load statistics summaries from LaporanService
+        $laporanData = app(\App\Services\LaporanService::class)->getLaporanPenerimaan($request, $tahunAktif);
+        $totalPenerimaan = $laporanData['totalPenerimaan'];
+        $totalSpp = $laporanData['totalSpp'];
+        $totalIuran = $laporanData['totalIuran'];
+        $totalTunggakan = $laporanData['totalTunggakan'];
+
+        return view('transaksi.penerimaan.index', compact(
+            'transaksi',
+            'tahunAktif',
+            'totalPenerimaan',
+            'totalSpp',
+            'totalIuran',
+            'totalTunggakan'
+        ));
     }
 
     /**

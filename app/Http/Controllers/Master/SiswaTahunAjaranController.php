@@ -44,6 +44,7 @@ class SiswaTahunAjaranController extends Controller
         $daftarKelas = $this->masterDataService->getDaftarKelasSiswa();
 
         $tarifSppList = $this->masterDataService->getTarifSpp($tahunAktif);
+        $dispensasiList = \App\Models\Dispensasi::orderBy('nama')->get();
 
         return view('master.siswa-tahun-ajaran.index', compact(
             'siswaList',
@@ -51,6 +52,7 @@ class SiswaTahunAjaranController extends Controller
             'semua',
             'tarifSppList',
             'daftarKelas',
+            'dispensasiList',
         ));
     }
 

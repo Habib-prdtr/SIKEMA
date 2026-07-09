@@ -28,13 +28,49 @@
         </div>
 
         <div class="card">
-            <div class="p-4 border-b border-gray-100">
+            <div class="p-4 border-b border-gray-100 space-y-3">
+                <!-- Quick Class Filter Buttons -->
+                <div class="bg-gray-50/50 p-4 rounded-xl border border-gray-150 space-y-2.5">
+                    <span class="block text-sm font-bold text-gray-700 uppercase tracking-wide">Pilih Tingkat Kelas:</span>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <a href="{{ route('master.siswa-tahun-ajaran.index', array_merge(request()->except('page'), ['kelas' => '7'])) }}"
+                           class="px-6 py-3.5 rounded-xl text-lg font-extrabold transition-all duration-150 inline-flex items-center gap-2 shadow-sm border {{ request('kelas') === '7' ? 'bg-emerald-600 text-white border-emerald-600 scale-[1.03] shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200 hover:border-gray-300' }}">
+                            <span>Kelas 7</span>
+                        </a>
+                        <a href="{{ route('master.siswa-tahun-ajaran.index', array_merge(request()->except('page'), ['kelas' => '8'])) }}"
+                           class="px-6 py-3.5 rounded-xl text-lg font-extrabold transition-all duration-150 inline-flex items-center gap-2 shadow-sm border {{ request('kelas') === '8' ? 'bg-emerald-600 text-white border-emerald-600 scale-[1.03] shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200 hover:border-gray-300' }}">
+                            <span>Kelas 8</span>
+                        </a>
+                        <a href="{{ route('master.siswa-tahun-ajaran.index', array_merge(request()->except('page'), ['kelas' => '9'])) }}"
+                           class="px-6 py-3.5 rounded-xl text-lg font-extrabold transition-all duration-150 inline-flex items-center gap-2 shadow-sm border {{ request('kelas') === '9' ? 'bg-emerald-600 text-white border-emerald-600 scale-[1.03] shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200 hover:border-gray-300' }}">
+                            <span>Kelas 9</span>
+                        </a>
+                        
+                        @if(in_array(request('kelas'), ['7', '8', '9']))
+                            <a href="{{ route('master.siswa-tahun-ajaran.index', request()->except(['kelas', 'page'])) }}"
+                               class="px-6 py-3.5 rounded-xl text-lg font-bold bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition-all inline-flex items-center gap-2">
+                                <span>Hapus Filter / Tampilkan Semua</span>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+
+                @php
+                    $selectedKelasVal = request('kelas');
+                    $activeGradeVal = null;
+                    if ($selectedKelasVal && in_array(substr($selectedKelasVal, 0, 1), ['7', '8', '9'])) {
+                        $activeGradeVal = substr($selectedKelasVal, 0, 1);
+                    }
+                @endphp
+
                 <form method="GET" action="{{ route('master.siswa-tahun-ajaran.index') }}" class="flex flex-col md:flex-row gap-3">
                     <input type="text" name="cari" value="{{ request('cari') }}" placeholder="Cari nama atau nomor induk..." class="form-input flex-grow">
                     <select name="kelas" class="form-select w-full md:w-48">
                         <option value="">Semua Kelas</option>
                         @foreach($daftarKelas as $kelas)
-                            <option value="{{ $kelas }}" {{ request('kelas') == $kelas ? 'selected' : '' }}>{{ $kelas }}</option>
+                            @if(!$activeGradeVal || str_starts_with($kelas, $activeGradeVal))
+                                <option value="{{ $kelas }}" {{ request('kelas') == $kelas ? 'selected' : '' }}>{{ $kelas }}</option>
+                            @endif
                         @endforeach
                     </select>
                     <button type="submit" class="btn-primary">Cari</button>
@@ -86,7 +122,12 @@
                                         @endif
                                     </td>
                                     <td class="text-right font-medium">
-                                        {{ $sta ? format_rupiah($sta->tarif_spp) : '-' }}
+                                        <div>{{ $sta ? format_rupiah($sta->tarif_spp) : '-' }}</div>
+                                        @if($sta && $sta->dispensasi)
+                                            <div class="text-[10px] text-amber-600 font-semibold mt-0.5" title="{{ $sta->dispensasi->keterangan }}">
+                                                Potongan: {{ $sta->dispensasi->nama }} ({{ $sta->durasi_dispensasi }} bln)
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="text-right">
                                         @if($sta)
@@ -197,6 +238,27 @@
                         </select>
                         @error('master_tarif_spp_id')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label for="dispensasi_id" class="form-label">Dispensasi SPP (Opsional)</label>
+                            <select id="dispensasi_id" name="dispensasi_id" class="form-select">
+                                <option value="">-- Tanpa Dispensasi --</option>
+                                @foreach($dispensasiList as $disp)
+                                    <option value="{{ $disp->id }}" {{ old('dispensasi_id') == $disp->id ? 'selected' : '' }}>
+                                        {{ $disp->nama }} ({{ $disp->tipe_potongan === 'persen' ? $disp->nilai_potongan . '%' : format_rupiah($disp->nilai_potongan) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('dispensasi_id')<p class="form-error">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label for="durasi_dispensasi" class="form-label">Durasi Dispensasi (Bulan)</label>
+                            <input id="durasi_dispensasi" type="number" name="durasi_dispensasi"
+                                value="{{ old('durasi_dispensasi') }}"
+                                class="form-input" placeholder="Misal: 4" min="1" max="12">
+                            @error('durasi_dispensasi')<p class="form-error">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
                     <div>
                         <label for="tunggakan_awal" class="form-label">Tunggakan Awal</label>
                         <div class="relative">
@@ -284,18 +346,63 @@
     <script>
         // Existing script...
 
-        document.getElementById('kelas_all')?.addEventListener('change', function() {
-            const selectedKelas = this.value;
-            const tarifSppSelect = document.getElementById('master_tarif_spp_id_all');
+        function autoSelectTarifByKelas(studentKelas, tarifSppSelect) {
+            if (!studentKelas || !tarifSppSelect) return;
+
+            // Try digit matching first (e.g. "7A" matching "7" or "Kelas 7")
+            const match = studentKelas.match(/\d+/);
+            if (match) {
+                const gradeNum = match[0];
+                for (let i = 0; i < tarifSppSelect.options.length; i++) {
+                    const opt = tarifSppSelect.options[i];
+                    const optText = (opt.getAttribute('data-kelas') || opt.text).toLowerCase();
+                    const optMatch = optText.match(/\d+/);
+                    if (optMatch && optMatch[0] === gradeNum) {
+                        tarifSppSelect.selectedIndex = i;
+                        return;
+                    }
+                }
+            }
+
+            // Fallback: search for Roman numerals ordered longest-to-shortest
+            const romanMap = {
+                'viii': '8', 'vii': '7', 'xii': '12', 'iii': '3', 
+                'xi': '11', 'ix': '9', 'vi': '6', 'ii': '2', 
+                'iv': '4', 'x': '10', 'v': '5', 'i': '1'
+            };
+            let normalizedStudent = studentKelas.toLowerCase();
+            for (const [roman, num] of Object.entries(romanMap)) {
+                if (normalizedStudent.includes(roman)) {
+                    normalizedStudent = normalizedStudent.replace(roman, num);
+                    break;
+                }
+            }
+
+            const studentMatch = normalizedStudent.match(/\d+/);
+            const searchNum = studentMatch ? studentMatch[0] : null;
 
             for (let i = 0; i < tarifSppSelect.options.length; i++) {
                 const opt = tarifSppSelect.options[i];
-                if (opt.getAttribute('data-kelas') === selectedKelas) {
+                let optText = (opt.getAttribute('data-kelas') || opt.text).toLowerCase();
+                for (const [roman, num] of Object.entries(romanMap)) {
+                    if (optText.includes(roman)) {
+                        optText = optText.replace(roman, num);
+                        break;
+                    }
+                }
+                const optMatch = optText.match(/\d+/);
+                if (searchNum && optMatch && optMatch[0] === searchNum) {
                     tarifSppSelect.selectedIndex = i;
                     return;
                 }
             }
             tarifSppSelect.selectedIndex = 0;
+        }
+
+        document.getElementById('kelas_all')?.addEventListener('change', function() {
+            const selectedKelas = this.value;
+            const tarifSppSelect = document.getElementById('master_tarif_spp_id_all');
+            autoSelectTarifByKelas(selectedKelas, tarifSppSelect);
         });
     </script>
 
@@ -307,7 +414,7 @@
         <div id="modal-edit-spp-{{ $sta->id }}" class="modal-backdrop hidden">
             <div class="modal-box max-w-md">
                 <div class="modal-header">
-                    <h3 class="font-semibold text-gray-900">Ubah Tarif SPP</h3>
+                    <h3 class="font-semibold text-gray-900">Ubah Tarif SPP & Dispensasi</h3>
                     <button data-modal-close="modal-edit-spp-{{ $sta->id }}" class="text-gray-400 hover:text-gray-600 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -333,8 +440,28 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <p class="text-xs text-gray-400 mt-1">Perubahan hanya akan mengubah tagihan SPP yang belum dibayar.</p>
+                            @error('master_tarif_spp_id')<p class="form-error">{{ $message }}</p>@enderror
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label for="dispensasi_id_{{ $sta->id }}" class="form-label">Dispensasi SPP</label>
+                                <select id="dispensasi_id_{{ $sta->id }}" name="dispensasi_id" class="form-select">
+                                    <option value="">-- Tanpa Dispensasi --</option>
+                                    @foreach($dispensasiList as $disp)
+                                        <option value="{{ $disp->id }}" {{ $sta->dispensasi_id == $disp->id ? 'selected' : '' }}>
+                                            {{ $disp->nama }} ({{ $disp->tipe_potongan === 'persen' ? $disp->nilai_potongan . '%' : format_rupiah($disp->nilai_potongan) }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label for="durasi_dispensasi_{{ $sta->id }}" class="form-label">Durasi (Bulan)</label>
+                                <input id="durasi_dispensasi_{{ $sta->id }}" type="number" name="durasi_dispensasi"
+                                    value="{{ $sta->durasi_dispensasi }}"
+                                    class="form-input" placeholder="Misal: 4" min="1" max="12">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">Perubahan hanya akan mengubah tagihan SPP yang belum dibayar.</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" data-modal-close="modal-edit-spp-{{ $sta->id }}" class="btn-secondary">Batal</button>
@@ -399,54 +526,8 @@
         document.getElementById('siswa_id')?.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const studentKelas = selectedOption.getAttribute('data-kelas'); // e.g. "7A"
-            if (studentKelas) {
-                const tarifSppSelect = document.getElementById('master_tarif_spp_id');
-                if (!tarifSppSelect) return;
-
-                // Try digit matching first (e.g. "7A" matching "7" or "Kelas 7")
-                const match = studentKelas.match(/\d+/);
-                if (match) {
-                    const gradeNum = match[0];
-                    for (let i = 0; i < tarifSppSelect.options.length; i++) {
-                        const opt = tarifSppSelect.options[i];
-                        const optText = (opt.getAttribute('data-kelas') || opt.text).toLowerCase();
-                        const optMatch = optText.match(/\d+/);
-                        if (optMatch && optMatch[0] === gradeNum) {
-                            tarifSppSelect.selectedIndex = i;
-                            return;
-                        }
-                    }
-                }
-
-                // Fallback: search for Roman numerals (VII, VIII, IX)
-                const romanMap = { 'vii': '7', 'viii': '8', 'ix': '9', 'x': '10', 'xi': '11', 'xii': '12' };
-                let normalizedStudent = studentKelas.toLowerCase();
-                for (const [roman, num] of Object.entries(romanMap)) {
-                    if (normalizedStudent.includes(roman)) {
-                        normalizedStudent = normalizedStudent.replace(roman, num);
-                        break;
-                    }
-                }
-
-                const studentMatch = normalizedStudent.match(/\d+/);
-                const searchNum = studentMatch ? studentMatch[0] : null;
-
-                for (let i = 0; i < tarifSppSelect.options.length; i++) {
-                    const opt = tarifSppSelect.options[i];
-                    let optText = (opt.getAttribute('data-kelas') || opt.text).toLowerCase();
-                    for (const [roman, num] of Object.entries(romanMap)) {
-                        if (optText.includes(roman)) {
-                            optText = optText.replace(roman, num);
-                            break;
-                        }
-                    }
-                    const optMatch = optText.match(/\d+/);
-                    if (searchNum && optMatch && optMatch[0] === searchNum) {
-                        tarifSppSelect.selectedIndex = i;
-                        return;
-                    }
-                }
-            }
+            const tarifSppSelect = document.getElementById('master_tarif_spp_id');
+            autoSelectTarifByKelas(studentKelas, tarifSppSelect);
         });
     </script>
 
