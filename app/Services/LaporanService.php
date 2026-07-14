@@ -24,7 +24,7 @@ class LaporanService
             'details.jenisPenerimaan',
             'user',
         ])
-            ->whereHas('siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAjaranId))
+            ->where('tahun_ajaran_id', $tahunAjaranId)
             ->orderByDesc('tanggal');
 
         // Filter bulan

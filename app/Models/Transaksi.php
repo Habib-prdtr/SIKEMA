@@ -17,6 +17,7 @@ class Transaksi extends Model
     protected $fillable = [
         'no_transaksi',
         'siswa_tahun_ajaran_id',
+        'tahun_ajaran_id',
         'user_id',
         'tanggal',
         'total_bayar',
@@ -26,6 +27,7 @@ class Transaksi extends Model
     protected $casts = [
         'tanggal' => 'date',
         'total_bayar' => 'integer',
+        'tahun_ajaran_id' => 'integer',
         'created_at' => 'datetime',
     ];
 
@@ -36,6 +38,11 @@ class Transaksi extends Model
     public function siswaTahunAjaran()
     {
         return $this->belongsTo(SiswaTahunAjaran::class);
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->belongsTo(TahunAjaran::class);
     }
 
     public function user()

@@ -20,7 +20,7 @@ class UpdateTarifSppRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kelas' => ['required', 'string', 'max:50'],
+            'kelas' => ['required', 'string', 'max:50', 'regex:/^(7|8|9)/'],
             'tarif' => ['required', 'integer', 'min:0'],
         ];
     }
@@ -32,6 +32,7 @@ class UpdateTarifSppRequest extends FormRequest
     {
         return [
             'kelas.required' => 'Nama/Tingkat Kelas wajib diisi.',
+            'kelas.regex' => 'Tingkat kelas tidak valid. Harus diawali tingkat 7-9 (contoh: 7, 8B, 9).',
             'tarif.required' => 'Tarif wajib diisi.',
             'tarif.integer' => 'Tarif harus berupa angka.',
             'tarif.min' => 'Tarif tidak boleh negatif.',

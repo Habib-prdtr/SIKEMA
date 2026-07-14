@@ -55,8 +55,11 @@
                                         @endif
                                     </td>
                                     <td class="text-gray-500 text-sm max-w-xs truncate">{{ $d->keterangan ?? '-' }}</td>
-                                    <td class="text-center">
+                                     <td class="text-center">
                                         <div class="flex items-center justify-center gap-2">
+                                            <a href="{{ route('master.dispensasi.siswa', $d) }}" class="btn-secondary btn-sm">
+                                                Siswa ({{ $d->siswaTahunAjaran()->count() }})
+                                            </a>
                                             <button class="btn-secondary btn-sm"
                                                 data-modal-open="modal-edit-{{ $d->id }}">Edit</button>
                                             <form id="del-d-{{ $d->id }}" method="POST"

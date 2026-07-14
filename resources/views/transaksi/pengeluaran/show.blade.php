@@ -1,6 +1,45 @@
 <x-layouts.app title="Detail Pengeluaran">
     <x-slot:pageTitle>Pengeluaran / Detail</x-slot:pageTitle>
 
+    <style>
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .card {
+                border: 1px solid #000000 !important;
+                box-shadow: none !important;
+                background: white !important;
+                color: black !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .bg-red-600 {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                border: 1px solid #000000 !important;
+            }
+            .bg-red-50 {
+                background-color: #f3f4f6 !important;
+                border: 1px solid #d1d5db !important;
+            }
+            .text-red-800, .text-red-700 {
+                color: #000000 !important;
+            }
+            .text-gray-500 {
+                color: #374151 !important;
+            }
+            .text-gray-900 {
+                color: #000000 !important;
+            }
+        }
+    </style>
+
     <div class="flex items-center gap-3 mb-5 no-print">
         <a href="{{ route('pengeluaran.index') }}" class="btn-secondary btn-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

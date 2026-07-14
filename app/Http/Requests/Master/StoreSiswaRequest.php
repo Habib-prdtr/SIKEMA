@@ -11,12 +11,19 @@ class StoreSiswaRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'status' => $this->status ?? 'aktif',
+        ]);
+    }
+
     public function rules(): array
     {
         return [
             'no_induk' => ['required', 'string', 'max:20', 'unique:siswa,no_induk'],
             'nama' => ['required', 'string', 'max:100'],
-            'kelas' => ['required', 'string', 'max:10'],
+            'kelas' => ['required', 'string', 'max:10', 'regex:/^(7|8|9)/'],
             'asrama' => ['nullable', 'string', 'max:50'],
             'jenis_kelamin' => ['required', 'in:L,P'],
             'tanggal_masuk' => ['nullable', 'date'],
@@ -32,6 +39,7 @@ class StoreSiswaRequest extends FormRequest
             'no_induk.max' => 'Nomor induk maksimal 20 karakter.',
             'nama.required' => 'Nama siswa wajib diisi.',
             'kelas.required' => 'Kelas wajib diisi.',
+            'kelas.regex' => 'Kelas tidak valid. Kelas harus diawali tingkat 7-9 (contoh: 7A, 8B, 9).',
             'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih.',
             'jenis_kelamin.in' => 'Jenis kelamin harus L atau P.',
             'status.required' => 'Status wajib dipilih.',
