@@ -5,9 +5,15 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\StoreSaldoAwalRequest;
 use App\Http\Requests\Master\UpdateSaldoAwalRequest;
+use App\Models\Pengeluaran;
+use App\Models\PosBiaya;
 use App\Models\SaldoAwal;
+use App\Models\TahunAjaran;
+use App\Models\Transaksi;
 use App\Services\MasterDataService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\View\View;
 
 class SaldoAwalController extends Controller
@@ -24,7 +30,7 @@ class SaldoAwalController extends Controller
      */
     public function index(): View
     {
-        $tahunAktif = \App\Models\TahunAjaran::aktif();
+        $tahunAktif = TahunAjaran::aktif();
         if (!$tahunAktif) {
             return view('master.saldo-awal.index', [
                 'tahunAktif' => null,
@@ -41,19 +47,25 @@ class SaldoAwalController extends Controller
             ]);
         }
 
+        // Fetch Pos Biaya with budget (anggaran)
+        $posBiayaList = PosBiaya::where('tahun_ajaran_id', $tahunAktif->id)
+            ->where('anggaran', '>', 0)
+            ->get();
+
         // Fetch income (pemasukan from Transaksi)
-        $pemasukanList = \App\Models\Transaksi::whereHas('siswaTahunAjaran', function ($q) use ($tahunAktif) {
+        $pemasukanList = Transaksi::whereHas('siswaTahunAjaran', function ($q) use ($tahunAktif) {
             $q->where('tahun_ajaran_id', $tahunAktif->id);
         })->with('siswaTahunAjaran.siswa')->get();
 
         // Fetch expenses (pengeluaran)
-        $pengeluaranList = \App\Models\Pengeluaran::whereHas('posBiaya', function ($q) use ($tahunAktif) {
+        $pengeluaranList = Pengeluaran::whereHas('posBiaya', function ($q) use ($tahunAktif) {
             $q->where('tahun_ajaran_id', $tahunAktif->id);
         })->with('posBiaya')->get();
 
+        $totalAnggaran = $posBiayaList->sum('anggaran');
         $totalPemasukan = $pemasukanList->sum('total_bayar');
         $totalPengeluaran = $pengeluaranList->sum('jumlah');
-        $saldoSaatIni = $saldoAwal->jumlah + $totalPemasukan - $totalPengeluaran;
+        $saldoSaatIni = $saldoAwal->jumlah + $totalAnggaran + $totalPemasukan - $totalPengeluaran;
 
         // Compile chronological record log
         $records = collect();
@@ -69,7 +81,20 @@ class SaldoAwalController extends Controller
             'running_saldo' => 0,
         ]);
 
-        // 2. Income Records
+        // 2. Pos Biaya Anggaran Records
+        foreach ($posBiayaList as $pos) {
+            $records->push((object)[
+                'tanggal' => $pos->created_at ?? $tahunAktif->created_at ?? now(),
+                'jenis' => 'anggaran',
+                'kategori' => 'Anggaran Pos',
+                'keterangan' => 'Alokasi anggaran pos biaya: ' . $pos->nama . ($pos->keterangan ? ' - ' . $pos->keterangan : ''),
+                'debit' => $pos->anggaran,
+                'kredit' => 0,
+                'running_saldo' => 0,
+            ]);
+        }
+
+        // 3. Income Records
         foreach ($pemasukanList as $t) {
             $records->push((object)[
                 'tanggal' => $t->tanggal,
@@ -82,7 +107,7 @@ class SaldoAwalController extends Controller
             ]);
         }
 
-        // 3. Expense Records
+        // 4. Expense Records
         foreach ($pengeluaranList as $p) {
             $records->push((object)[
                 'tanggal' => $p->tanggal,
@@ -109,15 +134,31 @@ class SaldoAwalController extends Controller
         // Sort descending for display (newest first)
         $records = $records->sortByDesc(function ($item) {
             return $item->tanggal instanceof \Carbon\Carbon ? $item->tanggal->timestamp : strtotime($item->tanggal);
-        });
+        })->values();
+
+        // Paginate records
+        $currentPage = Paginator::resolveCurrentPage() ?: 1;
+        $perPage = 10;
+        $currentPageItems = $records->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $paginatedRecords = new LengthAwarePaginator(
+            $currentPageItems,
+            $records->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ]
+        );
 
         return view('master.saldo-awal.index', compact(
             'tahunAktif',
             'saldoAwal',
+            'totalAnggaran',
             'totalPemasukan',
             'totalPengeluaran',
             'saldoSaatIni',
-            'records'
+            'paginatedRecords'
         ));
     }
 

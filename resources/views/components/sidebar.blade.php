@@ -52,7 +52,7 @@
         </div>
         <div>
             <h1 class="font-bold text-gray-900 text-base leading-tight">SIKEMA</h1>
-            <p class="text-xs text-gray-500">Sistem Keuangan Madrasah</p>
+            <p class="text-xs text-gray-500 font-medium truncate">MTS IHYAUL ULUM</p>
         </div>
     </div>
 

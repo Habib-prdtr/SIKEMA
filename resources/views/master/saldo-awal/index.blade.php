@@ -68,18 +68,18 @@
             </div>
         @else
             <!-- Dashboard Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 <!-- Saldo Kas Saat Ini -->
                 <div class="card p-4 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md border-0 flex flex-col justify-between">
                     <div>
                         <div class="text-xs font-semibold uppercase tracking-wider opacity-85">Saldo Kas Saat Ini</div>
-                        <div class="text-2xl font-extrabold mt-1.5 tracking-tight">{{ format_rupiah($saldoSaatIni) }}</div>
+                        <div class="text-xl font-extrabold mt-1.5 tracking-tight">{{ format_rupiah($saldoSaatIni) }}</div>
                     </div>
                     <div class="text-xs mt-3 opacity-75 flex items-center gap-1">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>Tahun Ajaran: {{ $tahunAktif->nama }}</span>
+                        <span>TA: {{ $tahunAktif->nama }}</span>
                     </div>
                 </div>
 
@@ -87,7 +87,7 @@
                 <div class="card p-4 border border-gray-100 bg-white shadow-sm flex flex-col justify-between">
                     <div>
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Saldo Awal Kas</div>
-                        <div class="text-xl font-bold text-gray-800 mt-1.5">{{ format_rupiah($saldoAwal->jumlah) }}</div>
+                        <div class="text-lg font-bold text-gray-800 mt-1.5">{{ format_rupiah($saldoAwal->jumlah) }}</div>
                     </div>
                     <div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
                         <span class="text-xs text-gray-400">Pencatatan Pertama</span>
@@ -97,14 +97,25 @@
                     </div>
                 </div>
 
+                <!-- Total Anggaran Pos -->
+                <div class="card p-4 border border-gray-100 bg-white shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Anggaran Pos</div>
+                        <div class="text-lg font-bold text-purple-600 mt-1.5">+{{ format_rupiah($totalAnggaran) }}</div>
+                    </div>
+                    <div class="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-50">
+                        Alokasi anggaran pos biaya
+                    </div>
+                </div>
+
                 <!-- Total Pemasukan -->
                 <div class="card p-4 border border-gray-100 bg-white shadow-sm flex flex-col justify-between">
                     <div>
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Pemasukan</div>
-                        <div class="text-xl font-bold text-emerald-600 mt-1.5">+{{ format_rupiah($totalPemasukan) }}</div>
+                        <div class="text-lg font-bold text-emerald-600 mt-1.5">+{{ format_rupiah($totalPemasukan) }}</div>
                     </div>
                     <div class="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-50">
-                        Dari transaksi penerimaan siswa
+                        Dari transaksi siswa
                     </div>
                 </div>
 
@@ -112,10 +123,10 @@
                 <div class="card p-4 border border-gray-100 bg-white shadow-sm flex flex-col justify-between">
                     <div>
                         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Pengeluaran</div>
-                        <div class="text-xl font-bold text-amber-600 mt-1.5">-{{ format_rupiah($totalPengeluaran) }}</div>
+                        <div class="text-lg font-bold text-amber-600 mt-1.5">-{{ format_rupiah($totalPengeluaran) }}</div>
                     </div>
                     <div class="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-50">
-                        Realisasi pos biaya operasional
+                        Realisasi pos biaya
                     </div>
                 </div>
             </div>
@@ -128,11 +139,11 @@
                         <p class="text-xs text-gray-400 mt-0.5">Urutan alur kas terhitung secara kronologis berdasarkan mutasi debet/kredit</p>
                     </div>
                     <span class="text-xs text-gray-500 bg-gray-50 border border-gray-150 px-3 py-1 rounded-full font-medium">
-                        {{ count($records) }} Rekor Kas
+                        {{ $paginatedRecords->total() }} Rekor Kas
                     </span>
                 </div>
 
-                @if($records->isEmpty())
+                @if($paginatedRecords->isEmpty())
                     <div class="p-12 text-center text-gray-400">
                         <svg class="w-14 h-14 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -148,13 +159,13 @@
                                     <th>Tanggal</th>
                                     <th>Kategori</th>
                                     <th>Keterangan</th>
-                                    <th class="text-right">Debit (Pemasukan)</th>
+                                    <th class="text-right">Debit (Pemasukan/Anggaran)</th>
                                     <th class="text-right">Kredit (Pengeluaran)</th>
                                     <th class="text-right">Saldo Kas</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($records as $record)
+                                @foreach($paginatedRecords as $record)
                                     <tr class="hover:bg-gray-50/50 transition-colors">
                                         <td class="text-sm font-medium text-gray-600 whitespace-nowrap">
                                             {{ \Carbon\Carbon::parse($record->tanggal)->translatedFormat('d M Y') }}
@@ -162,6 +173,8 @@
                                         <td>
                                             @if($record->jenis === 'saldo_awal')
                                                 <span class="badge-blue">Saldo Awal</span>
+                                            @elseif($record->jenis === 'anggaran')
+                                                <span class="badge-purple font-semibold">Anggaran Pos</span>
                                             @elseif($record->jenis === 'pemasukan')
                                                 <span class="badge-green">Pemasukan</span>
                                             @else
@@ -193,6 +206,12 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @if($paginatedRecords->hasPages())
+                        <div class="px-5 py-3 border-t border-gray-100">
+                            {{ $paginatedRecords->links() }}
+                        </div>
+                    @endif
                 @endif
             </div>
 
