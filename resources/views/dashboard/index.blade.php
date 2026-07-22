@@ -564,49 +564,89 @@
         {{-- ── Grafik (SVG Bar Chart sederhana) + Transaksi ───── --}}
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
-            {{-- Bar Chart 6 bulan --}}
+            {{-- Horizontal Bar Chart Penerimaan Per Jenis --}}
             <div class="card xl:col-span-2">
-                <div class="card-header">
-                    <h3 class="font-semibold text-gray-900">Grafik Keuangan 6 Bulan Terakhir</h3>
+                <div class="card-header flex items-center justify-between">
+                    <h3 class="font-semibold text-gray-900">Grafik Penerimaan per Jenis Pembayaran</h3>
+                    <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">TA {{ $tahunAktif?->nama ?? '-' }}</span>
                 </div>
                 <div class="p-5">
-                    @php
-                        $maxVal = max(max($dataPenerimaan->toArray() ?: [1]), max($dataPengeluaran->toArray() ?: [1]));
-                        $chartH = 160;
-                    @endphp
-                    <div class="overflow-x-auto">
-                        <svg viewBox="0 0 {{ count($bulanLabels) * 80 }} {{ $chartH + 40 }}"
-                            class="w-full min-w-xs" style="min-height:200px">
-                            @foreach ($bulanLabels as $i => $label)
-                                @php
-                                    $x = $i * 80 + 10;
-                                    $p = $dataPenerimaan[$i] ?? 0;
-                                    $k = $dataPengeluaran[$i] ?? 0;
-                                    $pHeight = $maxVal > 0 ? ($p / $maxVal) * $chartH : 0;
-                                    $kHeight = $maxVal > 0 ? ($k / $maxVal) * $chartH : 0;
-                                @endphp
-                                {{-- Penerimaan bar --}}
-                                <rect x="{{ $x }}" y="{{ $chartH - $pHeight }}" width="24"
-                                    height="{{ $pHeight }}" fill="#059669" rx="3" opacity="0.85">
-                                    <title>Penerimaan: {{ format_rupiah($p) }}</title>
-                                </rect>
-                                {{-- Pengeluaran bar --}}
-                                <rect x="{{ $x + 28 }}" y="{{ $chartH - $kHeight }}" width="24"
-                                    height="{{ $kHeight }}" fill="#dc2626" rx="3" opacity="0.75">
-                                    <title>Pengeluaran: {{ format_rupiah($k) }}</title>
-                                </rect>
-                                {{-- Label --}}
-                                <text x="{{ $x + 26 }}" y="{{ $chartH + 16 }}" text-anchor="middle"
-                                    font-size="11" fill="#6b7280">{{ $label }}</text>
-                            @endforeach
-                        </svg>
-                    </div>
-                    <div class="flex items-center gap-5 mt-2 text-xs text-gray-500">
-                        <span class="flex items-center gap-1.5"><span
-                                class="w-3 h-3 rounded bg-emerald-600 inline-block"></span>Penerimaan</span>
-                        <span class="flex items-center gap-1.5"><span
-                                class="w-3 h-3 rounded bg-red-600 inline-block"></span>Pengeluaran</span>
-                    </div>
+                    @if ($penerimaanPerJenisData->isNotEmpty())
+                        @php
+                            $itemCount = count($penerimaanPerJenisData);
+                            $rowHeight = 36;
+                            $topPadding = 15;
+                            $bottomPadding = 40;
+                            $svgHeight = $topPadding + ($itemCount * $rowHeight) + $bottomPadding;
+                            $leftMargin = 130;
+                            $rightMargin = 100;
+                            $chartWidth = 720;
+                            $barAreaWidth = $chartWidth - $leftMargin - $rightMargin;
+                            $maxVal = max($maxPenerimaanJenis, 1);
+                        @endphp
+                        <div class="overflow-x-auto">
+                            <svg viewBox="0 0 {{ $chartWidth }} {{ $svgHeight }}" class="w-full min-w-md">
+                                {{-- Background Grid Lines & Scale Ticks --}}
+                                @for ($k = 0; $k <= 4; $k++)
+                                    @php
+                                        $fraction = $k / 4;
+                                        $gx = $leftMargin + ($fraction * $barAreaWidth);
+                                        $gridVal = ($maxVal / 4) * $k;
+                                    @endphp
+                                    <line x1="{{ $gx }}" y1="{{ $topPadding - 5 }}" x2="{{ $gx }}"
+                                        y2="{{ $svgHeight - $bottomPadding + 5 }}" stroke="#e5e7eb" stroke-dasharray="3,3"
+                                        stroke-width="1" />
+                                    <text x="{{ $gx }}" y="{{ $svgHeight - $bottomPadding + 22 }}"
+                                        text-anchor="middle" font-size="11" fill="#6b7280">
+                                        {{ number_format($gridVal, 0, ',', '.') }}
+                                    </text>
+                                @endfor
+
+                                {{-- Bars & Labels --}}
+                                @foreach ($penerimaanPerJenisData as $i => $item)
+                                    @php
+                                        $y = $topPadding + ($i * $rowHeight);
+                                        $barY = $y + 5;
+                                        $barHeight = 18;
+                                        $val = $item['total'];
+                                        $barW = $maxVal > 0 ? ($val / $maxVal) * $barAreaWidth : 0;
+                                    @endphp
+
+                                    {{-- Y-Axis Label --}}
+                                    <text x="{{ $leftMargin - 12 }}" y="{{ $y + 18 }}" text-anchor="end"
+                                        font-size="12" font-weight="500" fill="#374151">
+                                        {{ $item['nama'] }}
+                                    </text>
+
+                                    @if ($val == 0)
+                                        {{-- Zero Value Marker --}}
+                                        <line x1="{{ $leftMargin }}" y1="{{ $y + 14 }}"
+                                            x2="{{ $leftMargin + 15 }}" y2="{{ $y + 14 }}" stroke="#d1d5db"
+                                            stroke-width="2" />
+                                        <text x="{{ $leftMargin + 22 }}" y="{{ $y + 18 }}" font-size="11"
+                                            font-weight="600" fill="#9ca3af">0</text>
+                                    @else
+                                        {{-- Bar Rect --}}
+                                        <rect x="{{ $leftMargin }}" y="{{ $barY }}"
+                                            width="{{ max($barW, 4) }}" height="{{ $barHeight }}" fill="#f59e0b"
+                                            rx="4">
+                                            <title>{{ $item['nama'] }}: {{ format_rupiah($val) }}</title>
+                                        </rect>
+
+                                        {{-- Value Text (Selalu di luar bar di sebelah kanan) --}}
+                                        <text x="{{ $leftMargin + $barW + 8 }}" y="{{ $y + 18 }}"
+                                            text-anchor="start" font-size="11" font-weight="bold" fill="#1f2937">
+                                            {{ number_format($val, 0, ',', '.') }}
+                                        </text>
+                                    @endif
+                                @endforeach
+                            </svg>
+                        </div>
+                    @else
+                        <div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                            <p class="text-sm font-medium">Belum ada data penerimaan untuk ditampilkan.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
 

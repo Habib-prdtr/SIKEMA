@@ -33,6 +33,12 @@ class Sekolah extends Model
      */
     public static function getData(): ?self
     {
-        return static::first();
+        $sekolah = static::first();
+        if (!$sekolah) {
+            $sekolah = static::create([
+                'nama_sekolah' => 'MTS IHYAUL ULUM',
+            ]);
+        }
+        return $sekolah;
     }
 }

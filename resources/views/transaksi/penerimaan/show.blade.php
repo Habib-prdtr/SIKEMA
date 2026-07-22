@@ -22,12 +22,12 @@
     <div class="card max-w-2xl mx-auto" id="kwitansi">
 
         {{-- Kop --}}
-        <div class="px-8 pt-8 pb-5 border-b-2 border-emerald-600 text-center">
-            <h2 class="text-xl font-bold text-gray-900 uppercase">{{ $sekolah->nama_sekolah ?? 'MADRASAH' }}</h2>
+        <div class="px-8 pt-8 pb-5 border-b-2 border-gray-900 text-center">
+            <h2 class="text-xl font-bold text-gray-900 uppercase">{{ $sekolah->nama_sekolah ?? 'MTS IHYAUL ULUM' }}</h2>
             @if($sekolah->nama_yayasan ?? false)
                 <p class="text-xs text-gray-500">{{ $sekolah->nama_yayasan }}</p>
             @endif
-            <div class="mt-3 inline-block bg-emerald-600 text-white px-6 py-1 rounded-full text-sm font-semibold tracking-wide">
+            <div class="mt-3 inline-block bg-gray-900 text-white px-6 py-1 rounded-md text-sm font-semibold tracking-wide">
                 BUKTI PEMBAYARAN / KWITANSI
             </div>
         </div>
@@ -46,13 +46,13 @@
             </div>
 
             {{-- Data Siswa --}}
-            <div class="bg-emerald-50 rounded-xl p-4 mb-6">
-                <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-2">Data Siswa</p>
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
+                <p class="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Data Siswa</p>
                 <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                    <div><span class="text-gray-500">Nama:</span> <span class="font-semibold">{{ $transaksi->siswaTahunAjaran->siswa->nama }}</span></div>
-                    <div><span class="text-gray-500">No. Induk:</span> <span class="font-mono">{{ $transaksi->siswaTahunAjaran->siswa->no_induk }}</span></div>
-                    <div><span class="text-gray-500">Kelas:</span> <span class="font-semibold">{{ $transaksi->siswaTahunAjaran->siswa->kelas }}</span></div>
-                    <div><span class="text-gray-500">Tahun Ajaran:</span> <span class="font-semibold">{{ $transaksi->siswaTahunAjaran->tahunAjaran->nama }}</span></div>
+                    <div><span class="text-gray-500">Nama:</span> <span class="font-semibold text-gray-900">{{ $transaksi->siswaTahunAjaran->siswa->nama }}</span></div>
+                    <div><span class="text-gray-500">No. Induk:</span> <span class="font-mono text-gray-900">{{ $transaksi->siswaTahunAjaran->siswa->no_induk }}</span></div>
+                    <div><span class="text-gray-500">Kelas:</span> <span class="font-semibold text-gray-900">{{ $transaksi->siswaTahunAjaran->siswa->kelas }}</span></div>
+                    <div><span class="text-gray-500">Tahun Ajaran:</span> <span class="font-semibold text-gray-900">{{ $transaksi->siswaTahunAjaran->tahunAjaran->nama }}</span></div>
                 </div>
             </div>
 
@@ -76,14 +76,14 @@
                                     Cicilan Tunggakan
                                 @endif
                             </td>
-                            <td class="py-2 text-right font-medium">{{ format_rupiah($detail->nominal) }}</td>
+                            <td class="py-2 text-right font-medium text-gray-900">{{ format_rupiah($detail->nominal) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
-                    <tr class="border-t-2 border-emerald-600">
+                    <tr class="border-t-2 border-gray-900">
                         <td class="pt-3 font-bold text-gray-900 text-base">TOTAL</td>
-                        <td class="pt-3 text-right font-bold text-emerald-700 text-xl">
+                        <td class="pt-3 text-right font-bold text-gray-900 text-xl">
                             {{ format_rupiah($transaksi->total_bayar) }}
                         </td>
                     </tr>
@@ -95,16 +95,11 @@
             @endif
 
             {{-- Tanda tangan --}}
-            <div class="flex justify-between items-end mt-8 pt-6 border-t border-gray-200">
+            <div class="flex justify-end items-end mt-8 pt-6 border-t border-gray-200">
                 <div class="text-center text-sm">
-                    <p class="text-gray-500">Orang Tua / Wali</p>
+                    <p class="text-gray-500">Tata Usaha</p>
                     <div class="h-14"></div>
-                    <p class="font-semibold text-gray-800 border-t border-gray-400 pt-1 min-w-32">(.............................)</p>
-                </div>
-                <div class="text-center text-sm">
-                    <p class="text-gray-500">Bendahara / Operator</p>
-                    <div class="h-14"></div>
-                    <p class="font-semibold text-gray-800 border-t border-gray-400 pt-1 min-w-32">{{ $transaksi->user->name }}</p>
+                    <p class="font-semibold text-gray-800 border-t border-gray-400 pt-1 min-w-36">{{ $transaksi->user->name }}</p>
                 </div>
             </div>
         </div>

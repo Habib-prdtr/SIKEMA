@@ -10,7 +10,7 @@
                 </svg>
             </div>
             <h1 class="text-3xl font-bold text-gray-900 tracking-tight">SIKEMA</h1>
-            <p class="text-gray-500 mt-1 text-sm">Sistem Informasi Keuangan Madrasah</p>
+            <p class="text-gray-500 mt-1 text-sm font-medium">Sistem Informasi Keuangan — MTS IHYAUL ULUM</p>
         </div>
 
         {{-- Sukses --}}

@@ -32,10 +32,9 @@ class DashboardController extends Controller
         $sppTerlewatBelumLunas = $this->dashboardService->getSppTerlewatBelumLunas($tahunAktif);
         $totalSaldo = $this->dashboardService->getTotalSaldo($tahunAktif);
 
-        $grafikData = $this->dashboardService->getGrafikBulanan($tahunAktif);
-        $bulanLabels = $grafikData['bulanLabels'];
-        $dataPenerimaan = $grafikData['dataPenerimaan'];
-        $dataPengeluaran = $grafikData['dataPengeluaran'];
+        $grafikPenerimaan = $this->dashboardService->getGrafikPenerimaanPerJenis($tahunAktif);
+        $penerimaanPerJenisData = $grafikPenerimaan['data'];
+        $maxPenerimaanJenis = $grafikPenerimaan['maxVal'];
 
         $transaksiTerbaru = $this->dashboardService->getTransaksiTerbaru($tahunAktif);
 
@@ -90,9 +89,8 @@ class DashboardController extends Controller
             'sppBelumLunas',
             'sppTerlewatBelumLunas',
             'totalSaldo',
-            'bulanLabels',
-            'dataPenerimaan',
-            'dataPengeluaran',
+            'penerimaanPerJenisData',
+            'maxPenerimaanJenis',
             'transaksiTerbaru',
             'daftarSiswa',
             'siswa',

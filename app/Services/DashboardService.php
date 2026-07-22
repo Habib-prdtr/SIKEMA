@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\JenisPenerimaan;
 use App\Models\Pengeluaran;
+use App\Models\PosBiaya;
 use App\Models\SaldoAwal;
 use App\Models\SiswaTahunAjaran;
 use App\Models\TagihanSpp;
 use App\Models\TahunAjaran;
 use App\Models\Transaksi;
+use App\Models\TransaksiDetail;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -83,14 +86,12 @@ class DashboardService
     {
         if (!$tahunAktif) return 0;
 
-        // Ambil semua tahun ajaran yang secara kronologis (nama) kurang dari atau sama dengan tahun aktif saat ini
-        $tahunIds = TahunAjaran::where('nama', '<=', $tahunAktif->nama)->pluck('id');
+        $saldoAwal = SaldoAwal::where('tahun_ajaran_id', $tahunAktif->id)->value('jumlah') ?? 0;
+        $totalAnggaran = (int) PosBiaya::where('tahun_ajaran_id', $tahunAktif->id)->sum('anggaran');
+        $totalPenerimaan = Transaksi::whereHas('siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))->sum('total_bayar');
+        $totalPengeluaran = Pengeluaran::whereHas('posBiaya', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))->sum('jumlah');
 
-        $saldoAwal = SaldoAwal::whereIn('tahun_ajaran_id', $tahunIds)->sum('jumlah');
-        $totalPenerimaan = Transaksi::whereHas('siswaTahunAjaran', fn ($q) => $q->whereIn('tahun_ajaran_id', $tahunIds))->sum('total_bayar');
-        $totalPengeluaran = Pengeluaran::whereHas('posBiaya', fn ($q) => $q->whereIn('tahun_ajaran_id', $tahunIds))->sum('jumlah');
-
-        return $saldoAwal + $totalPenerimaan - $totalPengeluaran;
+        return (int) ($saldoAwal + $totalAnggaran + $totalPenerimaan - $totalPengeluaran);
     }
 
     public function getGrafikBulanan(?TahunAjaran $tahunAktif): array
@@ -122,6 +123,64 @@ class DashboardService
         }
 
         return compact('bulanLabels', 'dataPenerimaan', 'dataPengeluaran');
+    }
+
+    public function getGrafikPenerimaanPerJenis(?TahunAjaran $tahunAktif): array
+    {
+        $data = collect();
+
+        if (!$tahunAktif) {
+            return [
+                'data' => $data,
+                'maxVal' => 0,
+            ];
+        }
+
+        // 1. SPP
+        $totalSpp = (int) TransaksiDetail::where('jenis', 'spp')
+            ->whereHas('transaksi.siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
+            ->sum('nominal');
+
+        // 2. Tunggakan
+        $totalTunggakan = (int) TransaksiDetail::where('jenis', 'tunggakan')
+            ->whereHas('transaksi.siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
+            ->sum('nominal');
+
+        // 3. Jenis Penerimaan (Iuran)
+        $jenisPenerimaanList = JenisPenerimaan::where('tahun_ajaran_id', $tahunAktif->id)
+            ->orderBy('urutan')
+            ->orderBy('id')
+            ->get();
+
+        $iuranSums = TransaksiDetail::where('jenis', 'iuran')
+            ->whereHas('transaksi.siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
+            ->groupBy('jenis_penerimaan_id')
+            ->selectRaw('jenis_penerimaan_id, SUM(nominal) as total')
+            ->pluck('total', 'jenis_penerimaan_id');
+
+        $data->push([
+            'nama' => 'SPP',
+            'total' => $totalSpp,
+        ]);
+
+        $data->push([
+            'nama' => 'Tunggakan',
+            'total' => $totalTunggakan,
+        ]);
+
+        foreach ($jenisPenerimaanList as $jp) {
+            $data->push([
+                'nama' => $jp->nama,
+                'total' => (int) ($iuranSums[$jp->id] ?? 0),
+            ]);
+        }
+
+        $maxVal = (int) ($data->max('total') ?: 0);
+
+        return [
+            'data' => $data,
+            'maxVal' => $maxVal,
+        ];
     }
 
     public function getTransaksiTerbaru(?TahunAjaran $tahunAktif): Collection
