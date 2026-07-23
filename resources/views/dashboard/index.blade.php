@@ -31,22 +31,6 @@
             </div>
         @endif
 
-        @if ($siswaAdaTunggakan > 0)
-            <div class="alert-warning">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                    <p class="font-medium">Terdapat Tunggakan Aktif</p>
-                    <p class="text-sm mt-0.5">
-                        <strong>{{ $siswaAdaTunggakan }} siswa</strong> memiliki tunggakan tahun sebelumnya
-                        dengan total <strong>{{ format_rupiah($totalTunggakanAwal) }}</strong>.
-                    </p>
-                </div>
-            </div>
-        @endif
-
         @if ($sppBelumLunas > 0)
             <div class="alert-info">
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,22 +41,6 @@
                     <strong>{{ $sppBelumLunas }} siswa</strong> belum melunasi SPP bulan
                     {{ now()->locale('id')->isoFormat('MMMM YYYY') }}.
                 </p>
-            </div>
-        @endif
-
-        @if ($sppTerlewatBelumLunas > 0)
-            <div class="alert-error">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                    <p class="font-medium">Terdapat Tagihan SPP Terlewat (Menunggak)</p>
-                    <p class="text-sm mt-0.5">
-                        <strong>{{ $sppTerlewatBelumLunas }} siswa</strong> memiliki satu atau lebih tagihan SPP bulan
-                        lalu yang sudah terlewat dan belum dilunasi.
-                    </p>
-                </div>
             </div>
         @endif
 
@@ -649,67 +617,67 @@
                     @endif
                 </div>
             </div>
+        </div>
 
-            {{-- Quick actions --}}
-            <div class="space-y-3">
-                <a href="{{ route('penerimaan.catat') }}"
-                    class="card p-4 flex items-center gap-4 hover:border-emerald-300 hover:shadow-md transition-all group">
-                    <div
-                        class="w-10 h-10 bg-emerald-100 group-hover:bg-emerald-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
-                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 4v16m8-8H4" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-gray-900 text-sm">Catat Penerimaan</p>
-                        <p class="text-xs text-gray-500">Proses pembayaran siswa</p>
-                    </div>
-                </a>
-                <a href="{{ route('pengeluaran.catat') }}"
-                    class="card p-4 flex items-center gap-4 hover:border-red-200 hover:shadow-md transition-all group">
-                    <div
-                        class="w-10 h-10 bg-red-100 group-hover:bg-red-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-gray-900 text-sm">Catat Pengeluaran</p>
-                        <p class="text-xs text-gray-500">Rekam kas keluar</p>
-                    </div>
-                </a>
-                <a href="{{ route('laporan.penerimaan') }}"
-                    class="card p-4 flex items-center gap-4 hover:border-blue-200 hover:shadow-md transition-all group">
-                    <div
-                        class="w-10 h-10 bg-blue-100 group-hover:bg-blue-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-gray-900 text-sm">Lihat Laporan</p>
-                        <p class="text-xs text-gray-500">Rekap keuangan</p>
-                    </div>
-                </a>
-                <a href="{{ route('master.siswa.index') }}"
-                    class="card p-4 flex items-center gap-4 hover:border-purple-200 hover:shadow-md transition-all group">
-                    <div
-                        class="w-10 h-10 bg-purple-100 group-hover:bg-purple-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
-                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-gray-900 text-sm">Data Siswa</p>
-                        <p class="text-xs text-gray-500">Kelola data siswa</p>
-                    </div>
-                </a>
-            </div>
+        {{-- ── Menu Cepat (Quick Actions) ──────────────────────── --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="{{ route('penerimaan.catat') }}"
+                class="card p-4 flex items-center gap-4 hover:border-emerald-300 hover:shadow-md transition-all group">
+                <div
+                    class="w-10 h-10 bg-emerald-100 group-hover:bg-emerald-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4v16m8-8H4" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900 text-sm">Catat Penerimaan</p>
+                    <p class="text-xs text-gray-500">Proses pembayaran siswa</p>
+                </div>
+            </a>
+            <a href="{{ route('pengeluaran.catat') }}"
+                class="card p-4 flex items-center gap-4 hover:border-red-200 hover:shadow-md transition-all group">
+                <div
+                    class="w-10 h-10 bg-red-100 group-hover:bg-red-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900 text-sm">Catat Pengeluaran</p>
+                    <p class="text-xs text-gray-500">Rekam kas keluar</p>
+                </div>
+            </a>
+            <a href="{{ route('laporan.penerimaan') }}"
+                class="card p-4 flex items-center gap-4 hover:border-blue-200 hover:shadow-md transition-all group">
+                <div
+                    class="w-10 h-10 bg-blue-100 group-hover:bg-blue-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900 text-sm">Lihat Laporan</p>
+                    <p class="text-xs text-gray-500">Rekap keuangan</p>
+                </div>
+            </a>
+            <a href="{{ route('master.siswa.index') }}"
+                class="card p-4 flex items-center gap-4 hover:border-purple-200 hover:shadow-md transition-all group">
+                <div
+                    class="w-10 h-10 bg-purple-100 group-hover:bg-purple-200 rounded-xl flex items-center justify-center transition-colors shrink-0">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900 text-sm">Data Siswa</p>
+                    <p class="text-xs text-gray-500">Kelola data siswa</p>
+                </div>
+            </a>
         </div>
 
         {{-- ── Transaksi Terbaru ───────────────────────────────── --}}

@@ -1,6 +1,48 @@
 <x-layouts.app title="Detail Transaksi">
     <x-slot:pageTitle>Penerimaan / Detail Transaksi</x-slot:pageTitle>
 
+    <style>
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            #kwitansi {
+                border: 1px solid #000000 !important;
+                box-shadow: none !important;
+                background: white !important;
+                color: black !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .border-emerald-600 {
+                border-color: #000000 !important;
+            }
+            .bg-emerald-600 {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                border: 1px solid #000000 !important;
+            }
+            .bg-emerald-50 {
+                background-color: #f3f4f6 !important;
+                border: 1px solid #d1d5db !important;
+            }
+            .text-emerald-700 {
+                color: #000000 !important;
+            }
+            .text-gray-500, .text-gray-600 {
+                color: #374151 !important;
+            }
+            .text-gray-900, .text-gray-800 {
+                color: #000000 !important;
+            }
+        }
+    </style>
+
     {{-- Tombol aksi (no-print) --}}
     <div class="flex items-center gap-3 mb-5 no-print">
         <a href="{{ route('penerimaan.index') }}" class="btn-secondary btn-sm">

@@ -24,18 +24,12 @@ class DashboardController extends Controller
         $totalPenerimaanBulanIni = $this->dashboardService->getTotalPenerimaanBulanIni($tahunAktif);
         $totalPengeluaranBulanIni = $this->dashboardService->getTotalPengeluaranBulanIni($tahunAktif);
 
-        $tunggakanData = $this->dashboardService->getTunggakanData($tahunAktif);
-        $siswaAdaTunggakan = $tunggakanData['siswaAdaTunggakan'];
-        $totalTunggakanAwal = $tunggakanData['totalTunggakanAwal'];
-
         $sppBelumLunas = $this->dashboardService->getSppBelumLunasBulanIni($tahunAktif);
-        $sppTerlewatBelumLunas = $this->dashboardService->getSppTerlewatBelumLunas($tahunAktif);
         $totalSaldo = $this->dashboardService->getTotalSaldo($tahunAktif);
 
         $grafikPenerimaan = $this->dashboardService->getGrafikPenerimaanPerJenis($tahunAktif);
         $penerimaanPerJenisData = $grafikPenerimaan['data'];
         $maxPenerimaanJenis = $grafikPenerimaan['maxVal'];
-
         $transaksiTerbaru = $this->dashboardService->getTransaksiTerbaru($tahunAktif);
 
         // Tambah daftar siswa untuk pencatatan cepat
@@ -84,10 +78,7 @@ class DashboardController extends Controller
             'jumlahSiswa',
             'totalPenerimaanBulanIni',
             'totalPengeluaranBulanIni',
-            'siswaAdaTunggakan',
-            'totalTunggakanAwal',
             'sppBelumLunas',
-            'sppTerlewatBelumLunas',
             'totalSaldo',
             'penerimaanPerJenisData',
             'maxPenerimaanJenis',

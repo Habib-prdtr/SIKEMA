@@ -48,6 +48,7 @@ class TransaksiService
             $transaksi = Transaksi::create([
                 'no_transaksi' => $this->generateNoTransaksi(),
                 'siswa_tahun_ajaran_id' => $sta->id,
+                'tahun_ajaran_id' => $sta->tahun_ajaran_id,
                 'user_id' => $user->id,
                 'tanggal' => $data['tanggal'],
                 'total_bayar' => $totalBayar,
@@ -108,9 +109,7 @@ class TransaksiService
     public function getDaftarPenerimaan(\Illuminate\Http\Request $request, ?\App\Models\TahunAjaran $tahunAktif): \Illuminate\Pagination\LengthAwarePaginator
     {
         $query = Transaksi::with(['siswaTahunAjaran.siswa', 'user'])
-            ->whereHas('siswaTahunAjaran', function ($q) use ($tahunAktif) {
-                $q->where('tahun_ajaran_id', $tahunAktif?->id);
-            })
+            ->where('tahun_ajaran_id', $tahunAktif?->id)
             ->orderByDesc('tanggal')
             ->orderByDesc('id');
 

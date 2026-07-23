@@ -107,6 +107,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [\App\Http\Controllers\Master\DispensasiController::class, 'store'])->name('store');
         Route::put('/{dispensasi}', [\App\Http\Controllers\Master\DispensasiController::class, 'update'])->name('update');
         Route::delete('/{dispensasi}', [\App\Http\Controllers\Master\DispensasiController::class, 'destroy'])->name('destroy');
+        Route::get('/{dispensasi}/siswa', [\App\Http\Controllers\Master\DispensasiController::class, 'siswa'])->name('siswa');
+        Route::post('/{dispensasi}/siswa', [\App\Http\Controllers\Master\DispensasiController::class, 'tambahSiswa'])->name('siswa.store');
+        Route::delete('/{dispensasi}/siswa/{siswaTahunAjaran}', [\App\Http\Controllers\Master\DispensasiController::class, 'hapusSiswa'])->name('siswa.destroy');
     });
 
     // ─── Transaksi: Penerimaan ────────────────────────────

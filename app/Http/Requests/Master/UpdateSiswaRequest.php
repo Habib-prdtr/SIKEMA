@@ -20,7 +20,7 @@ class UpdateSiswaRequest extends FormRequest
         return [
             'no_induk' => ['required', 'string', 'max:20', Rule::unique('siswa', 'no_induk')->ignore($siswaId)],
             'nama' => ['required', 'string', 'max:100'],
-            'kelas' => ['required', 'string', 'max:10'],
+            'kelas' => ['required', 'string', 'max:10', 'regex:/^(7|8|9)/'],
             'asrama' => ['nullable', 'string', 'max:50'],
             'jenis_kelamin' => ['required', 'in:L,P'],
             'tanggal_masuk' => ['nullable', 'date'],
@@ -35,6 +35,7 @@ class UpdateSiswaRequest extends FormRequest
             'no_induk.unique' => 'Nomor induk sudah terdaftar oleh siswa lain.',
             'nama.required' => 'Nama siswa wajib diisi.',
             'kelas.required' => 'Kelas wajib diisi.',
+            'kelas.regex' => 'Kelas tidak valid. Kelas harus diawali tingkat 7-9 (contoh: 7A, 8B, 9).',
             'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih.',
             'jenis_kelamin.in' => 'Jenis kelamin harus L atau P.',
             'status.required' => 'Status wajib dipilih.',

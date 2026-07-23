@@ -53,9 +53,8 @@ class SaldoAwalController extends Controller
             ->get();
 
         // Fetch income (pemasukan from Transaksi)
-        $pemasukanList = Transaksi::whereHas('siswaTahunAjaran', function ($q) use ($tahunAktif) {
-            $q->where('tahun_ajaran_id', $tahunAktif->id);
-        })->with('siswaTahunAjaran.siswa')->get();
+        $pemasukanList = Transaksi::where('tahun_ajaran_id', $tahunAktif->id)
+            ->with('siswaTahunAjaran.siswa')->get();
 
         // Fetch expenses (pengeluaran)
         $pengeluaranList = Pengeluaran::whereHas('posBiaya', function ($q) use ($tahunAktif) {

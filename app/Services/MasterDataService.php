@@ -125,6 +125,11 @@ class MasterDataService
                     continue;
                 }
 
+                if (!preg_match('/^(7|8|9)/', $kelas)) {
+                    $errors[] = "Baris " . ($i + 1) . ": Kelas '{$kelas}' tidak valid. Hanya diperbolehkan untuk tingkat kelas 7-9.";
+                    continue;
+                }
+
                 // Cek duplikasi di database
                 if (\App\Models\Siswa::where('no_induk', $noInduk)->exists()) {
                     $errors[] = "Baris " . ($i + 1) . ": Nomor induk '{$noInduk}' sudah terdaftar di database.";
@@ -453,6 +458,46 @@ class MasterDataService
             $siswaTahunAjaran->loadMissing('dispensasi');
             $dispensasi = $siswaTahunAjaran->dispensasi;
             $durasi = $siswaTahunAjaran->durasi_dispensasi ?? 0;
+
+            // Fetch SPP bills ordered chronologically
+            $bills = $siswaTahunAjaran->tagihanSpp()->orderBy('tahun')->orderBy('bulan')->get();
+
+            foreach ($bills as $index => $bill) {
+                if ($bill->status !== 'belum') {
+                    continue; // Skip paid bills
+                }
+
+                $tagihanNominal = $tarifSpp;
+
+                // Apply dispensation discount if inside the duration
+                if ($dispensasi && $index < $durasi) {
+                    if ($dispensasi->tipe_potongan === 'persen') {
+                        $potongan = ($tarifSpp * $dispensasi->nilai_potongan) / 100;
+                        $tagihanNominal = max(0, $tarifSpp - $potongan);
+                    } elseif ($dispensasi->tipe_potongan === 'nominal') {
+                        $tagihanNominal = max(0, $tarifSpp - $dispensasi->nilai_potongan);
+                    }
+                }
+
+                $bill->update([
+                    'tagihan' => $tagihanNominal,
+                ]);
+            }
+        });
+    }
+
+    public function assignDispensasiKeSiswa(SiswaTahunAjaran $siswaTahunAjaran, ?int $dispensasiId, int $durasi): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($siswaTahunAjaran, $dispensasiId, $durasi) {
+            $siswaTahunAjaran->update([
+                'dispensasi_id' => $dispensasiId,
+                'durasi_dispensasi' => $durasi,
+            ]);
+
+            // Load dispensasi relation
+            $siswaTahunAjaran->loadMissing('dispensasi');
+            $dispensasi = $siswaTahunAjaran->dispensasi;
+            $tarifSpp = $siswaTahunAjaran->tarif_spp;
 
             // Fetch SPP bills ordered chronologically
             $bills = $siswaTahunAjaran->tagihanSpp()->orderBy('tahun')->orderBy('bulan')->get();

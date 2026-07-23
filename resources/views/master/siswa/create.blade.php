@@ -85,17 +85,19 @@
                             class="form-input">
                     </div>
 
-                    {{-- Status --}}
-                    <div class="sm:col-span-2">
-                        <label for="status" class="form-label">Status <span class="text-red-500">*</span></label>
-                        <select id="status" name="status"
-                            class="form-select @error('status') border-red-400 @enderror" required>
-                            <option value="aktif"    {{ old('status', $siswa->status ?? 'aktif') === 'aktif'    ? 'selected' : '' }}>Aktif</option>
-                            <option value="nonaktif" {{ old('status', $siswa->status ?? '')       === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
-                            <option value="lulus"    {{ old('status', $siswa->status ?? '')       === 'lulus'    ? 'selected' : '' }}>Lulus</option>
-                        </select>
-                        @error('status')<p class="form-error">{{ $message }}</p>@enderror
-                    </div>
+                    {{-- Status (Only on Edit) --}}
+                    @if($isEdit)
+                        <div class="sm:col-span-2">
+                            <label for="status" class="form-label">Status <span class="text-red-500">*</span></label>
+                            <select id="status" name="status"
+                                class="form-select @error('status') border-red-400 @enderror" required>
+                                <option value="aktif"    {{ old('status', $siswa->status ?? 'aktif') === 'aktif'    ? 'selected' : '' }}>Aktif</option>
+                                <option value="nonaktif" {{ old('status', $siswa->status ?? '')       === 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
+                                <option value="lulus"    {{ old('status', $siswa->status ?? '')       === 'lulus'    ? 'selected' : '' }}>Lulus</option>
+                            </select>
+                            @error('status')<p class="form-error">{{ $message }}</p>@enderror
+                        </div>
+                    @endif
                 </div>
 
                 <div class="flex items-center gap-3 pt-2 border-t border-gray-100">

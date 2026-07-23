@@ -32,7 +32,7 @@ class DashboardService
     public function getTotalPenerimaanBulanIni(?TahunAjaran $tahunAktif): int
     {
         if (!$tahunAktif) return 0;
-        return Transaksi::whereHas('siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
+        return Transaksi::where('tahun_ajaran_id', $tahunAktif->id)
             ->whereMonth('tanggal', now()->month)
             ->whereYear('tanggal', now()->year)
             ->sum('total_bayar');
@@ -182,13 +182,12 @@ class DashboardService
             'maxVal' => $maxVal,
         ];
     }
-
     public function getTransaksiTerbaru(?TahunAjaran $tahunAktif): Collection
     {
         if (!$tahunAktif) return collect();
 
         return Transaksi::with(['siswaTahunAjaran.siswa', 'user'])
-            ->whereHas('siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
+            ->where('tahun_ajaran_id', $tahunAktif->id)
             ->orderByDesc('tanggal')
             ->orderByDesc('id')
             ->limit(5)
