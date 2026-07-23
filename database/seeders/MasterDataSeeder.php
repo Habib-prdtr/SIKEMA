@@ -61,19 +61,16 @@ class MasterDataSeeder extends Seeder
             }
 
             // 3. Jenis Penerimaan (selain SPP)
-            $jenisPenerimaan = [
-                ['nama' => 'Uang Gedung', 'tarif' => 2000000, 'tahun_ajaran_id' => $tahunAktif->id, 'urutan' => 1],
-                ['nama' => 'Seragam Sekolah', 'tarif' => 800000, 'tahun_ajaran_id' => $tahunAktif->id, 'urutan' => 2],
-                ['nama' => 'Kegiatan Ekstrakurikuler', 'tarif' => 150000, 'tahun_ajaran_id' => $tahunAktif->id, 'urutan' => 3],
-            ];
-
-            foreach ($jenisPenerimaan as $jp) {
+            $names = ['Qurban', 'Tafarrom', 'Muharrom', 'HSN', 'Haol', 'Maulid', 'Rajab', 'Ulangan(UTS/UAS)', 'Akhirussanah'];
+            $urutan = 1;
+            foreach ($names as $name) {
                 JenisPenerimaan::firstOrCreate([
-                    'tahun_ajaran_id' => $jp['tahun_ajaran_id'],
-                    'urutan' => $jp['urutan']
+                    'tahun_ajaran_id' => $tahunAktif->id,
+                    'nama' => $name,
                 ], [
-                    'nama' => $jp['nama'],
-                    'tarif' => $jp['tarif']
+                    'urutan' => $urutan++,
+                    'tarif' => 150000,
+                    'is_aktif' => true,
                 ]);
             }
 
