@@ -11,6 +11,7 @@ class Siswa extends Model
     use HasFactory, HasHashids;
 
     public const STATUS_AKTIF = 'aktif';
+    public const STATUS_NONAKTIF = 'nonaktif';
     public const STATUS_LULUS = 'lulus';
     public const STATUS_PINDAH = 'pindah';
     public const STATUS_BERHENTI = 'berhenti';
@@ -21,7 +22,7 @@ class Siswa extends Model
         'no_induk',
         'nama',
         'kelas',
-        'asrama',
+        'alamat',
         'jenis_kelamin',
         'tanggal_masuk',
         'status',

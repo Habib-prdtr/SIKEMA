@@ -41,17 +41,19 @@ class TagihanService
         $durasiDispensasi = $sta->durasi_dispensasi ?? 0;
 
         $rows = [];
-        foreach ($bulanTahun as $index => $bt) {
+        $dispensasiAppliedCount = 0;
+        foreach ($bulanTahun as $bt) {
             $tagihanNominal = $sta->tarif_spp;
 
             // Jika dalam masa durasi dispensasi, potong tagihan SPP
-            if ($dispensasi && $index < $durasiDispensasi) {
+            if ($dispensasi && $dispensasiAppliedCount < $durasiDispensasi) {
                 if ($dispensasi->tipe_potongan === 'persen') {
                     $potongan = ($sta->tarif_spp * $dispensasi->nilai_potongan) / 100;
                     $tagihanNominal = max(0, $sta->tarif_spp - $potongan);
                 } elseif ($dispensasi->tipe_potongan === 'nominal') {
                     $tagihanNominal = max(0, $sta->tarif_spp - $dispensasi->nilai_potongan);
                 }
+                $dispensasiAppliedCount++;
             }
 
             $rows[] = [

@@ -23,6 +23,12 @@ class SimpanPenerimaanRequest extends FormRequest
             'tanggal' => now()->format('Y-m-d'),
         ]);
 
+        if ($this->has('catatan') && ! $this->has('keterangan')) {
+            $this->merge([
+                'keterangan' => $this->input('catatan'),
+            ]);
+        }
+
         $rawItems = $this->input('items', []);
         $formattedItems = [];
 

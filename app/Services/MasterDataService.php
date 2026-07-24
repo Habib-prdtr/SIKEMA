@@ -78,7 +78,7 @@ class MasterDataService
 
         $colIndex = [
             'no_induk' => -1, 'nama' => -1, 'kelas' => -1,
-            'asrama' => -1, 'jenis_kelamin' => -1, 'tanggal_masuk' => -1,
+            'alamat' => -1, 'jenis_kelamin' => -1, 'tanggal_masuk' => -1,
         ];
 
         foreach ($headers as $index => $header) {
@@ -88,8 +88,8 @@ class MasterDataService
                 $colIndex['nama'] = $index;
             } elseif (str_contains($header, 'kelas')) {
                 $colIndex['kelas'] = $index;
-            } elseif (str_contains($header, 'asrama')) {
-                $colIndex['asrama'] = $index;
+            } elseif (str_contains($header, 'alamat') || str_contains($header, 'almt') || str_contains($header, 'address')) {
+                $colIndex['alamat'] = $index;
             } elseif (str_contains($header, 'jenis kelamin') || str_contains($header, 'jk') || str_contains($header, 'sex') || str_contains($header, 'gender') || str_contains($header, 'l/p')) {
                 $colIndex['jenis_kelamin'] = $index;
             } elseif (str_contains($header, 'tanggal') || str_contains($header, 'tgl') || str_contains($header, 'masuk')) {
@@ -100,7 +100,7 @@ class MasterDataService
         if ($colIndex['no_induk'] === -1) $colIndex['no_induk'] = 0;
         if ($colIndex['nama'] === -1) $colIndex['nama'] = 1;
         if ($colIndex['kelas'] === -1) $colIndex['kelas'] = 2;
-        if ($colIndex['asrama'] === -1) $colIndex['asrama'] = 3;
+        if ($colIndex['alamat'] === -1) $colIndex['alamat'] = 3;
         if ($colIndex['jenis_kelamin'] === -1) $colIndex['jenis_kelamin'] = 4;
         if ($colIndex['tanggal_masuk'] === -1) $colIndex['tanggal_masuk'] = 5;
 
@@ -116,7 +116,7 @@ class MasterDataService
                 $noInduk = trim((string)($row[$colIndex['no_induk']] ?? ''));
                 $nama = trim((string)($row[$colIndex['nama']] ?? ''));
                 $kelas = trim((string)($row[$colIndex['kelas']] ?? ''));
-                $asrama = trim((string)($row[$colIndex['asrama']] ?? ''));
+                $alamat = trim((string)($row[$colIndex['alamat']] ?? ''));
                 $jkRaw = strtoupper(trim((string)($row[$colIndex['jenis_kelamin']] ?? '')));
                 $tglMasukRaw = trim((string)($row[$colIndex['tanggal_masuk']] ?? ''));
 
@@ -172,7 +172,7 @@ class MasterDataService
                     'no_induk' => $noInduk,
                     'nama' => $nama,
                     'kelas' => $kelas,
-                    'asrama' => $asrama ?: null,
+                    'alamat' => $alamat ?: null,
                     'jenis_kelamin' => $jk,
                     'tanggal_masuk' => $tanggalMasuk,
                     'status' => 'aktif',
@@ -323,13 +323,13 @@ class MasterDataService
                     } elseif (preg_match('/^VII(.*)/i', $currentKelas, $matches)) {
                         $s->update(['kelas' => 'VIII' . $matches[1]]);
                     } elseif (preg_match('/^IX(.*)/i', $currentKelas, $matches)) {
-                        $s->update(['status' => 'lulus']);
+                        $s->update(['status' => \App\Models\Siswa::STATUS_NONAKTIF]);
                     } elseif (preg_match('/^XI(.*)/i', $currentKelas, $matches)) {
                         $s->update(['kelas' => 'XII' . $matches[1]]);
                     } elseif (preg_match('/^X(.*)/i', $currentKelas, $matches)) {
                         $s->update(['kelas' => 'XI' . $matches[1]]);
                     } elseif (preg_match('/^XII(.*)/i', $currentKelas, $matches)) {
-                        $s->update(['status' => 'lulus']);
+                        $s->update(['status' => \App\Models\Siswa::STATUS_NONAKTIF]);
                     }
                     // 2. Kenaikan kelas berbasis angka biasa
                     elseif (preg_match('/^7(.*)/', $currentKelas, $matches)) {
@@ -337,7 +337,7 @@ class MasterDataService
                     } elseif (preg_match('/^8(.*)/', $currentKelas, $matches)) {
                         $s->update(['kelas' => '9' . $matches[1]]);
                     } elseif (preg_match('/^9(.*)/', $currentKelas)) {
-                        $s->update(['status' => 'lulus']);
+                        $s->update(['status' => \App\Models\Siswa::STATUS_NONAKTIF]);
                     }
                 }
             }
@@ -462,21 +462,24 @@ class MasterDataService
             // Fetch SPP bills ordered chronologically
             $bills = $siswaTahunAjaran->tagihanSpp()->orderBy('tahun')->orderBy('bulan')->get();
 
-            foreach ($bills as $index => $bill) {
+            $dispensasiAppliedCount = 0;
+
+            foreach ($bills as $bill) {
                 if ($bill->status !== 'belum') {
                     continue; // Skip paid bills
                 }
 
                 $tagihanNominal = $tarifSpp;
 
-                // Apply dispensation discount if inside the duration
-                if ($dispensasi && $index < $durasi) {
+                // Apply dispensation discount if inside the duration for unpaid bills
+                if ($dispensasi && $dispensasiAppliedCount < $durasi) {
                     if ($dispensasi->tipe_potongan === 'persen') {
                         $potongan = ($tarifSpp * $dispensasi->nilai_potongan) / 100;
                         $tagihanNominal = max(0, $tarifSpp - $potongan);
                     } elseif ($dispensasi->tipe_potongan === 'nominal') {
                         $tagihanNominal = max(0, $tarifSpp - $dispensasi->nilai_potongan);
                     }
+                    $dispensasiAppliedCount++;
                 }
 
                 $bill->update([
@@ -502,21 +505,24 @@ class MasterDataService
             // Fetch SPP bills ordered chronologically
             $bills = $siswaTahunAjaran->tagihanSpp()->orderBy('tahun')->orderBy('bulan')->get();
 
-            foreach ($bills as $index => $bill) {
+            $dispensasiAppliedCount = 0;
+
+            foreach ($bills as $bill) {
                 if ($bill->status !== 'belum') {
                     continue; // Skip paid bills
                 }
 
                 $tagihanNominal = $tarifSpp;
 
-                // Apply dispensation discount if inside the duration
-                if ($dispensasi && $index < $durasi) {
+                // Apply dispensation discount if inside the duration for unpaid bills
+                if ($dispensasi && $dispensasiAppliedCount < $durasi) {
                     if ($dispensasi->tipe_potongan === 'persen') {
                         $potongan = ($tarifSpp * $dispensasi->nilai_potongan) / 100;
                         $tagihanNominal = max(0, $tarifSpp - $potongan);
                     } elseif ($dispensasi->tipe_potongan === 'nominal') {
                         $tagihanNominal = max(0, $tarifSpp - $dispensasi->nilai_potongan);
                     }
+                    $dispensasiAppliedCount++;
                 }
 
                 $bill->update([

@@ -44,7 +44,7 @@
                                 <th>No. Induk</th>
                                 <th>Nama Siswa</th>
                                 <th>Kelas</th>
-                                <th>Asrama</th>
+                                <th>Alamat</th>
                                 <th class="text-center">Durasi Dispensasi</th>
                                 <th class="text-center w-24">Aksi</th>
                             </tr>
@@ -55,7 +55,7 @@
                                     <td class="font-mono text-sm text-gray-600">{{ $p->siswa->no_induk }}</td>
                                     <td class="font-medium text-gray-900">{{ $p->siswa->nama }}</td>
                                     <td>{{ $p->siswa->kelas }}</td>
-                                    <td>{{ $p->siswa->asrama ?? '-' }}</td>
+                                    <td>{{ $p->siswa->alamat ?? '-' }}</td>
                                     <td class="text-center font-semibold text-blue-600">
                                         {{ $p->durasi_dispensasi }} Bulan
                                     </td>

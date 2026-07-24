@@ -21,7 +21,7 @@ class UpdateSiswaRequest extends FormRequest
             'no_induk' => ['required', 'string', 'max:20', Rule::unique('siswa', 'no_induk')->ignore($siswaId)],
             'nama' => ['required', 'string', 'max:100'],
             'kelas' => ['required', 'string', 'max:10', 'regex:/^(7|8|9)/'],
-            'asrama' => ['nullable', 'string', 'max:50'],
+            'alamat' => ['nullable', 'string'],
             'jenis_kelamin' => ['required', 'in:L,P'],
             'tanggal_masuk' => ['nullable', 'date'],
             'status' => ['required', 'in:aktif,nonaktif,lulus'],

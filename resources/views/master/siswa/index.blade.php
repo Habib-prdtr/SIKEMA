@@ -62,7 +62,7 @@
                                 <th>No. Induk</th>
                                 <th>Nama Siswa</th>
                                 <th>Kelas</th>
-                                <th>Asrama</th>
+                                <th>Alamat</th>
                                 <th>JK</th>
                                 <th>Status</th>
                                 <th class="text-center">Aksi</th>
@@ -74,7 +74,7 @@
                                     <td class="font-mono text-xs font-medium">{{ $s->no_induk }}</td>
                                     <td class="font-medium text-gray-900">{{ $s->nama }}</td>
                                     <td>{{ $s->kelas }}</td>
-                                    <td class="text-gray-500">{{ $s->asrama ?? '-' }}</td>
+                                    <td class="text-gray-500">{{ $s->alamat ?? '-' }}</td>
                                     <td>
                                         <span class="{{ $s->jenis_kelamin === 'L' ? 'badge-blue' : 'badge badge-pink' }}">
                                             {{ $s->jenis_kelamin === 'L' ? 'L' : 'P' }}

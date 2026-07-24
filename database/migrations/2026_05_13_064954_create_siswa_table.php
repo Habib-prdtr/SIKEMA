@@ -20,8 +20,8 @@ return new class extends Migration
 
             $table->string('kelas', 10);
 
-            // Asrama (opsional, contoh: Putra A, Putri B)
-            $table->string('asrama', 50)->nullable();
+            // Alamat (opsional)
+            $table->text('alamat')->nullable();
 
             $table->enum('jenis_kelamin', ['L', 'P']);
 

@@ -142,4 +142,44 @@ class DataSiswaController extends Controller
             return back()->withErrors(['error' => 'Gagal membaca atau memproses file Excel: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Unduh template Excel untuk import data siswa.
+     */
+    public function downloadTemplate(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Siswa');
+
+        // Header
+        $headers = ['No. Induk', 'Nama', 'Kelas', 'Alamat', 'Jenis Kelamin', 'Tanggal Masuk'];
+        $sheet->fromArray([$headers], null, 'A1');
+
+        // Sample Data
+        $sampleData = [
+            ['1001', 'Ahmad Fulan', '7A', 'Jl. Merdeka No. 12', 'L', '2026-07-15'],
+            ['1002', 'Siti Aminah', '8B', 'Jl. Mawar No. 5', 'P', '2026-07-15'],
+        ];
+        $sheet->fromArray($sampleData, null, 'A2');
+
+        // Header Styling
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:F1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('D1FAE5');
+
+        // Auto-fit columns
+        foreach (range('A', 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, 'Template_Import_Siswa.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
 }

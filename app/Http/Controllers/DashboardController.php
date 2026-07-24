@@ -16,7 +16,7 @@ class DashboardController extends Controller
         $this->dashboardService = $dashboardService;
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): View|\Illuminate\Http\JsonResponse
     {
         $tahunAktif = TahunAjaran::aktif();
 
@@ -71,6 +71,60 @@ class DashboardController extends Controller
                 $tagihanIuran = $sta->tagihanIuran;
                 $sisaTunggakan = $tunggakanService->hitungSisa($sta);
             }
+        }
+
+        if ($request->wantsJson() || $request->ajax() || $request->has('ajax')) {
+            if (!$siswa) {
+                return response()->json(['error' => 'Siswa dengan No. Induk tersebut tidak ditemukan atau belum aktif.'], 404);
+            }
+
+            $siswa->loadMissing('dispensasi');
+
+            return response()->json([
+                'siswa' => [
+                    'id' => $siswa->id,
+                    'nama' => $siswa->siswa->nama,
+                    'no_induk' => $siswa->siswa->no_induk,
+                    'kelas' => $siswa->siswa->kelas,
+                    'tahun_ajaran' => $siswa->tahunAjaran->nama,
+                    'tarif_spp' => $siswa->tarif_spp,
+                    'tunggakan_awal' => $siswa->tunggakan_awal,
+                    'dispensasi_nama' => $siswa->dispensasi->nama ?? null,
+                ],
+                'sisaTunggakan' => $sisaTunggakan,
+                'tagihanSpp' => $tagihanSpp->map(function ($spp) use ($siswa) {
+                    $lunas = $spp->status === 'lunas';
+                    $nama = \Carbon\Carbon::createFromDate($spp->tahun, $spp->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
+                    $nominal = $lunas ? $spp->tagihan : $spp->sisa();
+                    $hasDispensasi = $spp->tagihan < $siswa->tarif_spp;
+                    $potongan = $hasDispensasi ? ($siswa->tarif_spp - $spp->tagihan) : 0;
+                    return [
+                        'id' => $spp->id,
+                        'bulan' => $spp->bulan,
+                        'tahun' => $spp->tahun,
+                        'nama' => $nama,
+                        'status' => $spp->status,
+                        'tagihan' => $spp->tagihan,
+                        'nominal' => $nominal,
+                        'lunas' => $lunas,
+                        'hasDispensasi' => $hasDispensasi,
+                        'potongan' => $potongan,
+                        'namaDispensasi' => $siswa->dispensasi->nama ?? null,
+                    ];
+                }),
+                'tagihanIuran' => $tagihanIuran->map(function ($iuran) {
+                    $lunas = $iuran->status === 'lunas';
+                    $nominal = $lunas ? $iuran->tagihan : $iuran->sisa();
+                    return [
+                        'id' => $iuran->id,
+                        'nama' => $iuran->jenisPenerimaan->nama ?? 'Iuran',
+                        'status' => $iuran->status,
+                        'tagihan' => $iuran->tagihan,
+                        'nominal' => $nominal,
+                        'lunas' => $lunas,
+                    ];
+                }),
+            ]);
         }
 
         return view('dashboard.index', compact(

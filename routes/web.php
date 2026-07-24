@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [DataSiswaController::class, 'store'])->name('store');
         Route::get('/import', [DataSiswaController::class, 'showImportForm'])->name('import.form');
         Route::post('/import', [DataSiswaController::class, 'import'])->name('import');
+        Route::get('/template', [DataSiswaController::class, 'downloadTemplate'])->name('template');
         Route::get('/{siswa}/edit', [DataSiswaController::class, 'edit'])->name('edit');
         Route::put('/{siswa}', [DataSiswaController::class, 'update'])->name('update');
         Route::delete('/{siswa}', [DataSiswaController::class, 'destroy'])->name('destroy');

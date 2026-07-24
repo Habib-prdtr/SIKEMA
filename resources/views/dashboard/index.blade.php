@@ -104,33 +104,24 @@
                                             @php
                                                 $isTerpilih = isset($siswa) && $siswa->id === $s->id;
                                             @endphp
-                                            <tr class="{{ $isTerpilih ? 'bg-emerald-50/50' : '' }}">
+                                            <tr data-no-induk="{{ $s->siswa->no_induk }}" class="siswa-row-dashboard {{ $isTerpilih ? 'bg-emerald-50/50' : '' }}">
                                                 <td class="font-mono text-xs font-medium text-gray-600">
                                                     {{ $s->siswa->no_induk }}</td>
                                                 <td class="font-medium text-gray-900">
                                                     <div class="flex items-center gap-2">
                                                         <span>{{ $s->siswa->nama }}</span>
-                                                        @if ($isTerpilih)
-                                                            <span class="badge-green text-xs">
-                                                                Terpilih
-                                                            </span>
-                                                        @endif
+                                                        <span class="badge-terpilih-dashboard badge-green text-xs {{ $isTerpilih ? '' : 'hidden' }}">
+                                                            Terpilih
+                                                        </span>
                                                     </div>
                                                 </td>
                                                 <td>{{ $s->siswa->kelas }}</td>
                                                 <td class="text-center">
-                                                    @if ($isTerpilih)
-                                                        <button type="button"
-                                                            class="btn-secondary btn-sm opacity-60 cursor-not-allowed w-full"
-                                                            disabled>
-                                                            Terpilih
-                                                        </button>
-                                                    @else
-                                                        <a href="{{ route('dashboard', ['no_induk' => $s->siswa->no_induk, 'cari' => request('cari')]) }}"
-                                                            class="btn-primary btn-sm w-full block text-center">
-                                                            Catat
-                                                        </a>
-                                                    @endif
+                                                    <a href="{{ route('dashboard', ['no_induk' => $s->siswa->no_induk, 'cari' => request('cari')]) }}"
+                                                        data-no-induk="{{ $s->siswa->no_induk }}"
+                                                        class="btn-catat-dashboard btn-sm w-full block text-center transition-all {{ $isTerpilih ? 'bg-emerald-50 text-emerald-700 border-2 border-emerald-500 font-semibold' : 'bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm' }}">
+                                                        {{ $isTerpilih ? 'Terpilih' : 'Catat' }}
+                                                    </a>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -162,9 +153,10 @@
                     </div>
                 @endif
 
-                @isset($siswa)
+                {{-- Container Detail Transaksi Dashboard --}}
+                <div id="container-detail-transaksi-dashboard" class="space-y-5 {{ isset($siswa) ? '' : 'hidden' }}">
                     {{-- STEP 2: Info Siswa --}}
-                    <div class="card animate-pulse-once">
+                    <div class="card" id="card-data-siswa-dashboard">
                         <div class="card-header">
                             <h3 class="font-semibold text-gray-900 flex items-center gap-2">
                                 <span
@@ -187,48 +179,44 @@
                                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm flex-1">
                                         <div>
                                             <p class="text-gray-500">Nama</p>
-                                            <p class="font-semibold text-gray-900">{{ $siswa->siswa->nama }}</p>
+                                            <p id="dash-detail-nama" class="font-semibold text-gray-900">{{ $siswa->siswa->nama ?? '' }}</p>
                                         </div>
                                         <div>
                                             <p class="text-gray-500">No. Induk</p>
-                                            <p class="font-mono font-semibold">{{ $siswa->siswa->no_induk }}</p>
+                                            <p id="dash-detail-no-induk" class="font-mono font-semibold">{{ $siswa->siswa->no_induk ?? '' }}</p>
                                         </div>
                                         <div>
                                             <p class="text-gray-500">Kelas</p>
-                                            <p class="font-semibold">{{ $siswa->siswa->kelas }}</p>
+                                            <p id="dash-detail-kelas" class="font-semibold">{{ $siswa->siswa->kelas ?? '' }}</p>
                                         </div>
                                         <div>
                                             <p class="text-gray-500">Tahun Ajaran</p>
-                                            <p class="font-semibold">{{ $siswa->tahunAjaran->nama }}</p>
+                                            <p id="dash-detail-tahun-ajaran" class="font-semibold">{{ $siswa->tahunAjaran->nama ?? '' }}</p>
                                         </div>
                                         <div>
                                             <p class="text-gray-500">Tarif SPP</p>
-                                            <p class="font-semibold text-emerald-700">
-                                                {{ format_rupiah($siswa->tarif_spp) }}</p>
+                                            <p id="dash-detail-tarif-spp" class="font-semibold text-emerald-700">
+                                                {{ isset($siswa) ? format_rupiah($siswa->tarif_spp) : '' }}</p>
                                         </div>
-                                        @if ($siswa->tunggakan_awal > 0)
-                                            <div>
-                                                <p class="text-gray-500">Sisa Tunggakan</p>
-                                                <p class="font-semibold text-amber-700">
-                                                    {{ format_rupiah($sisaTunggakan) }}</p>
-                                            </div>
-                                        @endif
+                                        <div id="dash-detail-sisa-tunggakan-wrapper" class="{{ ($siswa->tunggakan_awal ?? 0) > 0 ? '' : 'hidden' }}">
+                                            <p class="text-gray-500">Sisa Tunggakan</p>
+                                            <p id="dash-detail-sisa-tunggakan" class="font-semibold text-amber-700">
+                                                {{ format_rupiah($sisaTunggakan ?? 0) }}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            @if ($siswa->tunggakan_awal > 0 && $sisaTunggakan > 0)
-                                <div class="alert-warning mt-4">
-                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p>Terdapat <strong>tunggakan tahun sebelumnya</strong> sebesar
-                                        <strong>{{ format_rupiah($sisaTunggakan) }}</strong>.
-                                    </p>
-                                </div>
-                            @endif
+                            <div id="dash-alert-tunggakan" class="alert-warning mt-4 {{ (($siswa->tunggakan_awal ?? 0) > 0 && ($sisaTunggakan ?? 0) > 0) ? '' : 'hidden' }}">
+                                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p>Terdapat <strong>tunggakan tahun sebelumnya</strong> sebesar
+                                    <strong id="dash-text-sisa-tunggakan-alert">{{ format_rupiah($sisaTunggakan ?? 0) }}</strong>.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -241,15 +229,27 @@
                                 Pilih Pembayaran
                             </h3>
                         </div>
-                        <form id="form-penerimaan" method="POST" action="{{ route('penerimaan.store') }}">
+                        <form id="form-penerimaan" novalidate method="POST" action="{{ route('penerimaan.store') }}">
                             @csrf
-                            <input type="hidden" name="siswa_tahun_ajaran_id" value="{{ $siswa->id }}">
+                            <input type="hidden" id="dash-input-siswa-tahun-ajaran-id" name="siswa_tahun_ajaran_id" value="{{ $siswa->id ?? '' }}">
                             <input type="hidden" id="total-bayar-input" name="total_bayar" value="0">
 
                             <div class="card-body space-y-5">
-                                @php
-                                    $defaultTab = 'spp';
-                                @endphp
+                                @if($errors->any())
+                                    <div class="alert-error">
+                                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <div>
+                                            <p class="font-semibold text-xs mb-1">Gagal memproses transaksi:</p>
+                                            <ul class="list-disc list-inside text-xs space-y-0.5">
+                                                @foreach($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
 
                                 {{-- Tab Navigation (Boxed Segmented Selector) --}}
                                 <div class="grid grid-cols-2 gap-3 mb-2">
@@ -271,8 +271,8 @@
 
                                 {{-- SPP Section --}}
                                 <div id="section-spp" class="space-y-3 hidden">
-                                    @if ($tagihanSpp->isNotEmpty())
-                                        <div class="space-y-2">
+                                    <div id="dash-list-items-spp" class="space-y-2">
+                                        @if (isset($tagihanSpp) && $tagihanSpp->isNotEmpty())
                                             @foreach ($tagihanSpp as $spp)
                                                 @php
                                                     $lunas = $spp->status === 'lunas';
@@ -286,6 +286,9 @@
                                                         !$lunas &&
                                                         ($spp->tahun < now()->year ||
                                                             ($spp->tahun == now()->year && $spp->bulan < now()->month));
+                                                    $hasDispensasi = isset($siswa) && $spp->tagihan < $siswa->tarif_spp;
+                                                    $potongan = $hasDispensasi ? ($siswa->tarif_spp - $spp->tagihan) : 0;
+                                                    $namaDispensasi = $siswa->dispensasi->nama ?? 'Dispensasi';
                                                 @endphp
                                                 <label
                                                     class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
@@ -303,6 +306,12 @@
                                                                 class="text-xs {{ $isTerlewat ? 'text-red-600 font-medium' : 'text-gray-500' }}">
                                                                 {{ $spp->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : ($isTerlewat ? 'Terlewat / Belum dibayar' : 'Belum dibayar')) }}
                                                             </p>
+                                                            @if($hasDispensasi)
+                                                                <p class="text-xs text-purple-700 font-medium mt-0.5 flex items-center gap-1">
+                                                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-600 inline-block"></span>
+                                                                    Potongan Dispensasi ({{ $namaDispensasi }}): -{{ format_rupiah($potongan) }} (Normal: {{ format_rupiah($siswa->tarif_spp) }})
+                                                                </p>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                     <div class="text-right">
@@ -311,6 +320,8 @@
                                                             {{ format_rupiah($nominal) }}</p>
                                                         @if ($lunas)
                                                             <span class="badge-green text-xs">Lunas</span>
+                                                        @elseif($hasDispensasi)
+                                                            <span class="inline-block text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded">{{ $namaDispensasi }}</span>
                                                         @elseif($isTerlewat)
                                                             <span class="badge-red text-xs">Terlewat</span>
                                                         @else
@@ -319,20 +330,19 @@
                                                     </div>
                                                 </label>
                                             @endforeach
-                                        </div>
-                                    @else
-                                        <div
-                                            class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                            <p class="text-sm font-medium">Tidak ada tagihan SPP untuk siswa ini.</p>
-                                        </div>
-                                    @endif
+                                        @else
+                                            <div
+                                                class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                                <p class="text-sm font-medium">Tidak ada tagihan SPP untuk siswa ini.</p>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 {{-- Iuran & Lainnya Section --}}
                                 <div id="section-iuran" class="space-y-4 hidden">
-                                    {{-- Iuran --}}
-                                    @if ($tagihanIuran->isNotEmpty())
-                                        <div class="space-y-2">
+                                    <div id="dash-list-items-iuran" class="space-y-2">
+                                        @if (isset($tagihanIuran) && $tagihanIuran->isNotEmpty())
                                             @foreach ($tagihanIuran as $iuran)
                                                 @php
                                                     $lunas = $iuran->status === 'lunas';
@@ -347,13 +357,13 @@
                                                             data-tagihan-nominal="{{ $nominal }}"
                                                             {{ $lunas ? 'disabled' : '' }}
                                                             class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
-                                                        <label class="flex-1 cursor-pointer">
+                                                        <div class="flex-1">
                                                             <span
                                                                 class="text-sm font-medium text-gray-900 block">{{ $iuran->jenisPenerimaan->nama }}</span>
                                                             <span class="text-xs text-gray-500 block">
                                                                 {{ $iuran->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : 'Belum dibayar') }}
                                                             </span>
-                                                        </label>
+                                                        </div>
                                                     </div>
                                                     <div class="text-right">
                                                         <p class="font-semibold text-sm">{{ format_rupiah($nominal) }}</p>
@@ -363,35 +373,35 @@
                                                     </div>
                                                 </label>
                                             @endforeach
-                                        </div>
-                                    @endif
+                                        @endif
+                                    </div>
 
                                     {{-- Tunggakan --}}
-                                    @if ($sisaTunggakan > 0)
+                                    <div id="dash-wrapper-tunggakan" class="{{ ($sisaTunggakan ?? 0) > 0 ? '' : 'hidden' }}">
                                         <div
                                             class="p-3 rounded-lg border border-amber-200 bg-amber-50 flex items-center justify-between">
                                             <div class="flex items-center gap-3">
                                                 <input type="checkbox" name="items[tunggakan]" value="1"
-                                                    data-tagihan-nominal="{{ $sisaTunggakan }}"
+                                                    data-tagihan-nominal="{{ $sisaTunggakan ?? 0 }}"
                                                     class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
                                                 <div>
                                                     <p class="text-sm font-medium text-gray-900">Cicil/Lunasi Tunggakan</p>
                                                     <p class="text-xs text-amber-700">Sisa:
-                                                        {{ format_rupiah($sisaTunggakan) }}</p>
+                                                        <span id="dash-text-sisa-tunggakan-iuran">{{ format_rupiah($sisaTunggakan ?? 0) }}</span></p>
                                                 </div>
                                             </div>
                                             <div>
                                                 <input type="number" name="nominal_tunggakan"
-                                                    value="{{ $sisaTunggakan }}"
-                                                    class="form-input w-36 text-right text-sm" min="1000"
-                                                    max="{{ $sisaTunggakan }}" step="1000"
+                                                    value="{{ $sisaTunggakan ?? 0 }}"
+                                                    class="form-input w-36 text-right text-sm" min="0"
+                                                    max="{{ $sisaTunggakan ?? 0 }}" step="1000"
                                                     placeholder="Nominal cicil">
                                             </div>
                                         </div>
-                                    @endif
+                                    </div>
 
                                     {{-- Jika Keduanya Kosong --}}
-                                    @if ($tagihanIuran->isEmpty() && $sisaTunggakan == 0)
+                                    @if (!isset($tagihanIuran) || ($tagihanIuran->isEmpty() && ($sisaTunggakan ?? 0) == 0))
                                         <div
                                             class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                                             <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none"
@@ -432,20 +442,103 @@
                             {{-- Action Buttons Footer (Hidden on load) --}}
                             <div id="section-actions"
                                 class="px-6 py-4 border-t border-gray-100 flex items-center gap-3 hidden">
-                                <button type="submit" class="btn-primary"
-                                    onclick="return document.getElementById('total-bayar-input').value > 0 || (alert('Pilih minimal 1 item pembayaran'), false)">
+                                <button type="button" onclick="showModalKonfirmasiDashboard()" id="btn-submit-penerimaan-dashboard" class="btn-primary">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M5 13l4 4L19 7" />
                                     </svg>
-                                    Proses Pembayaran
+                                    <span>Proses Pembayaran</span>
                                 </button>
                                 <a href="{{ route('dashboard') }}" class="btn-secondary">Reset</a>
                             </div>
                         </form>
                     </div>
-                @endisset
+                </div>
             </div>
+
+    {{-- Modal Konfirmasi Pembayaran --}}
+    <div id="modal-konfirmasi-penerimaan" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-md hidden opacity-0 transition-all duration-200">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full mx-4 overflow-hidden transform scale-95 transition-all duration-200" id="modal-konfirmasi-card">
+            
+            {{-- Header --}}
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-emerald-600 text-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base leading-tight">Konfirmasi Pembayaran</h3>
+                        <p class="text-xs text-emerald-100 font-normal">Periksa rincian sebelum menyimpan</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalKonfirmasi()" class="text-emerald-100 hover:text-white focus:outline-none p-1 rounded-lg hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            {{-- Body --}}
+            <div class="p-6 space-y-4 text-sm bg-white">
+                
+                {{-- Student Box --}}
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
+                    <div class="flex items-center justify-between text-xs text-gray-500 pb-2 border-b border-gray-200/60">
+                        <span class="font-semibold uppercase tracking-wider text-gray-400">Informasi Siswa</span>
+                        <span id="modal-no-induk-siswa" class="font-mono bg-white px-2 py-0.5 rounded border border-gray-200 font-semibold text-gray-700"></span>
+                    </div>
+                    <div class="flex items-center justify-between pt-1">
+                        <div>
+                            <h4 id="modal-nama-siswa" class="font-bold text-gray-900 text-base leading-tight"></h4>
+                            <p id="modal-kelas-siswa" class="text-xs text-emerald-600 font-semibold mt-0.5"></p>
+                        </div>
+                        <div class="shrink-0 bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full">
+                            Aktif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Selected Items --}}
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Item Pembayaran Terpilih</p>
+                    <div id="modal-list-items" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+                    </div>
+                </div>
+
+                {{-- Catatan --}}
+                <div id="modal-catatan-wrapper" class="hidden text-xs bg-amber-50/80 border border-amber-200 p-3 rounded-xl">
+                    <span class="font-semibold text-amber-800 block mb-0.5">Catatan Tambahan:</span>
+                    <span id="modal-catatan-text" class="text-amber-900 font-normal"></span>
+                </div>
+
+                {{-- Total Bayar Footer Box --}}
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-emerald-800 font-medium">Total Pembayaran</p>
+                        <p class="text-xs text-gray-500">Tunai / Transfer</p>
+                    </div>
+                    <div class="text-right">
+                        <span id="modal-total-bayar" class="text-2xl font-black text-emerald-700 tracking-tight"></span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeModalKonfirmasi()" class="btn-secondary">
+                    Batal
+                </button>
+                <button type="button" id="btn-submit-final-modal" onclick="submitFormPenerimaanFinal()" class="btn-primary shadow-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>Ya, Proses Pembayaran</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
             {{-- Right Column: Stats Cards --}}
             <div class="md:col-span-1 space-y-4">
@@ -736,10 +829,30 @@
 
     </div>
 
-    {{-- Script Tab Switcher --}}
+    {{-- Script Tab Switcher & AJAX --}}
     <script>
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        }
+
+        function updateTotalBayarDashboard() {
+            let total = 0;
+            document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked').forEach(cb => {
+                if (cb.name === 'items[tunggakan]') {
+                    const nominalInput = document.querySelector('input[name="nominal_tunggakan"]');
+                    total += parseInt(nominalInput?.value || 0, 10);
+                } else {
+                    total += parseInt(cb.dataset.tagihanNominal || 0, 10);
+                }
+            });
+
+            const inputTotal = document.getElementById('total-bayar-input');
+            const displayTotal = document.getElementById('total-bayar-display');
+            if (inputTotal) inputTotal.value = total;
+            if (displayTotal) displayTotal.innerText = formatRupiah(total);
+        }
+
         function switchTab(tabName) {
-            // Hide all sections
             const sppSec = document.getElementById('section-spp');
             const iuranSec = document.getElementById('section-iuran');
             const tunggakanSec = document.getElementById('section-tunggakan');
@@ -748,17 +861,14 @@
             if (iuranSec) iuranSec.classList.add('hidden');
             if (tunggakanSec) tunggakanSec.classList.add('hidden');
 
-            // Show selected section
             const activeSec = document.getElementById('section-' + tabName);
             if (activeSec) activeSec.classList.remove('hidden');
 
-            // Show checkout and action sections
             const checkoutSec = document.getElementById('section-checkout');
             const actionsSec = document.getElementById('section-actions');
             if (checkoutSec) checkoutSec.classList.remove('hidden');
             if (actionsSec) actionsSec.classList.remove('hidden');
 
-            // Reset all tab button styles to inactive
             const sppBtn = document.getElementById('tab-btn-spp');
             const iuranBtn = document.getElementById('tab-btn-iuran');
 
@@ -775,7 +885,6 @@
                 if (desc) desc.className = "tab-desc block text-xs font-normal text-gray-500 mt-0.5";
             }
 
-            // Set active tab button style
             const activeBtn = document.getElementById('tab-btn-' + tabName);
             if (activeBtn) {
                 activeBtn.className =
@@ -784,5 +893,307 @@
                 if (desc) desc.className = "tab-desc block text-xs font-normal text-emerald-600 mt-0.5";
             }
         }
+
+        function renderDashboardDetailSiswa(data) {
+            const s = data.siswa;
+            document.getElementById('dash-detail-nama').innerText = s.nama;
+            document.getElementById('dash-detail-no-induk').innerText = s.no_induk;
+            document.getElementById('dash-detail-kelas').innerText = s.kelas;
+            document.getElementById('dash-detail-tahun-ajaran').innerText = s.tahun_ajaran;
+            document.getElementById('dash-detail-tarif-spp').innerText = formatRupiah(s.tarif_spp);
+            document.getElementById('dash-input-siswa-tahun-ajaran-id').value = s.id;
+
+            const tunggakanWrapper = document.getElementById('dash-detail-sisa-tunggakan-wrapper');
+            const alertTunggakan = document.getElementById('dash-alert-tunggakan');
+            const wrapperTunggakan = document.getElementById('dash-wrapper-tunggakan');
+
+            if (s.tunggakan_awal > 0 && data.sisaTunggakan > 0) {
+                if (tunggakanWrapper) {
+                    tunggakanWrapper.classList.remove('hidden');
+                    document.getElementById('dash-detail-sisa-tunggakan').innerText = formatRupiah(data.sisaTunggakan);
+                }
+                if (alertTunggakan) {
+                    alertTunggakan.classList.remove('hidden');
+                    document.getElementById('dash-text-sisa-tunggakan-alert').innerText = formatRupiah(data.sisaTunggakan);
+                }
+                if (wrapperTunggakan) {
+                    wrapperTunggakan.classList.remove('hidden');
+                    document.getElementById('dash-text-sisa-tunggakan-iuran').innerText = formatRupiah(data.sisaTunggakan);
+                }
+            } else {
+                if (tunggakanWrapper) tunggakanWrapper.classList.add('hidden');
+                if (alertTunggakan) alertTunggakan.classList.add('hidden');
+                if (wrapperTunggakan) wrapperTunggakan.classList.add('hidden');
+            }
+
+            // Render SPP items
+            const sppListEl = document.getElementById('dash-list-items-spp');
+            if (data.tagihanSpp && data.tagihanSpp.length > 0) {
+                let html = '';
+                const currentYear = new Date().getFullYear();
+                const currentMonth = new Date().getMonth() + 1;
+
+                data.tagihanSpp.forEach(spp => {
+                    const lunas = spp.lunas;
+                    const nominal = spp.nominal;
+                    const hasDispensasi = spp.hasDispensasi;
+                    const potongan = spp.potongan;
+                    const namaDispensasi = spp.namaDispensasi || 'Dispensasi';
+                    const isTerlewat = !lunas && (spp.tahun < currentYear || (spp.tahun === currentYear && spp.bulan < currentMonth));
+
+                    html += `
+                    <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : (isTerlewat ? 'border-red-200 bg-red-50/30 hover:border-red-400 hover:bg-red-50' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50')}">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" name="items[spp][]" value="${spp.id}"
+                                data-tagihan-nominal="${nominal}" ${lunas ? 'disabled' : ''}
+                                class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">SPP ${spp.nama}</p>
+                                <p class="text-xs ${isTerlewat ? 'text-red-600 font-medium' : 'text-gray-500'}">
+                                    ${spp.status === 'cicilan' ? 'Cicilan — Sisa bayar' : (lunas ? 'Sudah lunas' : (isTerlewat ? 'Terlewat / Belum dibayar' : 'Belum dibayar'))}
+                                </p>
+                                ${hasDispensasi ? `
+                                    <p class="text-xs text-purple-700 font-medium mt-0.5 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-600 inline-block"></span>
+                                        Potongan Dispensasi (${namaDispensasi}): -${formatRupiah(potongan)} (Normal: ${formatRupiah(s.tarif_spp)})
+                                    </p>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-sm ${isTerlewat ? 'text-red-700' : ''}">${formatRupiah(nominal)}</p>
+                            ${lunas ? '<span class="badge-green text-xs">Lunas</span>' : (hasDispensasi ? `<span class="inline-block text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded">${namaDispensasi}</span>` : (isTerlewat ? '<span class="badge-red text-xs">Terlewat</span>' : '<span class="badge-yellow text-xs">Belum Bayar</span>'))}
+                        </div>
+                    </label>`;
+                });
+                sppListEl.innerHTML = html;
+            } else {
+                sppListEl.innerHTML = '<div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200"><p class="text-sm font-medium">Tidak ada tagihan SPP untuk siswa ini.</p></div>';
+            }
+
+            // Render Iuran items
+            const iuranListEl = document.getElementById('dash-list-items-iuran');
+            if (data.tagihanIuran && data.tagihanIuran.length > 0) {
+                let html = '';
+                data.tagihanIuran.forEach(iuran => {
+                    const lunas = iuran.lunas;
+                    const nominal = iuran.nominal;
+                    html += `
+                    <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50'}">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" name="items[iuran][]" value="${iuran.id}"
+                                data-tagihan-nominal="${nominal}" ${lunas ? 'disabled' : ''}
+                                class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                            <div class="flex-1">
+                                <span class="text-sm font-medium text-gray-900 block">${iuran.nama}</span>
+                                <span class="text-xs text-gray-500 block">
+                                    ${iuran.status === 'cicilan' ? 'Cicilan — Sisa bayar' : (lunas ? 'Sudah lunas' : 'Belum dibayar')}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-sm">${formatRupiah(nominal)}</p>
+                            ${lunas ? '<span class="badge-green text-xs">Lunas</span>' : ''}
+                        </div>
+                    </label>`;
+                });
+                iuranListEl.innerHTML = html;
+            } else {
+                iuranListEl.innerHTML = '';
+            }
+
+            const container = document.getElementById('container-detail-transaksi-dashboard');
+            container.classList.remove('hidden');
+
+            switchTab('spp');
+            updateTotalBayarDashboard();
+        }
+
+        function updateDashboardSelectedStudentRows(selectedNoInduk) {
+            document.querySelectorAll('.siswa-row-dashboard').forEach(tr => {
+                const isSelected = tr.dataset.noInduk === selectedNoInduk;
+
+                if (isSelected) {
+                    tr.classList.add('bg-emerald-50/50');
+                } else {
+                    tr.classList.remove('bg-emerald-50/50');
+                }
+
+                const badge = tr.querySelector('.badge-terpilih-dashboard');
+                if (badge) {
+                    if (isSelected) {
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+
+                const btn = tr.querySelector('.btn-catat-dashboard');
+                if (btn) {
+                    if (isSelected) {
+                        btn.innerText = 'Terpilih';
+                        btn.className = "btn-catat-dashboard btn-sm w-full block text-center transition-all bg-emerald-50 text-emerald-700 border-2 border-emerald-500 font-semibold";
+                    } else {
+                        btn.innerText = 'Catat';
+                        btn.className = "btn-catat-dashboard btn-sm w-full block text-center transition-all bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm";
+                    }
+                }
+            });
+        }
+
+        function showModalKonfirmasiDashboard() {
+            const totalBayar = parseInt(document.getElementById('total-bayar-input')?.value || 0, 10);
+            if (totalBayar <= 0) {
+                alert('Pilih minimal 1 item pembayaran.');
+                return;
+            }
+
+            // Student info
+            const nama = document.getElementById('dash-detail-nama')?.innerText || '-';
+            const noInduk = document.getElementById('dash-detail-no-induk')?.innerText || '';
+            const kelas = document.getElementById('dash-detail-kelas')?.innerText || '';
+
+            document.getElementById('modal-nama-siswa').innerText = nama;
+            document.getElementById('modal-no-induk-siswa').innerText = noInduk;
+            document.getElementById('modal-kelas-siswa').innerText = kelas ? 'Kelas ' + kelas : '';
+            document.getElementById('modal-total-bayar').innerText = formatRupiah(totalBayar);
+
+            // Collect selected items
+            let itemsHtml = '';
+            document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked').forEach(cb => {
+                let itemNama = '';
+                let itemNominal = 0;
+
+                const parentLabel = cb.closest('label');
+                if (cb.name === 'items[tunggakan]') {
+                    itemNama = 'Cicilan / Lunasi Tunggakan';
+                    const nominalInput = document.querySelector('input[name="nominal_tunggakan"]');
+                    itemNominal = parseInt(nominalInput?.value || 0, 10);
+                } else if (parentLabel) {
+                    const namaEl = parentLabel.querySelector('p.font-medium, span.font-medium');
+                    itemNama = namaEl ? namaEl.innerText.trim() : 'Item Pembayaran';
+                    itemNominal = parseInt(cb.dataset.tagihanNominal || 0, 10);
+                }
+
+                itemsHtml += `
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-200 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                            <span class="font-semibold text-gray-800">${itemNama}</span>
+                        </div>
+                        <span class="font-bold text-gray-900 text-sm">${formatRupiah(itemNominal)}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('modal-list-items').innerHTML = itemsHtml;
+
+            // Catatan
+            const catatan = document.querySelector('#form-penerimaan textarea[name="catatan"]')?.value?.trim();
+            const catatanWrapper = document.getElementById('modal-catatan-wrapper');
+            if (catatan) {
+                document.getElementById('modal-catatan-text').innerText = catatan;
+                catatanWrapper.classList.remove('hidden');
+            } else {
+                catatanWrapper.classList.add('hidden');
+            }
+
+            // Show modal animation
+            const modal = document.getElementById('modal-konfirmasi-penerimaan');
+            const card = document.getElementById('modal-konfirmasi-card');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModalKonfirmasi() {
+            const modal = document.getElementById('modal-konfirmasi-penerimaan');
+            const card = document.getElementById('modal-konfirmasi-card');
+            if (!modal) return;
+            modal.classList.add('opacity-0');
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function submitFormPenerimaanFinal() {
+            const btn = document.getElementById('btn-submit-final-modal');
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+                const span = btn.querySelector('span');
+                if (span) span.innerText = 'Memproses...';
+            }
+            document.getElementById('form-penerimaan').submit();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const formPenerimaan = document.getElementById('form-penerimaan');
+            if (formPenerimaan) {
+                formPenerimaan.addEventListener('change', updateTotalBayarDashboard);
+                formPenerimaan.addEventListener('input', updateTotalBayarDashboard);
+
+                formPenerimaan.addEventListener('submit', function(e) {
+                    const totalBayar = parseInt(document.getElementById('total-bayar-input')?.value || 0, 10);
+
+                    if (totalBayar <= 0) {
+                        e.preventDefault();
+                        alert('Pilih minimal 1 item pembayaran.');
+                        return false;
+                    }
+                });
+            }
+
+            // Attach AJAX to dashboard "Catat" buttons
+            document.querySelectorAll('.btn-catat-dashboard').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const noInduk = this.dataset.noInduk;
+                    const originalText = this.innerText;
+                    this.innerText = 'Memuat...';
+                    this.classList.add('opacity-75');
+
+                    fetch(`{{ route('dashboard') }}?no_induk=${encodeURIComponent(noInduk)}&ajax=1`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                            this.innerText = originalText;
+                            this.classList.remove('opacity-75');
+                            return;
+                        }
+
+                        updateDashboardSelectedStudentRows(noInduk);
+
+                        const newUrl = `{{ route('dashboard') }}?no_induk=${encodeURIComponent(noInduk)}`;
+                        window.history.pushState({ path: newUrl }, '', newUrl);
+
+                        renderDashboardDetailSiswa(data);
+                    })
+                    .catch(err => {
+                        this.innerText = originalText;
+                        this.classList.remove('opacity-75');
+                        this.classList.remove('opacity-80');
+                        console.error(err);
+                        alert('Gagal memuat data siswa via AJAX.');
+                    });
+                });
+            });
+
+            @if(isset($siswa))
+                switchTab('spp');
+                updateTotalBayarDashboard();
+            @endif
+        });
     </script>
 </x-layouts.app>

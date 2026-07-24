@@ -14,8 +14,14 @@
         </div>
 
         <div class="card">
-            <div class="card-header">
+            <div class="card-header flex items-center justify-between">
                 <h3 class="font-semibold text-gray-900">Unggah Berkas Excel</h3>
+                <a href="{{ route('master.siswa.template') }}" class="btn-secondary btn-sm text-emerald-700 border-emerald-300 hover:bg-emerald-50 font-medium">
+                    <svg class="w-4 h-4 text-emerald-600 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Unduh Template Excel
+                </a>
             </div>
             <form method="POST" action="{{ route('master.siswa.import') }}" enctype="multipart/form-data" class="card-body space-y-6">
                 @csrf
@@ -28,12 +34,17 @@
                 </div>
 
                 <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-                    <h4 class="font-semibold text-sm text-gray-800">Petunjuk Format Excel:</h4>
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-semibold text-sm text-gray-800">Petunjuk Format Excel:</h4>
+                        <a href="{{ route('master.siswa.template') }}" class="text-xs font-semibold text-emerald-700 hover:underline">
+                            ⬇ Download Format Template Excel (.xlsx)
+                        </a>
+                    </div>
                     <ul class="list-disc list-inside text-xs text-gray-600 space-y-1.5">
                         <li>Pastikan data siswa berada pada sheet pertama atau sheet bernama <strong>"Siswa"</strong>.</li>
                         <li>Baris pertama harus berupa header kolom.</li>
                         <li>Kolom wajib diisi: <strong>No. Induk</strong> (NIS/NISN), <strong>Nama</strong>, dan <strong>Kelas</strong>.</li>
-                        <li>Kolom opsional: <strong>Asrama</strong>, <strong>Jenis Kelamin</strong> (L/P, default L), dan <strong>Tanggal Masuk</strong> (format tanggal YYYY-MM-DD atau angka tanggal excel).</li>
+                        <li>Kolom opsional: <strong>Alamat</strong>, <strong>Jenis Kelamin</strong> (L/P, default L), dan <strong>Tanggal Masuk</strong> (format tanggal YYYY-MM-DD atau angka tanggal excel).</li>
                         <li>Jika nomor induk sudah ada di database, data siswa tersebut akan diperbarui secara otomatis.</li>
                     </ul>
                 </div>

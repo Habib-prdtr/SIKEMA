@@ -57,12 +57,12 @@
                         @error('kelas')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
 
-                    {{-- Asrama --}}
+                    {{-- Alamat --}}
                     <div>
-                        <label for="asrama" class="form-label">Asrama</label>
-                        <input id="asrama" type="text" name="asrama"
-                            value="{{ old('asrama', $siswa->asrama ?? '') }}"
-                            class="form-input" placeholder="Opsional" maxlength="50">
+                        <label for="alamat" class="form-label">Alamat</label>
+                        <input id="alamat" type="text" name="alamat"
+                            value="{{ old('alamat', $siswa->alamat ?? '') }}"
+                            class="form-input" placeholder="Opsional (Alamat tinggal/domisili)">
                     </div>
 
                     {{-- Jenis Kelamin --}}
