@@ -112,6 +112,9 @@
                             <td class="py-2 text-gray-800">
                                 @if($detail->jenis === 'spp')
                                     SPP Bulan {{ \Carbon\Carbon::createFromDate($detail->tahun, $detail->bulan, 1)->locale('id')->isoFormat('MMMM YYYY') }}
+                                    @if(($transaksi->siswaTahunAjaran->tarif_spp ?? 0) > 0 && $detail->nominal < $transaksi->siswaTahunAjaran->tarif_spp)
+                                        <span class="text-xs text-gray-500 font-normal ml-1">(Dispensasi: {{ $transaksi->siswaTahunAjaran->dispensasi->nama ?? 'Potongan' }})</span>
+                                    @endif
                                 @elseif($detail->jenis === 'iuran')
                                     {{ $detail->jenisPenerimaan->nama ?? 'Iuran' }}
                                 @else
