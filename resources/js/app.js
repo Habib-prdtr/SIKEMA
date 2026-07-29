@@ -164,4 +164,133 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Print kwitansi ─────────────────────────────────────
     document.getElementById('btn-print')?.addEventListener('click', () => window.print());
 
+    // ── Realtime AJAX Search & Auto-Filter Global (Tanpa Reload) ──
+    let realtimeSearchTimer = null;
+
+    function rebindDynamicButtons() {
+        if (typeof window.bindPilihSiswaButtons === 'function') window.bindPilihSiswaButtons();
+        if (typeof window.bindCatatDashboardButtons === 'function') window.bindCatatDashboardButtons();
+    }
+
+    function updatePageContentFromHtml(htmlText, requestUrl, activeInputElement = null) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+
+        // Check for specific search result containers first
+        const specificIds = ['dash-siswa-search-results', 'catat-siswa-search-results'];
+        let updatedSpecific = false;
+
+        specificIds.forEach(id => {
+            const currentEl = document.getElementById(id);
+            const newEl = doc.getElementById(id);
+            if (currentEl && newEl) {
+                currentEl.outerHTML = newEl.outerHTML;
+                updatedSpecific = true;
+            }
+        });
+
+        if (!updatedSpecific) {
+            const currentMain = document.querySelector('main');
+            const newMain = doc.querySelector('main');
+
+            if (currentMain && newMain) {
+                const currentCards = Array.from(currentMain.querySelectorAll('.card'));
+                const newCards = Array.from(newMain.querySelectorAll('.card'));
+
+                currentCards.forEach((card, idx) => {
+                    const isFormCard = activeInputElement && card.contains(activeInputElement);
+
+                    if (isFormCard) {
+                        const currentTableWrapper = card.querySelector('.table-wrapper, table');
+                        const newTableWrapper = newCards[idx]?.querySelector('.table-wrapper, table');
+
+                        if (currentTableWrapper && newTableWrapper) {
+                            currentTableWrapper.outerHTML = newTableWrapper.outerHTML;
+                        }
+                    } else if (newCards[idx]) {
+                        card.outerHTML = newCards[idx].outerHTML;
+                    }
+                });
+            }
+        }
+
+        // Update URL bar seamlessly without reload
+        if (requestUrl) {
+            window.history.replaceState(null, '', requestUrl);
+        }
+
+        rebindDynamicButtons();
+    }
+
+    function performRealtimeAjaxSearch(form, inputElement = null) {
+        if (!form || form.getAttribute('method')?.toUpperCase() !== 'GET') return;
+
+        const actionUrl = form.getAttribute('action') || window.location.pathname;
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+
+        for (const [key, value] of formData.entries()) {
+            if (value !== '') {
+                params.append(key, value);
+            }
+        }
+
+        const queryString = params.toString();
+        const requestUrl = actionUrl + (queryString ? '?' + queryString : '');
+
+        if (inputElement) {
+            inputElement.classList.add('bg-emerald-50/40');
+        }
+
+        fetch(requestUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html, application/xhtml+xml, */*'
+            }
+        })
+        .then(response => response.text())
+        .then(htmlText => {
+            updatePageContentFromHtml(htmlText, requestUrl, inputElement);
+        })
+        .catch(err => console.error('Realtime AJAX search error:', err))
+        .finally(() => {
+            if (inputElement) {
+                inputElement.classList.remove('bg-emerald-50/40');
+            }
+        });
+    }
+
+    // Realtime typing search on GET forms (Debounced 300ms, NO RELOAD)
+    document.addEventListener('input', (e) => {
+        const target = e.target;
+        if (!target) return;
+
+        const isSearchInput = target.matches('form[method="GET"] input[name="cari"], form[method="GET"] input[name="q"], form[method="GET"] input[name="search"], form[method="GET"] input[type="text"], form[method="GET"] input[type="search"], form[method="GET"] input[type="number"]');
+
+        if (isSearchInput) {
+            const form = target.closest('form');
+            if (!form || form.getAttribute('method')?.toUpperCase() !== 'GET') return;
+
+            clearTimeout(realtimeSearchTimer);
+            realtimeSearchTimer = setTimeout(() => {
+                performRealtimeAjaxSearch(form, target);
+            }, 300);
+        }
+    });
+
+    // Realtime dropdown filter on GET forms (Instant, NO RELOAD)
+    document.addEventListener('change', (e) => {
+        const target = e.target;
+        if (!target) return;
+
+        if (target.matches('form[method="GET"] select')) {
+            const form = target.closest('form');
+            if (!form || form.getAttribute('method')?.toUpperCase() !== 'GET') return;
+
+            if (target.closest('.modal-backdrop') || target.hasAttribute('data-no-auto-submit')) return;
+
+            performRealtimeAjaxSearch(form, null);
+        }
+    });
+
 });

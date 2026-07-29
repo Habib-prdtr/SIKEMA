@@ -76,7 +76,7 @@ class DispensasiController extends Controller
             'nilai_potongan.max' => 'Potongan persentase tidak boleh melebihi 100%.',
         ]);
 
-        $dispensasi->update($validated);
+        $this->masterDataService->updateDispensasi($dispensasi, $validated);
 
         return redirect()->route('master.dispensasi.index')
             ->with('sukses', 'Master data dispensasi berhasil diperbarui.');
@@ -117,13 +117,9 @@ class DispensasiController extends Controller
             ->with('siswa')
             ->get();
 
-        // Ambil siswa yang aktif di tahun ajaran ini tetapi belum memiliki dispensasi ini
+        // Ambil semua siswa yang aktif di tahun ajaran ini
         $availableSiswa = SiswaTahunAjaran::where('tahun_ajaran_id', $tahunAktif->id)
-            ->where(function ($query) use ($dispensasi) {
-                $query->whereNull('dispensasi_id')
-                    ->orWhere('dispensasi_id', '!=', $dispensasi->id);
-            })
-            ->with('siswa')
+            ->with(['siswa', 'dispensasi'])
             ->get()
             ->sortBy('siswa.nama');
 
@@ -136,25 +132,50 @@ class DispensasiController extends Controller
     public function tambahSiswa(Request $request, Dispensasi $dispensasi): RedirectResponse
     {
         $validated = $request->validate([
-            'siswa_tahun_ajaran_id' => 'required|exists:siswa_tahun_ajaran,id',
+            'siswa_tahun_ajaran_id' => 'nullable|exists:siswa_tahun_ajaran,id',
+            'siswa_tahun_ajaran_ids' => 'nullable|array',
+            'siswa_tahun_ajaran_ids.*' => 'exists:siswa_tahun_ajaran,id',
             'durasi_dispensasi' => 'required|integer|min:1|max:12',
+            'semester_dispensasi' => 'nullable|in:ganjil,genap,semua',
         ], [
-            'siswa_tahun_ajaran_id.required' => 'Siswa wajib dipilih.',
             'durasi_dispensasi.required' => 'Durasi dispensasi wajib diisi.',
             'durasi_dispensasi.min' => 'Durasi minimal 1 bulan.',
             'durasi_dispensasi.max' => 'Durasi maksimal 12 bulan.',
         ]);
 
-        $sta = SiswaTahunAjaran::findOrFail($validated['siswa_tahun_ajaran_id']);
+        $semester = $validated['semester_dispensasi'] ?? 'semua';
+        if (in_array($semester, ['ganjil', 'genap']) && (int) $validated['durasi_dispensasi'] > 6) {
+            return back()->withErrors(['durasi_dispensasi' => 'Durasi dispensasi per semester maksimal 6 bulan.']);
+        }
+
+        $ids = [];
+        if (!empty($validated['siswa_tahun_ajaran_ids'])) {
+            $ids = $validated['siswa_tahun_ajaran_ids'];
+        } elseif (!empty($validated['siswa_tahun_ajaran_id'])) {
+            $ids = [$validated['siswa_tahun_ajaran_id']];
+        }
+
+        if (empty($ids)) {
+            return back()->withErrors(['error' => 'Pilih minimal satu siswa.']);
+        }
 
         try {
-            $this->masterDataService->assignDispensasiKeSiswa($sta, $dispensasi->id, $validated['durasi_dispensasi']);
+            $count = 0;
+            foreach ($ids as $staId) {
+                $sta = SiswaTahunAjaran::findOrFail($staId);
+                $this->masterDataService->assignDispensasiKeSiswa($sta, $dispensasi->id, (int) $validated['durasi_dispensasi'], $semester);
+                $count++;
+            }
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Gagal memberikan dispensasi: ' . $e->getMessage()]);
         }
 
+        $pesan = $count === 1
+            ? "Dispensasi berhasil diberikan kepada siswa."
+            : "Dispensasi berhasil diberikan kepada {$count} siswa.";
+
         return redirect()->route('master.dispensasi.siswa', $dispensasi)
-            ->with('sukses', "Dispensasi berhasil diberikan kepada siswa {$sta->siswa->nama}.");
+            ->with('sukses', $pesan);
     }
 
     /**

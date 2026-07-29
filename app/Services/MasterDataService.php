@@ -489,16 +489,18 @@ class MasterDataService
         });
     }
 
-    public function assignDispensasiKeSiswa(SiswaTahunAjaran $siswaTahunAjaran, ?int $dispensasiId, int $durasi): void
+    public function assignDispensasiKeSiswa(SiswaTahunAjaran $siswaTahunAjaran, ?int $dispensasiId, int $durasi, ?string $semester = 'semua'): void
     {
-        \Illuminate\Support\Facades\DB::transaction(function () use ($siswaTahunAjaran, $dispensasiId, $durasi) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($siswaTahunAjaran, $dispensasiId, $durasi, $semester) {
+            $sem = $semester ?? 'semua';
             $siswaTahunAjaran->update([
                 'dispensasi_id' => $dispensasiId,
                 'durasi_dispensasi' => $durasi,
             ]);
 
             // Load dispensasi relation
-            $siswaTahunAjaran->loadMissing('dispensasi');
+            $siswaTahunAjaran->unsetRelation('dispensasi');
+            $siswaTahunAjaran->load('dispensasi');
             $dispensasi = $siswaTahunAjaran->dispensasi;
             $tarifSpp = $siswaTahunAjaran->tarif_spp;
 
@@ -507,6 +509,17 @@ class MasterDataService
 
             $dispensasiAppliedCount = 0;
 
+            // Determine target months for dispensation:
+            // ganjil => months 7, 8, 9, 10, 11, 12 (Semester 1)
+            // genap => months 1, 2, 3, 4, 5, 6 (Semester 2)
+            // semua => any month
+            $targetBulan = null;
+            if ($sem === 'ganjil') {
+                $targetBulan = [7, 8, 9, 10, 11, 12];
+            } elseif ($sem === 'genap') {
+                $targetBulan = [1, 2, 3, 4, 5, 6];
+            }
+
             foreach ($bills as $bill) {
                 if ($bill->status !== 'belum') {
                     continue; // Skip paid bills
@@ -514,8 +527,10 @@ class MasterDataService
 
                 $tagihanNominal = $tarifSpp;
 
-                // Apply dispensation discount if inside the duration for unpaid bills
-                if ($dispensasi && $dispensasiAppliedCount < $durasi) {
+                $isTargetSemester = $targetBulan === null || in_array((int) $bill->bulan, $targetBulan, true);
+
+                // Apply dispensation discount if inside target semester & duration
+                if ($dispensasi && $isTargetSemester && $dispensasiAppliedCount < $durasi) {
                     if ($dispensasi->tipe_potongan === 'persen') {
                         $potongan = ($tarifSpp * $dispensasi->nilai_potongan) / 100;
                         $tagihanNominal = max(0, $tarifSpp - $potongan);
@@ -529,6 +544,22 @@ class MasterDataService
                     'tagihan' => $tagihanNominal,
                 ]);
             }
+        });
+    }
+
+    public function updateDispensasi(\App\Models\Dispensasi $dispensasi, array $data): bool
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($dispensasi, $data) {
+            $updated = $dispensasi->update($data);
+
+            if ($updated) {
+                $penerimaList = SiswaTahunAjaran::where('dispensasi_id', $dispensasi->id)->get();
+                foreach ($penerimaList as $sta) {
+                    $this->assignDispensasiKeSiswa($sta, $dispensasi->id, $sta->durasi_dispensasi ?? 0, $sta->semester_dispensasi ?? 'semua');
+                }
+            }
+
+            return $updated;
         });
     }
 

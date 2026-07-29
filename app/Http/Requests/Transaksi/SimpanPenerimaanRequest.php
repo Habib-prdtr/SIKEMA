@@ -90,7 +90,7 @@ class SimpanPenerimaanRequest extends FormRequest
             'keterangan' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.jenis' => ['required', 'in:spp,iuran,tunggakan'],
-            'items.*.nominal' => ['required', 'integer', 'min:1'],
+            'items.*.nominal' => ['required', 'integer', 'min:0'],
             // Untuk SPP: bulan + tahun wajib
             'items.*.bulan' => ['nullable', 'integer', 'min:1', 'max:12'],
             'items.*.tahun' => ['nullable', 'integer'],
@@ -112,7 +112,7 @@ class SimpanPenerimaanRequest extends FormRequest
             'items.*.jenis.required' => 'Jenis item wajib diisi.',
             'items.*.jenis.in' => 'Jenis item tidak valid.',
             'items.*.nominal.required' => 'Nominal wajib diisi.',
-            'items.*.nominal.min' => 'Nominal minimal Rp 1.',
+            'items.*.nominal.min' => 'Nominal tidak boleh kurang dari Rp 0.',
         ];
     }
 
