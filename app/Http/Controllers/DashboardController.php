@@ -73,7 +73,7 @@ class DashboardController extends Controller
             }
         }
 
-        if ($request->wantsJson() || $request->ajax() || $request->has('ajax')) {
+        if ($request->has('ajax') || ($request->has('no_induk') && ($request->wantsJson() || $request->ajax()))) {
             if (!$siswa) {
                 return response()->json(['error' => 'Siswa dengan No. Induk tersebut tidak ditemukan atau belum aktif.'], 404);
             }

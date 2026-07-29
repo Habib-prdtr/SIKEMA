@@ -7,72 +7,86 @@
             <p class="text-gray-500 text-sm mt-0.5">Informasi ini akan tampil di kwitansi dan laporan</p>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h3 class="font-semibold text-gray-900">Data Institusi</h3>
+        <form method="POST" action="{{ route('pengaturan.sekolah.update') }}" class="space-y-5">
+            @csrf @method('PUT')
+
+            {{-- Card Data Institusi --}}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="font-semibold text-gray-900">Data Institusi</h3>
+                </div>
+                <div class="card-body space-y-5">
+                    <div>
+                        <label for="nama_sekolah" class="form-label">Nama Madrasah / Sekolah <span class="text-red-500">*</span></label>
+                        <input id="nama_sekolah" type="text" name="nama_sekolah"
+                            value="{{ old('nama_sekolah', $sekolah->nama_sekolah ?? '') }}"
+                            class="form-input @error('nama_sekolah') border-red-400 @enderror"
+                            placeholder="MTs Contoh Al-Hikmah" maxlength="150" required>
+                        @error('nama_sekolah')<p class="form-error">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label for="nama_yayasan" class="form-label">Nama Yayasan</label>
+                        <input id="nama_yayasan" type="text" name="nama_yayasan"
+                            value="{{ old('nama_yayasan', $sekolah->nama_yayasan ?? '') }}"
+                            class="form-input" placeholder="Yayasan ..." maxlength="150">
+                    </div>
+
+                    <div>
+                        <label for="alamat" class="form-label">Alamat</label>
+                        <textarea id="alamat" name="alamat" rows="3" class="form-textarea"
+                            placeholder="Jl. Contoh No. 1, Kota...">{{ old('alamat', $sekolah->alamat ?? '') }}</textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label for="telepon" class="form-label">Telepon</label>
+                            <input id="telepon" type="text" name="telepon"
+                                value="{{ old('telepon', $sekolah->telepon ?? '') }}"
+                                class="form-input" placeholder="021-xxxxxxx">
+                        </div>
+                        <div>
+                            <label for="email" class="form-label">Email</label>
+                            <input id="email" type="email" name="email"
+                                value="{{ old('email', $sekolah->email ?? '') }}"
+                                class="form-input" placeholder="sekolah@example.com">
+                        </div>
+                    </div>
+                </div>
             </div>
-            <form method="POST" action="{{ route('pengaturan.sekolah.update') }}" class="card-body space-y-5">
-                @csrf @method('PUT')
 
-                <div>
-                    <label for="nama_sekolah" class="form-label">Nama Madrasah / Sekolah <span class="text-red-500">*</span></label>
-                    <input id="nama_sekolah" type="text" name="nama_sekolah"
-                        value="{{ old('nama_sekolah', $sekolah->nama_sekolah ?? '') }}"
-                        class="form-input @error('nama_sekolah') border-red-400 @enderror"
-                        placeholder="MTs Contoh Al-Hikmah" maxlength="150" required>
-                    @error('nama_sekolah')<p class="form-error">{{ $message }}</p>@enderror
+            {{-- Card Data Kepala TU --}}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="font-semibold text-gray-900">Data Kepala Tata Usaha (TU)</h3>
                 </div>
-
-                <div>
-                    <label for="nama_yayasan" class="form-label">Nama Yayasan</label>
-                    <input id="nama_yayasan" type="text" name="nama_yayasan"
-                        value="{{ old('nama_yayasan', $sekolah->nama_yayasan ?? '') }}"
-                        class="form-input" placeholder="Yayasan ..." maxlength="150">
-                </div>
-
-                <div>
-                    <label for="alamat" class="form-label">Alamat</label>
-                    <textarea id="alamat" name="alamat" rows="3" class="form-textarea"
-                        placeholder="Jl. Contoh No. 1, Kota...">{{ old('alamat', $sekolah->alamat ?? '') }}</textarea>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                        <label for="telepon" class="form-label">Telepon</label>
-                        <input id="telepon" type="text" name="telepon"
-                            value="{{ old('telepon', $sekolah->telepon ?? '') }}"
-                            class="form-input" placeholder="021-xxxxxxx">
-                    </div>
-                    <div>
-                        <label for="email" class="form-label">Email</label>
-                        <input id="email" type="email" name="email"
-                            value="{{ old('email', $sekolah->email ?? '') }}"
-                            class="form-input" placeholder="sekolah@example.com">
-                    </div>
-                    <div>
-                        <label for="kepala_tu" class="form-label">Nama Kepala TU</label>
-                        <input id="kepala_tu" type="text" name="kepala_tu"
-                            value="{{ old('kepala_tu', $sekolah->kepala_tu ?? '') }}"
-                            class="form-input" placeholder="Nama lengkap" maxlength="100">
-                    </div>
-                    <div>
-                        <label for="nip_kepala_tu" class="form-label">NIP Kepala TU</label>
-                        <input id="nip_kepala_tu" type="text" name="nip_kepala_tu"
-                            value="{{ old('nip_kepala_tu', $sekolah->nip_kepala_tu ?? '') }}"
-                            class="form-input" placeholder="NIP" maxlength="30">
+                <div class="card-body space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label for="kepala_tu" class="form-label">Nama Kepala TU</label>
+                            <input id="kepala_tu" type="text" name="kepala_tu"
+                                value="{{ old('kepala_tu', $sekolah->kepala_tu ?? '') }}"
+                                class="form-input" placeholder="Nama lengkap" maxlength="100">
+                        </div>
+                        <div>
+                            <label for="nip_kepala_tu" class="form-label">NIP Kepala TU</label>
+                            <input id="nip_kepala_tu" type="text" name="nip_kepala_tu"
+                                value="{{ old('nip_kepala_tu', $sekolah->nip_kepala_tu ?? '') }}"
+                                class="form-input" placeholder="NIP" maxlength="30">
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="pt-2 border-t border-gray-100 flex items-center gap-3">
-                    <button type="submit" class="btn-primary">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Simpan Pengaturan
-                    </button>
-                </div>
-            </form>
-        </div>
+            <div class="pt-2 flex items-center gap-3">
+                <button type="submit" class="btn-primary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Simpan Pengaturan
+                </button>
+            </div>
+        </form>
 
         {{-- Ganti Password --}}
         <div class="card">

@@ -115,11 +115,12 @@ class TransaksiService
 
         if ($request->filled('cari')) {
             $cari = $request->cari;
-            $query->where(function ($outer) use ($cari) {
-                $outer->whereHas('siswaTahunAjaran.siswa', function ($q) use ($cari) {
-                    $q->where('nama', 'like', "%{$cari}%")
-                        ->orWhere('no_induk', 'like', "%{$cari}%");
-                })->orWhere('no_transaksi', 'like', "%{$cari}%");
+            $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $query->where(function ($outer) use ($cari, $like) {
+                $outer->whereHas('siswaTahunAjaran.siswa', function ($q) use ($cari, $like) {
+                    $q->where('nama', $like, "%{$cari}%")
+                        ->orWhere('no_induk', $like, "%{$cari}%");
+                })->orWhere('no_transaksi', $like, "%{$cari}%");
             });
         }
 
@@ -153,10 +154,11 @@ class TransaksiService
             ->orderBy('siswa.nama');
 
         if ($keyword) {
-            $siswaQuery->where(function ($q) use ($keyword) {
-                $q->where('siswa.nama', 'like', "%{$keyword}%")
-                  ->orWhere('siswa.no_induk', 'like', "%{$keyword}%")
-                  ->orWhere('siswa.kelas', 'like', "%{$keyword}%");
+            $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $siswaQuery->where(function ($q) use ($keyword, $like) {
+                $q->where('siswa.nama', $like, "%{$keyword}%")
+                  ->orWhere('siswa.no_induk', $like, "%{$keyword}%")
+                  ->orWhere('siswa.kelas', $like, "%{$keyword}%");
             });
         }
 

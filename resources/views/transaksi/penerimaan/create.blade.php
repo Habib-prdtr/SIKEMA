@@ -54,6 +54,7 @@
                     </div>
                 @endif
 
+                <div id="catat-siswa-search-results">
                 @if($daftarSiswa && $daftarSiswa->isNotEmpty())
                     <div class="table-wrapper">
                         <table class="table">
@@ -114,6 +115,7 @@
                         @endif
                     </div>
                 @endif
+                </div>
             </div>
         </div>
 
@@ -445,7 +447,23 @@
 
         function updateTotalBayar() {
             let total = 0;
-            document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked').forEach(cb => {
+            const checkedCheckboxes = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
+            
+            // Highlight selected labels
+            document.querySelectorAll('#form-penerimaan label').forEach(label => {
+                const cb = label.querySelector('input[type="checkbox"]');
+                if (cb && !cb.disabled) {
+                    if (cb.checked) {
+                        label.classList.add('border-emerald-500', 'bg-emerald-50/70', 'ring-1', 'ring-emerald-500');
+                        label.classList.remove('border-gray-200');
+                    } else {
+                        label.classList.remove('border-emerald-500', 'bg-emerald-50/70', 'ring-1', 'ring-emerald-500');
+                        label.classList.add('border-gray-200');
+                    }
+                }
+            });
+
+            checkedCheckboxes.forEach(cb => {
                 if (cb.name === 'items[tunggakan]') {
                     const nominalInput = document.querySelector('input[name="nominal_tunggakan"]');
                     total += parseInt(nominalInput?.value || 0, 10);
@@ -641,11 +659,12 @@
         }
 
         function showModalKonfirmasiCatat() {
-            const totalBayar = parseInt(document.getElementById('total-bayar-input')?.value || 0, 10);
-            if (totalBayar <= 0) {
-                alert('Pilih minimal 1 item pembayaran.');
+            const selectedItems = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
+            if (selectedItems.length === 0) {
+                alert('Silakan centang (pilih) minimal 1 item tagihan yang ingin diproses.');
                 return;
             }
+            const totalBayar = parseInt(document.getElementById('total-bayar-input')?.value || 0, 10);
 
             // Student info
             const nama = document.getElementById('detail-nama')?.innerText || '-';
@@ -738,18 +757,13 @@
                 formPenerimaan.addEventListener('input', updateTotalBayar);
 
                 formPenerimaan.addEventListener('submit', function(e) {
-                    const totalBayar = parseInt(document.getElementById('total-bayar-input')?.value || 0, 10);
+                    const selectedItems = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
 
-                    if (totalBayar <= 0) {
-                        e.preventDefault();
-                        alert('Pilih minimal 1 item pembayaran.');
-                        return false;
-                    }
-                });
-            }
-
-            // Attach AJAX to "Pilih" buttons
+                    if (selectedItems.length === 0) {
+        window.bindPilihSiswaButtons = function() {
             document.querySelectorAll('.btn-pilih-siswa').forEach(btn => {
+                if (btn.dataset.bound) return;
+                btn.dataset.bound = "true";
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     const noInduk = this.dataset.noInduk;
@@ -782,12 +796,31 @@
                     .catch(err => {
                         this.innerText = originalText;
                         this.classList.remove('opacity-75');
-                        this.classList.remove('opacity-80');
                         console.error(err);
                         alert('Gagal memuat data siswa via AJAX.');
                     });
                 });
             });
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const formPenerimaan = document.getElementById('form-penerimaan');
+            if (formPenerimaan) {
+                formPenerimaan.addEventListener('change', updateTotalBayar);
+                formPenerimaan.addEventListener('input', updateTotalBayar);
+
+                formPenerimaan.addEventListener('submit', function(e) {
+                    const selectedItems = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
+
+                    if (selectedItems.length === 0) {
+                        e.preventDefault();
+                        alert('Silakan centang (pilih) minimal 1 item tagihan yang ingin diproses.');
+                        return false;
+                    }
+                });
+            }
+
+            window.bindPilihSiswaButtons();
 
             @if(isset($siswa))
                 switchTab('spp');

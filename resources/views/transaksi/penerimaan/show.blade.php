@@ -142,9 +142,14 @@
             {{-- Tanda tangan --}}
             <div class="flex justify-end items-end mt-8 pt-6 border-t border-gray-200">
                 <div class="text-center text-sm">
-                    <p class="text-gray-500">Tata Usaha</p>
+                    <p class="text-gray-500">Kepala TU</p>
                     <div class="h-14"></div>
-                    <p class="font-semibold text-gray-800 border-t border-gray-400 pt-1 min-w-36">{{ $transaksi->user->name }}</p>
+                    <p class="font-semibold text-gray-800 border-t border-gray-400 pt-1 min-w-36">
+                        {{ !empty($sekolah->kepala_tu) ? $sekolah->kepala_tu : $transaksi->user->name }}
+                    </p>
+                    @if(!empty($sekolah->nip_kepala_tu))
+                        <p class="text-xs text-gray-500 mt-0.5">NIP. {{ $sekolah->nip_kepala_tu }}</p>
+                    @endif
                 </div>
             </div>
         </div>
