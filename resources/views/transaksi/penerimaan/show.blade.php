@@ -73,12 +73,12 @@
 
         {{-- Kop --}}
         <div class="pb-2 border-b border-black text-center shrink-0">
-            <h2 class="text-sm font-black text-black uppercase tracking-wide leading-tight">{{ $sekolah->nama_sekolah ?? 'MTS IHYAUL ULUM' }}</h2>
+            <h2 style="font-size: 8.5px; line-height: 1.2;" class="font-black text-black uppercase tracking-wide">{{ $sekolah->nama_sekolah ?? 'MTS IHYAUL ULUM' }}</h2>
             @if($sekolah->nama_yayasan ?? false)
-                <p class="text-[10px] font-bold text-black leading-tight mt-0.5">{{ $sekolah->nama_yayasan }}</p>
+                <p style="font-size: 8.5px; line-height: 1.2;" class="font-bold text-black mt-0.5">{{ $sekolah->nama_yayasan }}</p>
             @endif
             @if(($sekolah->alamat ?? false) || ($sekolah->telepon ?? false))
-                <p class="text-[9px] font-bold text-black leading-tight mt-0.5">
+                <p style="font-size: 8.5px; line-height: 1.2;" class="font-bold text-black mt-0.5">
                     {{ $sekolah->alamat }}
                     @if(($sekolah->alamat ?? false) && ($sekolah->telepon ?? false)) | @endif
                     @if($sekolah->telepon ?? false) Telp: {{ $sekolah->telepon }} @endif
@@ -104,12 +104,90 @@
         {{-- Data Siswa --}}
         <div class="border border-black rounded p-2 bg-gray-50/50 my-2 shrink-0">
             <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] font-bold">
-                <div><span class="text-black">Nama:</span> <span class="font-black text-black block truncate">{{ $transaksi->siswaTahunAjaran->siswa->nama }}</span></div>
-                <div><span class="text-black">No. Induk:</span> <span class="font-mono font-black text-black block">{{ $transaksi->siswaTahunAjaran->siswa->no_induk }}</span></div>
-                <div><span class="text-black">Kelas:</span> <span class="font-black text-black block">{{ $transaksi->siswaTahunAjaran->siswa->kelas }}</span></div>
-                <div><span class="text-black">TA:</span> <span class="font-black text-black block">{{ $transaksi->siswaTahunAjaran->tahunAjaran->nama }}</span></div>
+                <div><span class="text-black">Nama:</span> <span class="font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->siswa->nama }}</span></div>
+                <div><span class="text-black">No. Induk:</span> <span class="font-mono font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->siswa->no_induk }}</span></div>
+                <div><span class="text-black">Kelas:</span> <span class="font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->siswa->kelas }}</span></div>
+                <div><span class="text-black">TA:</span> <span class="font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->tahunAjaran->nama }}</span></div>
             </div>
         </div>
+
+        @php
+            $rincianPembayaran = collect();
+            $tarifSpp = $transaksi->siswaTahunAjaran->tarif_spp ?? 0;
+            $namaDispensasi = $transaksi->siswaTahunAjaran->dispensasi->nama ?? 'Potongan';
+
+            $processGroupItem = function ($group, $tarifSpp, $namaDispensasi) {
+                $first = $group[0];
+                $last = end($group);
+                $totalNominal = collect($group)->sum('nominal');
+
+                $firstBulanStr = \Carbon\Carbon::createFromDate($first->tahun, $first->bulan, 1)->locale('id')->isoFormat('MMMM');
+
+                if (count($group) === 1) {
+                    $keterangan = 'SPP ' . \Carbon\Carbon::createFromDate($first->tahun, $first->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
+                } else {
+                    $lastBulanStr = \Carbon\Carbon::createFromDate($last->tahun, $last->bulan, 1)->locale('id')->isoFormat('MMMM');
+                    if ($first->tahun === $last->tahun) {
+                        $keterangan = "SPP {$firstBulanStr} - {$lastBulanStr} {$first->tahun}";
+                    } else {
+                        $keterangan = "SPP {$firstBulanStr} {$first->tahun} - {$lastBulanStr} {$last->tahun}";
+                    }
+                }
+
+                $hasDisp = false;
+                foreach ($group as $item) {
+                    if ($tarifSpp > 0 && $item->nominal < $tarifSpp) {
+                        $hasDisp = true;
+                        break;
+                    }
+                }
+
+                if ($hasDisp) {
+                    $keterangan .= " (Disp: {$namaDispensasi})";
+                }
+
+                return [
+                    'keterangan' => $keterangan,
+                    'nominal' => $totalNominal,
+                ];
+            };
+
+            $sppDetails = $transaksi->details->where('jenis', 'spp')->sortBy(function ($item) {
+                return ($item->tahun * 12) + $item->bulan;
+            })->values();
+
+            if ($sppDetails->isNotEmpty()) {
+                $currentGroup = [];
+                foreach ($sppDetails as $detail) {
+                    if (empty($currentGroup)) {
+                        $currentGroup[] = $detail;
+                    } else {
+                        $prev = end($currentGroup);
+                        $prevIndex = ($prev->tahun * 12) + $prev->bulan;
+                        $currIndex = ($detail->tahun * 12) + $detail->bulan;
+
+                        if ($currIndex === $prevIndex + 1) {
+                            $currentGroup[] = $detail;
+                        } else {
+                            $rincianPembayaran->push($processGroupItem($currentGroup, $tarifSpp, $namaDispensasi));
+                            $currentGroup = [$detail];
+                        }
+                    }
+                }
+                if (!empty($currentGroup)) {
+                    $rincianPembayaran->push($processGroupItem($currentGroup, $tarifSpp, $namaDispensasi));
+                }
+            }
+
+            $nonSppDetails = $transaksi->details->where('jenis', '!=', 'spp');
+            foreach ($nonSppDetails as $detail) {
+                $label = $detail->jenis === 'iuran' ? ($detail->jenisPenerimaan->nama ?? 'Iuran') : 'Cicilan Tunggakan';
+                $rincianPembayaran->push([
+                    'keterangan' => $label,
+                    'nominal' => $detail->nominal,
+                ]);
+            }
+        @endphp
 
         {{-- Rincian Pembayaran --}}
         <table class="w-full text-[10px] font-bold my-1 shrink-0">
@@ -120,21 +198,10 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-300 border-b border-black">
-                @foreach($transaksi->details as $detail)
+                @foreach($rincianPembayaran as $item)
                     <tr>
-                        <td class="py-1 text-black font-bold">
-                            @if($detail->jenis === 'spp')
-                                SPP {{ \Carbon\Carbon::createFromDate($detail->tahun, $detail->bulan, 1)->locale('id')->isoFormat('MMMM YYYY') }}
-                                @if(($transaksi->siswaTahunAjaran->tarif_spp ?? 0) > 0 && $detail->nominal < $transaksi->siswaTahunAjaran->tarif_spp)
-                                    <span class="text-[9px] text-black font-bold ml-1">(Disp: {{ $transaksi->siswaTahunAjaran->dispensasi->nama ?? 'Potongan' }})</span>
-                                @endif
-                            @elseif($detail->jenis === 'iuran')
-                                {{ $detail->jenisPenerimaan->nama ?? 'Iuran' }}
-                            @else
-                                Cicilan Tunggakan
-                            @endif
-                        </td>
-                        <td class="py-1 text-right font-black text-black">{{ format_rupiah($detail->nominal) }}</td>
+                        <td class="py-1 text-black font-bold">{{ $item['keterangan'] }}</td>
+                        <td class="py-1 text-right font-black text-black">{{ format_rupiah($item['nominal']) }}</td>
                     </tr>
                 @endforeach
             </tbody>
