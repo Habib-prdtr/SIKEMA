@@ -70,7 +70,17 @@
     <div class="card max-w-[95mm] mx-auto border-2 border-black p-3 text-black font-bold flex flex-col justify-start min-h-[134mm]" id="bukti-pengeluaran">
         {{-- Kop --}}
         <div class="pb-2 border-b border-black text-center shrink-0">
-            <h2 class="text-sm font-black text-black uppercase tracking-wide leading-tight">{{ $sekolah->nama_sekolah ?? 'MTS IHYAUL ULUM' }}</h2>
+            <h2 style="font-size: 8.5px; line-height: 1.2;" class="font-black text-black uppercase tracking-wide">{{ $sekolah->nama_sekolah ?? 'MTS IHYAUL ULUM' }}</h2>
+            @if($sekolah->nama_yayasan ?? false)
+                <p style="font-size: 8.5px; line-height: 1.2;" class="font-bold text-black mt-0.5">{{ $sekolah->nama_yayasan }}</p>
+            @endif
+            @if(($sekolah->alamat ?? false) || ($sekolah->telepon ?? false))
+                <p style="font-size: 8.5px; line-height: 1.2;" class="font-bold text-black mt-0.5">
+                    {{ $sekolah->alamat }}
+                    @if(($sekolah->alamat ?? false) && ($sekolah->telepon ?? false)) | @endif
+                    @if($sekolah->telepon ?? false) Telp: {{ $sekolah->telepon }} @endif
+                </p>
+            @endif
             <div class="mt-1.5 inline-block border border-black text-black px-2 py-0.5 rounded text-[9px] font-black tracking-widest uppercase">
                 BUKTI PENGELUARAN KAS
             </div>
@@ -78,20 +88,20 @@
 
         <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] font-bold border-b border-black py-2 my-1 shrink-0">
             <div>
-                <p class="text-black">Tanggal:</p>
-                <p class="font-black text-black">{{ $pengeluaran->tanggal->locale('id')->isoFormat('D MMMM YYYY') }}</p>
+                <span class="text-black">Tanggal:</span>
+                <span class="font-black text-black ml-1">{{ $pengeluaran->tanggal->locale('id')->isoFormat('D MMMM YYYY') }}</span>
             </div>
             <div>
-                <p class="text-black">Pos Biaya:</p>
-                <p class="font-black text-black">{{ $pengeluaran->posBiaya->nama }}</p>
+                <span class="text-black">Pos Biaya:</span>
+                <span class="font-black text-black ml-1">{{ $pengeluaran->posBiaya->nama }}</span>
             </div>
-            <div class="col-span-2 mt-1">
-                <p class="text-black">Keterangan:</p>
-                <p class="font-black text-black">{{ $pengeluaran->keterangan }}</p>
+            <div class="col-span-2 mt-0.5">
+                <span class="text-black">Keterangan:</span>
+                <span class="font-black text-black ml-1">{{ $pengeluaran->keterangan }}</span>
             </div>
             <div class="col-span-2">
-                <p class="text-black">Operator:</p>
-                <p class="font-black text-black">{{ $pengeluaran->user->name }}</p>
+                <span class="text-black">Operator:</span>
+                <span class="font-black text-black ml-1">{{ $pengeluaran->user->name }}</span>
             </div>
         </div>
 
