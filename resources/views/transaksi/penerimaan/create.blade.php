@@ -198,9 +198,9 @@
                         <div class="grid grid-cols-2 gap-3 mb-2">
                             <button type="button" onclick="switchTab('spp')" id="tab-btn-spp"
                                 class="tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1
-                                border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50">
+                                border-emerald-600 bg-emerald-50 text-emerald-800 font-semibold shadow-sm">
                                 <span class="block text-base">SPP Bulanan</span>
-                                <span class="tab-desc block text-xs font-normal text-gray-500 mt-0.5">Daftar SPP per bulan</span>
+                                <span class="tab-desc block text-xs font-normal text-emerald-600 mt-0.5">Daftar SPP per bulan</span>
                             </button>
                             <button type="button" onclick="switchTab('iuran')" id="tab-btn-iuran"
                                 class="tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1
@@ -211,7 +211,7 @@
                         </div>
 
                         {{-- SPP Section --}}
-                        <div id="section-spp" class="space-y-3 hidden">
+                        <div id="section-spp" class="space-y-3">
                             <div id="list-items-spp" class="space-y-2">
                                 @if(isset($tagihanSpp) && $tagihanSpp->isNotEmpty())
                                     @foreach($tagihanSpp as $spp)
@@ -290,6 +290,10 @@
                                             </div>
                                         </label>
                                     @endforeach
+                                @else
+                                    <div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <p class="text-sm font-medium">Tidak ada tagihan iuran untuk siswa ini.</p>
+                                    </div>
                                 @endif
                             </div>
 
@@ -318,7 +322,7 @@
                         <div id="section-tunggakan" class="hidden"></div>
 
                         {{-- Total, Info, & Catatan --}}
-                        <div id="section-checkout" class="space-y-5 hidden">
+                        <div id="section-checkout" class="space-y-5">
                             <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
                                 <div>
                                     <p class="text-sm text-gray-500">Total Pembayaran</p>
@@ -340,7 +344,7 @@
                     </div>
 
                     {{-- Action Buttons Footer --}}
-                    <div id="section-actions" class="px-6 py-4 border-t border-gray-100 flex items-center gap-3 hidden">
+                    <div id="section-actions" class="px-6 py-4 border-t border-gray-100 flex items-center gap-3">
                         <button type="button" onclick="showModalKonfirmasiCatat()" id="btn-submit-penerimaan" class="btn-primary">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -616,7 +620,7 @@
                 });
                 iuranListEl.innerHTML = html;
             } else {
-                iuranListEl.innerHTML = '';
+                iuranListEl.innerHTML = '<div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200"><p class="text-sm font-medium">Tidak ada tagihan iuran untuk siswa ini.</p></div>';
             }
 
             const container = document.getElementById('container-detail-transaksi');
@@ -750,16 +754,6 @@
             document.getElementById('form-penerimaan').submit();
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const formPenerimaan = document.getElementById('form-penerimaan');
-            if (formPenerimaan) {
-                formPenerimaan.addEventListener('change', updateTotalBayar);
-                formPenerimaan.addEventListener('input', updateTotalBayar);
-
-                formPenerimaan.addEventListener('submit', function(e) {
-                    const selectedItems = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
-
-                    if (selectedItems.length === 0) {
         window.bindPilihSiswaButtons = function() {
             document.querySelectorAll('.btn-pilih-siswa').forEach(btn => {
                 if (btn.dataset.bound) return;
@@ -821,6 +815,20 @@
             }
 
             window.bindPilihSiswaButtons();
+
+            // Direct click handlers for tab buttons
+            document.addEventListener('click', function(e) {
+                const sppBtn = e.target.closest('#tab-btn-spp');
+                if (sppBtn) {
+                    e.preventDefault();
+                    switchTab('spp');
+                }
+                const iuranBtn = e.target.closest('#tab-btn-iuran');
+                if (iuranBtn) {
+                    e.preventDefault();
+                    switchTab('iuran');
+                }
+            });
 
             @if(isset($siswa))
                 switchTab('spp');

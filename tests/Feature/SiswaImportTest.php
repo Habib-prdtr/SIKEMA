@@ -79,7 +79,6 @@ class SiswaImportTest extends TestCase
             'no_induk' => '99001',
             'nama' => 'Siswa Test Satu',
             'kelas' => '7A',
-            'asrama' => 'Putra A',
             'jenis_kelamin' => 'L',
             'tanggal_masuk' => '2026-06-01 00:00:00',
         ]);
@@ -88,7 +87,6 @@ class SiswaImportTest extends TestCase
             'no_induk' => '99002',
             'nama' => 'Siswa Test Dua',
             'kelas' => '8B',
-            'asrama' => 'Putri B',
             'jenis_kelamin' => 'P',
         ]);
 
