@@ -19,8 +19,8 @@ return new class extends Migration
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
 
-            // Jenis item: spp | iuran | tunggakan
-            $table->enum('jenis', ['spp', 'iuran', 'tunggakan']);
+            // Jenis item: spp | iuran | tunggakan | custom
+            $table->string('jenis');
 
             // Diisi jika jenis = iuran; NULL jika spp atau tunggakan
             $table->foreignId('jenis_penerimaan_id')

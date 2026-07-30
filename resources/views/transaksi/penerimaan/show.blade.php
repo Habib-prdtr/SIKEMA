@@ -34,9 +34,9 @@
             #kwitansi {
                 position: fixed !important;
                 left: 3mm !important;
-                top: 3mm !important;
+                top: 6mm !important;
                 width: 89mm !important;
-                height: 134mm !important;
+                height: 130mm !important;
                 margin: 0 !important;
                 padding: 10px 12px !important;
                 border: 1.5px solid #000000 !important;
@@ -102,12 +102,14 @@
         </div>
 
         {{-- Data Siswa --}}
-        <div class="border border-black rounded p-2 bg-gray-50/50 my-2 shrink-0">
-            <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] font-bold">
-                <div><span class="text-black">Nama:</span> <span class="font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->siswa->nama }}</span></div>
-                <div><span class="text-black">No. Induk:</span> <span class="font-mono font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->siswa->no_induk }}</span></div>
+        <div class="border border-black rounded p-2 bg-gray-50/50 my-2 shrink-0 text-[10px] font-bold space-y-1">
+            <div class="flex items-baseline justify-between gap-2">
+                <div class="truncate"><span class="text-black">Nama:</span> <span class="font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->siswa->nama }}</span></div>
+                <div class="shrink-0 text-right"><span class="text-black">No. Induk:</span> <span class="font-mono font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->siswa->no_induk }}</span></div>
+            </div>
+            <div class="flex items-baseline justify-between gap-2">
                 <div><span class="text-black">Kelas:</span> <span class="font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->siswa->kelas }}</span></div>
-                <div><span class="text-black">TA:</span> <span class="font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->tahunAjaran->nama }}</span></div>
+                <div class="shrink-0 text-right"><span class="text-black">TA:</span> <span class="font-black text-black ml-1">{{ $transaksi->siswaTahunAjaran->tahunAjaran->nama }}</span></div>
             </div>
         </div>
 
@@ -181,7 +183,13 @@
 
             $nonSppDetails = $transaksi->details->where('jenis', '!=', 'spp');
             foreach ($nonSppDetails as $detail) {
-                $label = $detail->jenis === 'iuran' ? ($detail->jenisPenerimaan->nama ?? 'Iuran') : 'Cicilan Tunggakan';
+                if ($detail->jenis === 'iuran') {
+                    $label = $detail->jenisPenerimaan->nama ?? 'Iuran';
+                } elseif ($detail->jenis === 'custom') {
+                    $label = $detail->keterangan ?? 'Penerimaan Lain';
+                } else {
+                    $label = 'Cicilan Tunggakan';
+                }
                 $rincianPembayaran->push([
                     'keterangan' => $label,
                     'nominal' => $detail->nominal,
@@ -220,11 +228,11 @@
         @endif
 
         {{-- Tanda tangan --}}
-        <div class="flex justify-end items-end pt-3 mt-auto shrink-0">
-            <div class="text-center text-[9px] font-bold">
-                <p class="text-black font-bold">Kepala TU / Kasir</p>
-                <div class="h-8"></div>
-                <p class="font-black text-black border-t border-black pt-0.5 min-w-28">
+        <div class="flex justify-end items-end pt-2 mt-auto shrink-0">
+            <div class="text-center">
+                <p style="font-size: 9px; line-height: 1.2;" class="text-black font-semibold">Kepala TU / Bendahara</p>
+                <div class="h-7"></div>
+                <p style="font-size: 9.5px; line-height: 1.2;" class="font-bold text-black border-t border-black pt-0.5 min-w-24">
                     {{ !empty($sekolah->kepala_tu) ? $sekolah->kepala_tu : $transaksi->user->name }}
                 </p>
             </div>

@@ -136,7 +136,13 @@ class LaporanService
                     $sheet->setCellValue('A' . $row, $index);
                     $sheet->setCellValue('B' . $row, format_tanggal($t->tanggal));
                     $sheet->setCellValue('C' . $row, $t->siswaTahunAjaran->siswa->nama);
-                    $sheet->setCellValue('D' . $row, $t->details->pluck('jenisPenerimaan.nama')->join(', '));
+                    $rincianStr = $t->details->map(function ($d) {
+                        if ($d->jenis === 'spp') return "SPP Bln {$d->bulan}";
+                        if ($d->jenis === 'iuran') return $d->jenisPenerimaan->nama ?? 'Iuran';
+                        if ($d->jenis === 'tunggakan') return 'Cicilan Tunggakan';
+                        return $d->keterangan ?? 'Custom';
+                    })->join(', ');
+                    $sheet->setCellValue('D' . $row, $rincianStr);
                     $sheet->setCellValue('E' . $row, $t->total_bayar);
                 },
                 'totalRow' => ['col' => 'E', 'label' => 'TOTAL PENERIMAAN', 'value' => $data['totalPenerimaan']]

@@ -68,6 +68,7 @@ class TransaksiService
                     'bulan' => $item['bulan'] ?? null,
                     'tahun' => $item['tahun'] ?? null,
                     'nominal' => $nominal,
+                    'keterangan' => $item['nama_custom'] ?? $item['keterangan'] ?? null,
                 ]);
 
                 // Update tagihan yang bersangkutan
