@@ -57,7 +57,16 @@
                                     <td>{{ $p->siswa->kelas }}</td>
                                     <td>{{ $p->siswa->alamat ?? '-' }}</td>
                                     <td class="text-center font-semibold text-blue-600">
-                                        {{ $p->durasi_dispensasi }} Bulan
+                                        <div>{{ $p->total_durasi ?? $p->durasi_dispensasi }} Bulan</div>
+                                        <div class="text-[11px] text-gray-500 font-normal">
+                                            @if(($p->durasi_ganjil ?? 0) > 0 && ($p->durasi_genap ?? 0) > 0)
+                                                Ganjil: {{ $p->durasi_ganjil }} bln | Genap: {{ $p->durasi_genap }} bln
+                                            @elseif(($p->durasi_ganjil ?? 0) > 0)
+                                                Sem. Ganjil ({{ $p->durasi_ganjil }} bln)
+                                            @elseif(($p->durasi_genap ?? 0) > 0)
+                                                Sem. Genap ({{ $p->durasi_genap }} bln)
+                                            @endif
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <form id="del-siswa-{{ $p->id }}" method="POST"
@@ -177,7 +186,13 @@
                                     @endphp
                                     <label class="siswa-item flex items-center justify-between py-2 px-2.5 bg-white hover:bg-blue-50/80 rounded-md border border-gray-100 cursor-pointer transition-colors"
                                         data-kelas="{{ $as->siswa->kelas }}"
-                                        data-search="{{ strtolower($as->siswa->no_induk . ' ' . $as->siswa->nama . ' ' . $as->siswa->kelas) }}">
+                                        data-search="{{ strtolower($as->siswa->no_induk . ' ' . $as->siswa->nama . ' ' . $as->siswa->kelas) }}"
+                                        data-durasi-ganjil="{{ $as->durasi_ganjil ?? 0 }}"
+                                        data-durasi-genap="{{ $as->durasi_genap ?? 0 }}"
+                                        data-durasi-total="{{ $as->total_durasi ?? $as->durasi_dispensasi }}"
+                                        data-already-this="{{ $alreadyThis ? 'true' : 'false' }}"
+                                        data-already-other="{{ $alreadyOther ? 'true' : 'false' }}"
+                                        data-dispensasi-nama="{{ $as->dispensasi->nama ?? '' }}">
                                         <div class="flex items-center gap-3">
                                             <input type="checkbox" name="siswa_tahun_ajaran_ids[]" value="{{ $as->id }}"
                                                 class="siswa-checkbox form-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
@@ -186,10 +201,14 @@
                                                 <div class="text-xs text-gray-500 font-mono">NIS: {{ $as->siswa->no_induk }} | Kelas: {{ $as->siswa->kelas }}</div>
                                             </div>
                                         </div>
-                                        <div class="text-right">
-                                            @if($alreadyThis)
+                                        <div class="text-right badge-status-container">
+                                            @if(($as->durasi_ganjil ?? 0) > 0 && ($as->durasi_genap ?? 0) > 0)
+                                                <span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-purple-100 text-purple-800">
+                                                    Ganjil: {{ $as->durasi_ganjil }} bln | Genap: {{ $as->durasi_genap }} bln
+                                                </span>
+                                            @elseif($alreadyThis)
                                                 <span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700">
-                                                    Sudah ada ({{ $as->durasi_dispensasi }} bln)
+                                                    Sudah ada ({{ $as->total_durasi ?? $as->durasi_dispensasi }} bln)
                                                 </span>
                                             @elseif($alreadyOther)
                                                 <span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800" title="Dispensasi: {{ $as->dispensasi->nama ?? '' }}">
@@ -312,6 +331,54 @@
                 }
 
                 bindPresetButtons();
+                updateStudentBadges(selectedSem);
+            }
+
+            function updateStudentBadges(selectedSem) {
+                document.querySelectorAll('.siswa-item').forEach(item => {
+                    const dGanjil = parseInt(item.dataset.durasiGanjil || 0, 10);
+                    const dGenap = parseInt(item.dataset.durasiGenap || 0, 10);
+                    const alreadyThis = item.dataset.alreadyThis === 'true';
+                    const alreadyOther = item.dataset.alreadyOther === 'true';
+                    const dispensasiNama = item.dataset.dispensasiNama || '';
+
+                    const badgeBox = item.querySelector('.badge-status-container');
+                    if (!badgeBox) return;
+
+                    let html = '';
+                    if (selectedSem === 'genap' && dGanjil > 0) {
+                        html = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                            Sudah ada ${dGanjil} bln di Sem. Ganjil
+                        </span>`;
+                        if (dGenap > 0) {
+                            html += `<span class="block mt-0.5 text-[10px] text-emerald-700 font-semibold">(Genap: ${dGenap} bln)</span>`;
+                        }
+                    } else if (selectedSem === 'ganjil' && dGenap > 0) {
+                        html = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                            Sudah ada ${dGenap} bln di Sem. Genap
+                        </span>`;
+                        if (dGanjil > 0) {
+                            html += `<span class="block mt-0.5 text-[10px] text-emerald-700 font-semibold">(Ganjil: ${dGanjil} bln)</span>`;
+                        }
+                    } else if (dGanjil > 0 && dGenap > 0) {
+                        html = `<span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-purple-100 text-purple-800">
+                            Ganjil: ${dGanjil} bln | Genap: ${dGenap} bln
+                        </span>`;
+                    } else if (alreadyThis) {
+                        const total = dGanjil + dGenap;
+                        html = `<span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700">
+                            Sudah ada (${total > 0 ? total : item.dataset.durasiTotal} bln)
+                        </span>`;
+                    } else if (alreadyOther) {
+                        html = `<span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800" title="Dispensasi: ${dispensasiNama}">
+                            Dispensasi lain: ${dispensasiNama}
+                        </span>`;
+                    }
+
+                    badgeBox.innerHTML = html;
+                });
             }
 
             semesterTabs.forEach(btn => {

@@ -111,17 +111,42 @@ class DispensasiController extends Controller
             abort(404, 'Tahun ajaran aktif belum ditentukan.');
         }
 
+        $ganjilBulan = [7, 8, 9, 10, 11, 12];
+        $genapBulan = [1, 2, 3, 4, 5, 6];
+
         // Ambil semua siswa yang aktif di tahun ajaran aktif dan memiliki dispensasi ini
         $penerimaList = SiswaTahunAjaran::where('tahun_ajaran_id', $tahunAktif->id)
             ->where('dispensasi_id', $dispensasi->id)
-            ->with('siswa')
+            ->with(['siswa', 'tagihanSpp'])
             ->get();
+
+        foreach ($penerimaList as $p) {
+            $tarif = $p->tarif_spp;
+            $p->durasi_ganjil = $p->tagihanSpp
+                ->filter(fn($b) => in_array((int)$b->bulan, $ganjilBulan, true) && $b->tagihan < $tarif)
+                ->count();
+            $p->durasi_genap = $p->tagihanSpp
+                ->filter(fn($b) => in_array((int)$b->bulan, $genapBulan, true) && $b->tagihan < $tarif)
+                ->count();
+            $p->total_durasi = $p->durasi_ganjil + $p->durasi_genap;
+        }
 
         // Ambil semua siswa yang aktif di tahun ajaran ini
         $availableSiswa = SiswaTahunAjaran::where('tahun_ajaran_id', $tahunAktif->id)
-            ->with(['siswa', 'dispensasi'])
+            ->with(['siswa', 'dispensasi', 'tagihanSpp'])
             ->get()
             ->sortBy('siswa.nama');
+
+        foreach ($availableSiswa as $as) {
+            $tarif = $as->tarif_spp;
+            $as->durasi_ganjil = $as->tagihanSpp
+                ->filter(fn($b) => in_array((int)$b->bulan, $ganjilBulan, true) && $b->tagihan < $tarif)
+                ->count();
+            $as->durasi_genap = $as->tagihanSpp
+                ->filter(fn($b) => in_array((int)$b->bulan, $genapBulan, true) && $b->tagihan < $tarif)
+                ->count();
+            $as->total_durasi = $as->durasi_ganjil + $as->durasi_genap;
+        }
 
         return view('master.dispensasi.siswa', compact('dispensasi', 'tahunAktif', 'penerimaList', 'availableSiswa'));
     }

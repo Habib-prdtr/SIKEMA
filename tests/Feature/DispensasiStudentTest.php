@@ -88,13 +88,14 @@ class DispensasiStudentTest extends TestCase
         $this->assertEquals($this->dispensasi->id, $this->siswaTahunAjaran->dispensasi_id);
         $this->assertEquals(6, $this->siswaTahunAjaran->durasi_dispensasi);
 
-        // Check bills: first 6 bills should be discounted by 50% (100k -> 50k), next 6 should remain 100k
-        $bills = $this->siswaTahunAjaran->tagihanSpp()->orderBy('id')->get();
-        for ($i = 0; $i < 6; $i++) {
-            $this->assertEquals(50000, $bills[$i]->tagihan);
+        // Check bills: Semester Ganjil (months 7-12) should be discounted by 50% (100k -> 50k), Semester Genap (1-6) should remain 100k
+        $billsGanjil = $this->siswaTahunAjaran->tagihanSpp()->whereIn('bulan', [7, 8, 9, 10, 11, 12])->get();
+        foreach ($billsGanjil as $bill) {
+            $this->assertEquals(50000, $bill->tagihan);
         }
-        for ($i = 6; $i < 12; $i++) {
-            $this->assertEquals(100000, $bills[$i]->tagihan);
+        $billsGenap = $this->siswaTahunAjaran->tagihanSpp()->whereIn('bulan', [1, 2, 3, 4, 5, 6])->get();
+        foreach ($billsGenap as $bill) {
+            $this->assertEquals(100000, $bill->tagihan);
         }
     }
 
@@ -115,6 +116,16 @@ class DispensasiStudentTest extends TestCase
             'tahun_ajaran_id' => $this->tahunAjaran->id,
             'tarif_spp' => 100000,
         ]);
+
+        for ($month = 1; $month <= 12; $month++) {
+            TagihanSpp::create([
+                'siswa_tahun_ajaran_id' => $sta2->id,
+                'bulan' => $month,
+                'tahun' => 2026,
+                'tagihan' => 100000,
+                'status' => 'belum',
+            ]);
+        }
 
         // Bulk assign dispensation to both students for 6 months
         $response = $this->post(route('master.dispensasi.siswa.store', $this->dispensasi), [
@@ -206,9 +217,9 @@ class DispensasiStudentTest extends TestCase
             'durasi_dispensasi' => 6,
         ]);
 
-        // Verify initial discount (50k for first 6 bills)
-        $bills = $this->siswaTahunAjaran->tagihanSpp()->orderBy('id')->get();
-        $this->assertEquals(50000, $bills[0]->tagihan);
+        // Verify initial discount (50k for Ganjil bills)
+        $billsGanjil = $this->siswaTahunAjaran->tagihanSpp()->whereIn('bulan', [7, 8, 9, 10, 11, 12])->get();
+        $this->assertEquals(50000, $billsGanjil[0]->tagihan);
 
         // Edit dispensasi: change to nominal discount of 70,000 (meaning bill becomes 30,000)
         $response = $this->put(route('master.dispensasi.update', $this->dispensasi), [
@@ -220,13 +231,14 @@ class DispensasiStudentTest extends TestCase
         $response->assertRedirect(route('master.dispensasi.index'));
         $response->assertSessionHas('sukses');
 
-        // Check bills: first 6 bills should now be 30,000 (100k - 70k)
-        $updatedBills = $this->siswaTahunAjaran->tagihanSpp()->orderBy('id')->get();
-        for ($i = 0; $i < 6; $i++) {
-            $this->assertEquals(30000, $updatedBills[$i]->tagihan);
+        // Check bills: Ganjil bills should now be 30,000 (100k - 70k), Genap remain 100k
+        $updatedGanjil = $this->siswaTahunAjaran->tagihanSpp()->whereIn('bulan', [7, 8, 9, 10, 11, 12])->get();
+        foreach ($updatedGanjil as $bill) {
+            $this->assertEquals(30000, $bill->tagihan);
         }
-        for ($i = 6; $i < 12; $i++) {
-            $this->assertEquals(100000, $updatedBills[$i]->tagihan);
+        $updatedGenap = $this->siswaTahunAjaran->tagihanSpp()->whereIn('bulan', [1, 2, 3, 4, 5, 6])->get();
+        foreach ($updatedGenap as $bill) {
+            $this->assertEquals(100000, $bill->tagihan);
         }
     }
 
@@ -247,7 +259,8 @@ class DispensasiStudentTest extends TestCase
             'durasi_dispensasi' => 6,
         ]);
 
-        $bill = $this->siswaTahunAjaran->tagihanSpp()->orderBy('id')->first();
+        $bill = $this->siswaTahunAjaran->tagihanSpp()->where('tagihan', 0)->first();
+        $this->assertNotNull($bill);
         $this->assertEquals(0, $bill->tagihan);
         $this->assertEquals('belum', $bill->status);
 
