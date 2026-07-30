@@ -34,9 +34,9 @@
             #bukti-pengeluaran {
                 position: fixed !important;
                 left: 3mm !important;
-                top: 3mm !important;
+                top: 6mm !important;
                 width: 89mm !important;
-                height: 134mm !important;
+                height: 130mm !important;
                 margin: 0 !important;
                 padding: 10px 12px !important;
                 border: 1.5px solid #000000 !important;
@@ -86,22 +86,14 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] font-bold border-b border-black py-2 my-1 shrink-0">
-            <div>
-                <span class="text-black">Tanggal:</span>
-                <span class="font-black text-black ml-1">{{ $pengeluaran->tanggal->locale('id')->isoFormat('D MMMM YYYY') }}</span>
+        <div class="border-b border-black py-2 my-1 shrink-0 text-[10px] font-bold space-y-1">
+            <div class="flex items-baseline justify-between gap-2">
+                <div><span class="text-black">Tanggal:</span> <span class="font-black text-black ml-1">{{ $pengeluaran->tanggal->locale('id')->isoFormat('D MMMM YYYY') }}</span></div>
+                <div class="shrink-0 text-right"><span class="text-black">Pos Biaya:</span> <span class="font-black text-black ml-1">{{ $pengeluaran->posBiaya->nama }}</span></div>
             </div>
-            <div>
-                <span class="text-black">Pos Biaya:</span>
-                <span class="font-black text-black ml-1">{{ $pengeluaran->posBiaya->nama }}</span>
-            </div>
-            <div class="col-span-2 mt-0.5">
-                <span class="text-black">Keterangan:</span>
-                <span class="font-black text-black ml-1">{{ $pengeluaran->keterangan }}</span>
-            </div>
-            <div class="col-span-2">
-                <span class="text-black">Operator:</span>
-                <span class="font-black text-black ml-1">{{ $pengeluaran->user->name }}</span>
+            <div class="flex items-baseline justify-between gap-2">
+                <div class="truncate"><span class="text-black">Keterangan:</span> <span class="font-black text-black ml-1">{{ $pengeluaran->keterangan }}</span></div>
+                <div class="shrink-0 text-right"><span class="text-black">Operator:</span> <span class="font-black text-black ml-1">{{ $pengeluaran->user->name }}</span></div>
             </div>
         </div>
 
@@ -110,16 +102,16 @@
             <p class="text-sm font-black text-black">{{ format_rupiah($pengeluaran->jumlah) }}</p>
         </div>
 
-        <div class="flex justify-between items-end pt-3 mt-auto shrink-0">
-            <div class="text-center text-[9px] font-bold">
-                <p class="text-black font-bold">Disetujui oleh</p>
-                <div class="h-8"></div>
-                <p class="border-t border-black pt-0.5 min-w-20 font-black text-black">(.....................)</p>
+        <div class="flex justify-between items-end pt-2 mt-auto shrink-0">
+            <div class="text-center">
+                <p style="font-size: 9px; line-height: 1.2;" class="text-black font-semibold">Disetujui oleh</p>
+                <div class="h-7"></div>
+                <p style="font-size: 9.5px; line-height: 1.2;" class="border-t border-black pt-0.5 min-w-20 font-bold text-black">(.....................)</p>
             </div>
-            <div class="text-center text-[9px] font-bold">
-                <p class="text-black font-bold">Bendahara</p>
-                <div class="h-8"></div>
-                <p class="border-t border-black pt-0.5 font-black text-black">{{ $pengeluaran->user->name }}</p>
+            <div class="text-center">
+                <p style="font-size: 9px; line-height: 1.2;" class="text-black font-semibold">Bendahara</p>
+                <div class="h-7"></div>
+                <p style="font-size: 9.5px; line-height: 1.2;" class="border-t border-black pt-0.5 min-w-20 font-bold text-black">{{ $pengeluaran->user->name }}</p>
             </div>
         </div>
     </div>

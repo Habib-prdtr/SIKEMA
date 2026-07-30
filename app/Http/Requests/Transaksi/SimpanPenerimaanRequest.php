@@ -75,6 +75,20 @@ class SimpanPenerimaanRequest extends FormRequest
                     'nominal' => (int) $this->input('nominal_tunggakan', 0),
                 ];
             }
+
+            // Mapping Custom Items (Penerimaan Tambahan / Custom)
+            $customItems = $this->input('custom_items', []);
+            if (is_array($customItems)) {
+                foreach ($customItems as $custom) {
+                    if (! empty($custom['nama']) && isset($custom['nominal']) && (int) $custom['nominal'] > 0) {
+                        $formattedItems[] = [
+                            'jenis' => 'custom',
+                            'nominal' => (int) $custom['nominal'],
+                            'nama_custom' => trim($custom['nama']),
+                        ];
+                    }
+                }
+            }
         }
 
         $this->merge([
@@ -89,8 +103,9 @@ class SimpanPenerimaanRequest extends FormRequest
             'tanggal' => ['required', 'date'],
             'keterangan' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.jenis' => ['required', 'in:spp,iuran,tunggakan'],
+            'items.*.jenis' => ['required', 'in:spp,iuran,tunggakan,custom'],
             'items.*.nominal' => ['required', 'integer', 'min:0'],
+            'items.*.nama_custom' => ['nullable', 'string', 'max:255'],
             // Untuk SPP: bulan + tahun wajib
             'items.*.bulan' => ['nullable', 'integer', 'min:1', 'max:12'],
             'items.*.tahun' => ['nullable', 'integer'],

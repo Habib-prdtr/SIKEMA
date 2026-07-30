@@ -17,6 +17,7 @@ class TransaksiDetail extends Model
         'bulan',
         'tahun',
         'nominal',
+        'keterangan',
     ];
 
     protected $casts = [

@@ -321,6 +321,33 @@
                         {{-- Element dummy untuk mencegah error JS --}}
                         <div id="section-tunggakan" class="hidden"></div>
 
+                        {{-- Custom / Penerimaan Tambahan --}}
+                        <div id="section-custom-penerimaan" class="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 rounded-xl p-4 border border-emerald-200 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-emerald-200/60">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider truncate">Penerimaan Tambahan / Custom</h4>
+                                        <p class="text-[11px] text-gray-500 truncate">Item penerimaan khusus (misal: Seragam, Buku, Infaq Sukarela, dll)</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="addCustomPenerimaanRow()" class="btn-secondary btn-sm text-xs flex items-center gap-1.5 border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 font-semibold shadow-sm shrink-0 self-start sm:self-auto">
+                                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    <span>+ Tambah Item</span>
+                                </button>
+                            </div>
+
+                            <div id="custom-penerimaan-list" class="space-y-2">
+                                {{-- Custom rows dynamically inserted here --}}
+                            </div>
+                        </div>
+
                         {{-- Total, Info, & Catatan --}}
                         <div id="section-checkout" class="space-y-5">
                             <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
@@ -449,6 +476,58 @@
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
         }
 
+        let customRowIndex = 0;
+
+        function addCustomPenerimaanRow(nama = '', nominal = '') {
+            const listContainer = document.getElementById('custom-penerimaan-list');
+            if (!listContainer) return;
+
+            const rowId = `custom-row-${customRowIndex}`;
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = "custom-item-row flex flex-wrap sm:flex-nowrap items-center gap-3 bg-white p-3 rounded-xl border border-emerald-200 shadow-sm transition-all";
+
+            div.innerHTML = `
+                <div class="flex-1 min-w-[200px]">
+                    <input type="text" name="custom_items[${customRowIndex}][nama]" value="${nama}"
+                        class="form-input text-xs input-custom-nama font-medium"
+                        placeholder="Nama Penerimaan (misal: Seragam, Buku, Infaq...)" required>
+                </div>
+                <div class="w-40 shrink-0">
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none select-none z-10">Rp</span>
+                        <input type="number" name="custom_items[${customRowIndex}][nominal]" value="${nominal}"
+                            class="form-input text-xs pl-9 pr-3 font-bold text-gray-900 input-custom-nominal w-full"
+                            min="1" step="500" placeholder="Nominal" required>
+                    </div>
+                </div>
+                <button type="button" onclick="removeCustomPenerimaanRow('${rowId}')"
+                    class="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors shrink-0" title="Hapus Item">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            `;
+
+            listContainer.appendChild(div);
+            customRowIndex++;
+
+            div.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', updateTotalBayar);
+                input.addEventListener('change', updateTotalBayar);
+            });
+
+            updateTotalBayar();
+        }
+
+        function removeCustomPenerimaanRow(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) {
+                row.remove();
+                updateTotalBayar();
+            }
+        }
+
         function updateTotalBayar() {
             let total = 0;
             const checkedCheckboxes = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
@@ -473,6 +552,14 @@
                     total += parseInt(nominalInput?.value || 0, 10);
                 } else {
                     total += parseInt(cb.dataset.tagihanNominal || 0, 10);
+                }
+            });
+
+            // Add Custom items
+            document.querySelectorAll('.input-custom-nominal').forEach(input => {
+                const val = parseInt(input.value || 0, 10);
+                if (val > 0) {
+                    total += val;
                 }
             });
 
@@ -664,8 +751,17 @@
 
         function showModalKonfirmasiCatat() {
             const selectedItems = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
-            if (selectedItems.length === 0) {
-                alert('Silakan centang (pilih) minimal 1 item tagihan yang ingin diproses.');
+            let hasValidCustom = false;
+            document.querySelectorAll('.custom-item-row').forEach(row => {
+                const customNama = row.querySelector('.input-custom-nama')?.value?.trim();
+                const customNominal = parseInt(row.querySelector('.input-custom-nominal')?.value || 0, 10);
+                if (customNama && customNominal > 0) {
+                    hasValidCustom = true;
+                }
+            });
+
+            if (selectedItems.length === 0 && !hasValidCustom) {
+                alert('Silakan centang tagihan atau isi minimal 1 penerimaan tambahan.');
                 return;
             }
             const totalBayar = parseInt(document.getElementById('total-bayar-input')?.value || 0, 10);
@@ -706,6 +802,26 @@
                         <span class="font-bold text-gray-900 text-sm">${formatRupiah(itemNominal)}</span>
                     </div>
                 `;
+            });
+
+            // Collect Custom items
+            document.querySelectorAll('.custom-item-row').forEach(row => {
+                const customNama = row.querySelector('.input-custom-nama')?.value?.trim();
+                const customNominal = parseInt(row.querySelector('.input-custom-nominal')?.value || 0, 10);
+                if (customNama && customNominal > 0) {
+                    itemsHtml += `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-teal-50 border border-teal-200 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span>
+                                <div>
+                                    <span class="font-semibold text-gray-800">${customNama}</span>
+                                    <span class="text-[10px] text-teal-600 block font-normal">Penerimaan Tambahan</span>
+                                </div>
+                            </div>
+                            <span class="font-bold text-gray-900 text-sm">${formatRupiah(customNominal)}</span>
+                        </div>
+                    `;
+                }
             });
 
             document.getElementById('modal-list-items').innerHTML = itemsHtml;
@@ -805,10 +921,18 @@
 
                 formPenerimaan.addEventListener('submit', function(e) {
                     const selectedItems = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
+                    let hasValidCustom = false;
+                    document.querySelectorAll('.custom-item-row').forEach(row => {
+                        const customNama = row.querySelector('.input-custom-nama')?.value?.trim();
+                        const customNominal = parseInt(row.querySelector('.input-custom-nominal')?.value || 0, 10);
+                        if (customNama && customNominal > 0) {
+                            hasValidCustom = true;
+                        }
+                    });
 
-                    if (selectedItems.length === 0) {
+                    if (selectedItems.length === 0 && !hasValidCustom) {
                         e.preventDefault();
-                        alert('Silakan centang (pilih) minimal 1 item tagihan yang ingin diproses.');
+                        alert('Silakan centang tagihan atau isi minimal 1 penerimaan tambahan.');
                         return false;
                     }
                 });
