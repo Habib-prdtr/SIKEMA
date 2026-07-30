@@ -169,8 +169,26 @@
 
 /* ── Print styles ──────────────────────────────── */
 @media print {
+    aside, header, nav, #sidebar-overlay, .no-print, [role="navigation"] {
+        display: none !important;
+    }
+    body, html {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    main {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
     .no-print { display: none !important; }
     .print-only { display: block !important; }
-    body { background: white !important; }
-    .card { box-shadow: none !important; border: 1px solid #e5e7eb !important; }
+    .card { box-shadow: none !important; }
 }

@@ -39,7 +39,7 @@
 @endphp
 
 <aside id="app-sidebar"
-    class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col
+    class="no-print fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col
            -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out shadow-sm">
 
     {{-- Logo --}}
