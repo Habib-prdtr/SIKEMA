@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Dispensasi;
 use App\Models\JenisPenerimaan;
 use App\Models\PosBiaya;
 use App\Models\SaldoAwal;
@@ -493,57 +494,82 @@ class MasterDataService
     {
         \Illuminate\Support\Facades\DB::transaction(function () use ($siswaTahunAjaran, $dispensasiId, $durasi, $semester) {
             $sem = $semester ?? 'semua';
-            $siswaTahunAjaran->update([
-                'dispensasi_id' => $dispensasiId,
-                'durasi_dispensasi' => $durasi,
-            ]);
-
-            // Load dispensasi relation
-            $siswaTahunAjaran->unsetRelation('dispensasi');
-            $siswaTahunAjaran->load('dispensasi');
-            $dispensasi = $siswaTahunAjaran->dispensasi;
             $tarifSpp = $siswaTahunAjaran->tarif_spp;
+            $dispensasi = $dispensasiId ? Dispensasi::find($dispensasiId) : null;
 
-            // Fetch SPP bills ordered chronologically
-            $bills = $siswaTahunAjaran->tagihanSpp()->orderBy('tahun')->orderBy('bulan')->get();
-
-            $dispensasiAppliedCount = 0;
-
-            // Determine target months for dispensation:
-            // ganjil => months 7, 8, 9, 10, 11, 12 (Semester 1)
-            // genap => months 1, 2, 3, 4, 5, 6 (Semester 2)
-            // semua => any month
-            $targetBulan = null;
-            if ($sem === 'ganjil') {
-                $targetBulan = [7, 8, 9, 10, 11, 12];
-            } elseif ($sem === 'genap') {
-                $targetBulan = [1, 2, 3, 4, 5, 6];
+            if (!$dispensasiId || $durasi <= 0 || !$dispensasi) {
+                $siswaTahunAjaran->update([
+                    'dispensasi_id' => null,
+                    'durasi_dispensasi' => 0,
+                ]);
+                foreach ($siswaTahunAjaran->tagihanSpp as $bill) {
+                    if ($bill->status === 'belum') {
+                        $bill->update(['tagihan' => $tarifSpp]);
+                    }
+                }
+                return;
             }
+
+            $ganjilBulan = [7, 8, 9, 10, 11, 12];
+            $genapBulan = [1, 2, 3, 4, 5, 6];
+
+            if ($sem === 'ganjil') {
+                $targetBulan = $ganjilBulan;
+                $preserveBulan = $genapBulan;
+            } elseif ($sem === 'genap') {
+                $targetBulan = $genapBulan;
+                $preserveBulan = $ganjilBulan;
+            } else {
+                $targetBulan = array_merge($ganjilBulan, $genapBulan);
+                $preserveBulan = [];
+            }
+
+            $schoolMonthOrder = [7 => 1, 8 => 2, 9 => 3, 10 => 4, 11 => 5, 12 => 6, 1 => 7, 2 => 8, 3 => 9, 4 => 10, 5 => 11, 6 => 12];
+            $bills = $siswaTahunAjaran->tagihanSpp()->get()->sortBy(function ($bill) use ($schoolMonthOrder) {
+                return ($bill->tahun * 100) + ($schoolMonthOrder[(int) $bill->bulan] ?? (int) $bill->bulan);
+            });
+            $appliedInTarget = 0;
 
             foreach ($bills as $bill) {
                 if ($bill->status !== 'belum') {
                     continue; // Skip paid bills
                 }
 
-                $tagihanNominal = $tarifSpp;
+                $bulan = (int) $bill->bulan;
 
-                $isTargetSemester = $targetBulan === null || in_array((int) $bill->bulan, $targetBulan, true);
-
-                // Apply dispensation discount if inside target semester & duration
-                if ($dispensasi && $isTargetSemester && $dispensasiAppliedCount < $durasi) {
-                    if ($dispensasi->tipe_potongan === 'persen') {
-                        $potongan = ($tarifSpp * $dispensasi->nilai_potongan) / 100;
-                        $tagihanNominal = max(0, $tarifSpp - $potongan);
-                    } elseif ($dispensasi->tipe_potongan === 'nominal') {
-                        $tagihanNominal = max(0, $tarifSpp - $dispensasi->nilai_potongan);
-                    }
-                    $dispensasiAppliedCount++;
+                if (in_array($bulan, $preserveBulan, true)) {
+                    // Preserve existing dispensation in non-target semester
+                    continue;
                 }
 
-                $bill->update([
-                    'tagihan' => $tagihanNominal,
-                ]);
+                if (in_array($bulan, $targetBulan, true)) {
+                    if ($appliedInTarget < $durasi) {
+                        if ($dispensasi->tipe_potongan === 'persen') {
+                            $potongan = ($tarifSpp * $dispensasi->nilai_potongan) / 100;
+                            $tagihanNominal = max(0, $tarifSpp - $potongan);
+                        } elseif ($dispensasi->tipe_potongan === 'nominal') {
+                            $tagihanNominal = max(0, $tarifSpp - $dispensasi->nilai_potongan);
+                        } else {
+                            $tagihanNominal = $tarifSpp;
+                        }
+                        $appliedInTarget++;
+                    } else {
+                        $tagihanNominal = $tarifSpp;
+                    }
+
+                    $bill->update(['tagihan' => $tagihanNominal]);
+                }
             }
+
+            // Recalculate total discounted months across the year
+            $totalDiscountedMonths = $siswaTahunAjaran->tagihanSpp()
+                ->where('tagihan', '<', $tarifSpp)
+                ->count();
+
+            $siswaTahunAjaran->update([
+                'dispensasi_id' => $totalDiscountedMonths > 0 ? $dispensasiId : null,
+                'durasi_dispensasi' => $totalDiscountedMonths,
+            ]);
         });
     }
 
