@@ -1,4 +1,4 @@
-<header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
+<header class="no-print bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between gap-4 sticky top-0 z-30">
 
     {{-- Mobile sidebar toggle --}}
     <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-lg transition-colors">
