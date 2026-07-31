@@ -138,6 +138,7 @@ class LaporanService
                     $sheet->setCellValue('C' . $row, $t->siswaTahunAjaran->siswa->nama);
                     $rincianStr = $t->details->map(function ($d) {
                         if ($d->jenis === 'spp') return "SPP Bln {$d->bulan}";
+                        if ($d->jenis === 'tabungan_wajib') return 'Tabungan Wajib';
                         if ($d->jenis === 'iuran') return $d->jenisPenerimaan->nama ?? 'Iuran';
                         if ($d->jenis === 'tunggakan') return 'Cicilan Tunggakan';
                         return $d->keterangan ?? 'Custom';

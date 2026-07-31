@@ -680,6 +680,65 @@ class MasterDataService
     {
         return $tarifSpp->delete();
     }
+
+    // --- TABUNGAN WAJIB ---
+    public function getTabunganWajib(?TahunAjaran $tahunAktif): Collection
+    {
+        if (!$tahunAktif) return collect();
+        return \App\Models\MasterTabunganWajib::where('tahun_ajaran_id', $tahunAktif->id)
+            ->orderBy('kelas')
+            ->get();
+    }
+
+    public function cekTabunganWajibExists(int $tahunAjaranId, string $kelas, ?int $ignoreId = null): bool
+    {
+        $query = \App\Models\MasterTabunganWajib::where('tahun_ajaran_id', $tahunAjaranId)
+            ->where('kelas', $kelas);
+
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        return $query->exists();
+    }
+
+    public function simpanTabunganWajib(array $data): \App\Models\MasterTabunganWajib
+    {
+        return \App\Models\MasterTabunganWajib::create($data);
+    }
+
+    public function updateTabunganWajib(\App\Models\MasterTabunganWajib $tabunganWajib, array $data): bool
+    {
+        return $tabunganWajib->update($data);
+    }
+
+    public function hapusTabunganWajib(\App\Models\MasterTabunganWajib $tabunganWajib): bool
+    {
+        return $tabunganWajib->delete();
+    }
+
+    public function getTarifTabunganWajibSiswa(\App\Models\SiswaTahunAjaran $sta): int
+    {
+        $list = \App\Models\MasterTabunganWajib::where('tahun_ajaran_id', $sta->tahun_ajaran_id)->get();
+        if ($list->isEmpty()) {
+            return 0;
+        }
+
+        $siswaKelas = $sta->siswa->kelas ?? '';
+        $siswaGrade = $this->getGradeFromKelas($siswaKelas);
+
+        foreach ($list as $tw) {
+            if ($tw->kelas === $siswaKelas) {
+                return $tw->tarif;
+            }
+            if ($siswaGrade !== null && $this->getGradeFromKelas($tw->kelas) === $siswaGrade) {
+                return $tw->tarif;
+            }
+        }
+
+        return $list->first()->tarif ?? 0;
+    }
 }
+
 
 

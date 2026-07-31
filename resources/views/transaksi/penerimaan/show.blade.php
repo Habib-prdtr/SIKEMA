@@ -185,6 +185,8 @@
             foreach ($nonSppDetails as $detail) {
                 if ($detail->jenis === 'iuran') {
                     $label = $detail->jenisPenerimaan->nama ?? 'Iuran';
+                } elseif ($detail->jenis === 'tabungan_wajib') {
+                    $label = 'Tabungan Wajib';
                 } elseif ($detail->jenis === 'custom') {
                     $label = $detail->keterangan ?? 'Penerimaan Lain';
                 } else {

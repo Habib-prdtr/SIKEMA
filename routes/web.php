@@ -78,6 +78,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{tarifSpp}', [\App\Http\Controllers\Master\MasterTarifSppController::class, 'destroy'])->name('destroy');
     });
 
+    // ─── Master: Tabungan Wajib ───────────────────────────
+    Route::prefix('master/tabungan-wajib')->name('master.tabungan-wajib.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Master\MasterTabunganWajibController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Master\MasterTabunganWajibController::class, 'store'])->name('store');
+        Route::post('/extract', [\App\Http\Controllers\Master\MasterTabunganWajibController::class, 'extract'])->name('extract');
+        Route::put('/{tabunganWajib}', [\App\Http\Controllers\Master\MasterTabunganWajibController::class, 'update'])->name('update');
+        Route::delete('/{tabunganWajib}', [\App\Http\Controllers\Master\MasterTabunganWajibController::class, 'destroy'])->name('destroy');
+    });
+
     // ─── Master: Jenis Penerimaan (Iuran) ─────────────────
     Route::prefix('master/jenis-penerimaan')->name('master.jenis-penerimaan.')->group(function () {
         Route::get('/', [JenisPenerimaanController::class, 'index'])->name('index');

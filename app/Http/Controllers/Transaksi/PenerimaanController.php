@@ -18,6 +18,7 @@ class PenerimaanController extends Controller
     public function __construct(
         private readonly TransaksiService $transaksiService,
         private readonly TunggakanService $tunggakanService,
+        private readonly \App\Services\MasterDataService $masterDataService,
     ) {}
 
     /**
@@ -55,6 +56,7 @@ class PenerimaanController extends Controller
         $tagihanSpp = collect();
         $tagihanIuran = collect();
         $sisaTunggakan = 0;
+        $tarifTabunganWajib = 0;
 
         if ($request->filled('no_induk')) {
             $sta = $this->transaksiService->getSiswaUntukTransaksi($request->no_induk, $tahunAktif);
@@ -64,6 +66,7 @@ class PenerimaanController extends Controller
                 $tagihanSpp = $sta->tagihanSpp;
                 $tagihanIuran = $sta->tagihanIuran;
                 $sisaTunggakan = $this->tunggakanService->hitungSisa($sta);
+                $tarifTabunganWajib = $this->masterDataService->getTarifTabunganWajibSiswa($sta);
             }
         }
 
@@ -82,6 +85,7 @@ class PenerimaanController extends Controller
                     'kelas' => $siswa->siswa->kelas,
                     'tahun_ajaran' => $siswa->tahunAjaran->nama,
                     'tarif_spp' => $siswa->tarif_spp,
+                    'tarif_tabungan_wajib' => $tarifTabunganWajib,
                     'tunggakan_awal' => $siswa->tunggakan_awal,
                     'dispensasi_nama' => $siswa->dispensasi->nama ?? null,
                 ],
@@ -147,6 +151,7 @@ class PenerimaanController extends Controller
             'siswa',
             'tagihanSpp',
             'tagihanIuran',
+            'tarifTabunganWajib',
             'sisaTunggakan',
             'daftarSiswa',
         ));
