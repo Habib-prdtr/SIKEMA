@@ -58,10 +58,12 @@ class DashboardController extends Controller
         $tagihanSpp = collect();
         $tagihanIuran = collect();
         $sisaTunggakan = 0;
+        $tarifTabunganWajib = 0;
 
         if ($request->filled('no_induk') && $tahunAktif) {
             $transaksiService = app(\App\Services\TransaksiService::class);
             $tunggakanService = app(\App\Services\TunggakanService::class);
+            $masterDataService = app(\App\Services\MasterDataService::class);
 
             $sta = $transaksiService->getSiswaUntukTransaksi($request->no_induk, $tahunAktif);
 
@@ -70,6 +72,7 @@ class DashboardController extends Controller
                 $tagihanSpp = $sta->tagihanSpp;
                 $tagihanIuran = $sta->tagihanIuran;
                 $sisaTunggakan = $tunggakanService->hitungSisa($sta);
+                $tarifTabunganWajib = $masterDataService->getTarifTabunganWajibSiswa($sta);
             }
         }
 
@@ -88,6 +91,7 @@ class DashboardController extends Controller
                     'kelas' => $siswa->siswa->kelas,
                     'tahun_ajaran' => $siswa->tahunAjaran->nama,
                     'tarif_spp' => $siswa->tarif_spp,
+                    'tarif_tabungan_wajib' => $tarifTabunganWajib,
                     'tunggakan_awal' => $siswa->tunggakan_awal,
                     'dispensasi_nama' => $siswa->dispensasi->nama ?? null,
                 ],
@@ -141,6 +145,7 @@ class DashboardController extends Controller
             'siswa',
             'tagihanSpp',
             'tagihanIuran',
+            'tarifTabunganWajib',
             'sisaTunggakan',
         ));
     }

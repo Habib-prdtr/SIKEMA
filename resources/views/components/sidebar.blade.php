@@ -10,6 +10,7 @@
                 ['label' => 'Tahun Ajaran',          'route' => 'master.tahun-ajaran.index'],
                 ['label' => 'Data Siswa',             'route' => 'master.siswa.index'],
                 ['label' => 'Tarif SPP',              'route' => 'master.tarif-spp.index'],
+                ['label' => 'Tabungan Wajib',         'route' => 'master.tabungan-wajib.index'],
                 ['label' => 'Siswa per Tahun Ajaran', 'route' => 'master.siswa-tahun-ajaran.index'],
                 ['label' => 'Jenis Penerimaan',       'route' => 'master.jenis-penerimaan.index'],
                 ['label' => 'Pos Biaya',              'route' => 'master.pos-biaya.index'],

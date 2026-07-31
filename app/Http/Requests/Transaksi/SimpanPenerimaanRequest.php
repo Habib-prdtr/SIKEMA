@@ -68,6 +68,18 @@ class SimpanPenerimaanRequest extends FormRequest
                 }
             }
 
+            // Mapping Tabungan Wajib
+            if (! empty($rawItems['tabungan_wajib'])) {
+                $nominalTw = (int) $this->input('nominal_tabungan_wajib', 0);
+                if ($nominalTw > 0) {
+                    $formattedItems[] = [
+                        'jenis' => 'tabungan_wajib',
+                        'nominal' => $nominalTw,
+                        'keterangan' => 'Tabungan Wajib',
+                    ];
+                }
+            }
+
             // Mapping Tunggakan
             if (! empty($rawItems['tunggakan'])) {
                 $formattedItems[] = [
@@ -103,7 +115,7 @@ class SimpanPenerimaanRequest extends FormRequest
             'tanggal' => ['required', 'date'],
             'keterangan' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.jenis' => ['required', 'in:spp,iuran,tunggakan,custom'],
+            'items.*.jenis' => ['required', 'in:spp,tabungan_wajib,iuran,tunggakan,custom'],
             'items.*.nominal' => ['required', 'integer', 'min:0'],
             'items.*.nama_custom' => ['nullable', 'string', 'max:255'],
             // Untuk SPP: bulan + tahun wajib

@@ -195,12 +195,18 @@
                         @endif
 
                         {{-- Tab Navigation (Boxed Segmented Selector) --}}
-                        <div class="grid grid-cols-2 gap-3 mb-2">
+                        <div class="grid grid-cols-3 gap-3 mb-2">
                             <button type="button" onclick="switchTab('spp')" id="tab-btn-spp"
                                 class="tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1
                                 border-emerald-600 bg-emerald-50 text-emerald-800 font-semibold shadow-sm">
                                 <span class="block text-base">SPP Bulanan</span>
                                 <span class="tab-desc block text-xs font-normal text-emerald-600 mt-0.5">Daftar SPP per bulan</span>
+                            </button>
+                            <button type="button" onclick="switchTab('tabungan_wajib')" id="tab-btn-tabungan_wajib"
+                                class="tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1
+                                border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50">
+                                <span class="block text-base">Tabungan Wajib</span>
+                                <span class="tab-desc block text-xs font-normal text-gray-500 mt-0.5">Tabungan wajib</span>
                             </button>
                             <button type="button" onclick="switchTab('iuran')" id="tab-btn-iuran"
                                 class="tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1
@@ -258,6 +264,32 @@
                                         <p class="text-sm font-medium">Tidak ada tagihan SPP untuk siswa ini.</p>
                                     </div>
                                 @endif
+                            </div>
+                        </div>
+
+                        {{-- Tabungan Wajib Section --}}
+                        <div id="section-tabungan_wajib" class="space-y-4 hidden">
+                            <div class="space-y-2">
+                                <label class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/50 bg-white">
+                                    <div class="flex items-center gap-4">
+                                        <input type="checkbox" name="items[tabungan_wajib]" value="1" id="checkbox-tabungan-wajib"
+                                            data-tagihan-nominal="{{ $tarifTabunganWajib ?? 0 }}"
+                                            class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 shrink-0">
+                                        <div class="space-y-0.5">
+                                            <p class="text-sm font-bold text-gray-900">Tabungan Wajib</p>
+                                            <p class="text-xs text-gray-500">Tarif per kelas: <span id="text-tarif-tabungan-wajib" class="font-semibold text-emerald-700">{{ format_rupiah($tarifTabunganWajib ?? 0) }}</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="relative flex items-center">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 select-none">Rp</span>
+                                            <input type="number" name="nominal_tabungan_wajib" id="input-nominal-tabungan-wajib"
+                                                value="{{ $tarifTabunganWajib ?? 0 }}"
+                                                class="form-input text-xs pl-9 pr-3 font-bold text-gray-900 w-36 text-right rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                                min="0" step="1000" placeholder="Nominal">
+                                        </div>
+                                    </div>
+                                </label>
                             </div>
                         </div>
 
@@ -550,18 +582,24 @@
                 if (cb.name === 'items[tunggakan]') {
                     const nominalInput = document.querySelector('input[name="nominal_tunggakan"]');
                     total += parseInt(nominalInput?.value || 0, 10);
+                } else if (cb.name === 'items[tabungan_wajib]') {
+                    const nominalInput = document.querySelector('input[name="nominal_tabungan_wajib"]');
+                    total += parseInt(nominalInput?.value || 0, 10);
                 } else {
                     total += parseInt(cb.dataset.tagihanNominal || 0, 10);
                 }
             });
 
-            // Add Custom items
-            document.querySelectorAll('.input-custom-nominal').forEach(input => {
-                const val = parseInt(input.value || 0, 10);
-                if (val > 0) {
-                    total += val;
-                }
-            });
+            // Add Custom items (only if visible on SPP tab)
+            const customSec = document.getElementById('section-custom-penerimaan');
+            if (customSec && !customSec.classList.contains('hidden')) {
+                document.querySelectorAll('.input-custom-nominal').forEach(input => {
+                    const val = parseInt(input.value || 0, 10);
+                    if (val > 0) {
+                        total += val;
+                    }
+                });
+            }
 
             document.getElementById('total-bayar-input').value = total;
             document.getElementById('total-bayar-display').innerText = formatRupiah(total);
@@ -569,15 +607,26 @@
 
         function switchTab(tabName) {
             const sppSec = document.getElementById('section-spp');
+            const twSec = document.getElementById('section-tabungan_wajib');
             const iuranSec = document.getElementById('section-iuran');
             const tunggakanSec = document.getElementById('section-tunggakan');
+            const customSec = document.getElementById('section-custom-penerimaan');
 
             if (sppSec) sppSec.classList.add('hidden');
+            if (twSec) twSec.classList.add('hidden');
             if (iuranSec) iuranSec.classList.add('hidden');
             if (tunggakanSec) tunggakanSec.classList.add('hidden');
 
             const activeSec = document.getElementById('section-' + tabName);
             if (activeSec) activeSec.classList.remove('hidden');
+
+            if (customSec) {
+                if (tabName === 'spp') {
+                    customSec.classList.remove('hidden');
+                } else {
+                    customSec.classList.add('hidden');
+                }
+            }
 
             const checkoutSec = document.getElementById('section-checkout');
             const actionsSec = document.getElementById('section-actions');
@@ -585,18 +634,16 @@
             if (actionsSec) actionsSec.classList.remove('hidden');
 
             const sppBtn = document.getElementById('tab-btn-spp');
+            const twBtn = document.getElementById('tab-btn-tabungan_wajib');
             const iuranBtn = document.getElementById('tab-btn-iuran');
 
-            if (sppBtn) {
-                sppBtn.className = "tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1 border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50";
-                const desc = sppBtn.querySelector('.tab-desc');
-                if (desc) desc.className = "tab-desc block text-xs font-normal text-gray-500 mt-0.5";
-            }
-            if (iuranBtn) {
-                iuranBtn.className = "tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1 border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50";
-                const desc = iuranBtn.querySelector('.tab-desc');
-                if (desc) desc.className = "tab-desc block text-xs font-normal text-gray-500 mt-0.5";
-            }
+            [sppBtn, twBtn, iuranBtn].forEach(btn => {
+                if (btn) {
+                    btn.className = "tab-btn p-3 rounded-xl border-2 text-center transition-all focus:outline-none flex-1 border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-300 hover:bg-gray-50";
+                    const desc = btn.querySelector('.tab-desc');
+                    if (desc) desc.className = "tab-desc block text-xs font-normal text-gray-500 mt-0.5";
+                }
+            });
 
             const activeBtn = document.getElementById('tab-btn-' + tabName);
             if (activeBtn) {
@@ -604,6 +651,8 @@
                 const desc = activeBtn.querySelector('.tab-desc');
                 if (desc) desc.className = "tab-desc block text-xs font-normal text-emerald-600 mt-0.5";
             }
+
+            updateTotalBayar();
         }
 
         function renderDetailSiswa(data) {
@@ -614,6 +663,16 @@
             document.getElementById('detail-tahun-ajaran').innerText = s.tahun_ajaran;
             document.getElementById('detail-tarif-spp').innerText = formatRupiah(s.tarif_spp);
             document.getElementById('input-siswa-tahun-ajaran-id').value = s.id;
+
+            // Tabungan Wajib
+            if (s.tarif_tabungan_wajib !== undefined) {
+                const textTw = document.getElementById('text-tarif-tabungan-wajib');
+                const inputTw = document.getElementById('input-nominal-tabungan-wajib');
+                const cbTw = document.getElementById('checkbox-tabungan-wajib');
+                if (textTw) textTw.innerText = formatRupiah(s.tarif_tabungan_wajib);
+                if (inputTw) inputTw.value = s.tarif_tabungan_wajib;
+                if (cbTw) cbTw.dataset.tagihanNominal = s.tarif_tabungan_wajib;
+            }
 
             const tunggakanWrapper = document.getElementById('detail-sisa-tunggakan-wrapper');
             const alertTunggakan = document.getElementById('alert-tunggakan');
@@ -751,14 +810,17 @@
 
         function showModalKonfirmasiCatat() {
             const selectedItems = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
+            const customSec = document.getElementById('section-custom-penerimaan');
             let hasValidCustom = false;
-            document.querySelectorAll('.custom-item-row').forEach(row => {
-                const customNama = row.querySelector('.input-custom-nama')?.value?.trim();
-                const customNominal = parseInt(row.querySelector('.input-custom-nominal')?.value || 0, 10);
-                if (customNama && customNominal > 0) {
-                    hasValidCustom = true;
-                }
-            });
+            if (customSec && !customSec.classList.contains('hidden')) {
+                document.querySelectorAll('.custom-item-row').forEach(row => {
+                    const customNama = row.querySelector('.input-custom-nama')?.value?.trim();
+                    const customNominal = parseInt(row.querySelector('.input-custom-nominal')?.value || 0, 10);
+                    if (customNama && customNominal > 0) {
+                        hasValidCustom = true;
+                    }
+                });
+            }
 
             if (selectedItems.length === 0 && !hasValidCustom) {
                 alert('Silakan centang tagihan atau isi minimal 1 penerimaan tambahan.');
@@ -787,8 +849,12 @@
                     itemNama = 'Cicilan / Lunasi Tunggakan';
                     const nominalInput = document.querySelector('input[name="nominal_tunggakan"]');
                     itemNominal = parseInt(nominalInput?.value || 0, 10);
+                } else if (cb.name === 'items[tabungan_wajib]') {
+                    itemNama = 'Tabungan Wajib';
+                    const nominalInput = document.querySelector('input[name="nominal_tabungan_wajib"]');
+                    itemNominal = parseInt(nominalInput?.value || 0, 10);
                 } else if (parentLabel) {
-                    const namaEl = parentLabel.querySelector('p.font-medium, span.font-medium');
+                    const namaEl = parentLabel.querySelector('p.font-medium, span.font-medium, p.font-semibold');
                     itemNama = namaEl ? namaEl.innerText.trim() : 'Item Pembayaran';
                     itemNominal = parseInt(cb.dataset.tagihanNominal || 0, 10);
                 }
@@ -804,25 +870,27 @@
                 `;
             });
 
-            // Collect Custom items
-            document.querySelectorAll('.custom-item-row').forEach(row => {
-                const customNama = row.querySelector('.input-custom-nama')?.value?.trim();
-                const customNominal = parseInt(row.querySelector('.input-custom-nominal')?.value || 0, 10);
-                if (customNama && customNominal > 0) {
-                    itemsHtml += `
-                        <div class="flex items-center justify-between p-3 rounded-xl bg-teal-50 border border-teal-200 text-xs">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span>
-                                <div>
-                                    <span class="font-semibold text-gray-800">${customNama}</span>
-                                    <span class="text-[10px] text-teal-600 block font-normal">Penerimaan Tambahan</span>
+            // Collect Custom items (only if visible)
+            if (customSec && !customSec.classList.contains('hidden')) {
+                document.querySelectorAll('.custom-item-row').forEach(row => {
+                    const customNama = row.querySelector('.input-custom-nama')?.value?.trim();
+                    const customNominal = parseInt(row.querySelector('.input-custom-nominal')?.value || 0, 10);
+                    if (customNama && customNominal > 0) {
+                        itemsHtml += `
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-teal-50 border border-teal-200 text-xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-teal-500 shrink-0"></span>
+                                    <div>
+                                        <span class="font-semibold text-gray-800">${customNama}</span>
+                                        <span class="text-[10px] text-teal-600 block font-normal">Penerimaan Tambahan</span>
+                                    </div>
                                 </div>
+                                <span class="font-bold text-gray-900 text-sm">${formatRupiah(customNominal)}</span>
                             </div>
-                            <span class="font-bold text-gray-900 text-sm">${formatRupiah(customNominal)}</span>
-                        </div>
-                    `;
-                }
-            });
+                        `;
+                    }
+                });
+            }
 
             document.getElementById('modal-list-items').innerHTML = itemsHtml;
 
@@ -921,14 +989,17 @@
 
                 formPenerimaan.addEventListener('submit', function(e) {
                     const selectedItems = document.querySelectorAll('#form-penerimaan input[type="checkbox"]:checked');
+                    const customSec = document.getElementById('section-custom-penerimaan');
                     let hasValidCustom = false;
-                    document.querySelectorAll('.custom-item-row').forEach(row => {
-                        const customNama = row.querySelector('.input-custom-nama')?.value?.trim();
-                        const customNominal = parseInt(row.querySelector('.input-custom-nominal')?.value || 0, 10);
-                        if (customNama && customNominal > 0) {
-                            hasValidCustom = true;
-                        }
-                    });
+                    if (customSec && !customSec.classList.contains('hidden')) {
+                        document.querySelectorAll('.custom-item-row').forEach(row => {
+                            const customNama = row.querySelector('.input-custom-nama')?.value?.trim();
+                            const customNominal = parseInt(row.querySelector('.input-custom-nominal')?.value || 0, 10);
+                            if (customNama && customNominal > 0) {
+                                hasValidCustom = true;
+                            }
+                        });
+                    }
 
                     if (selectedItems.length === 0 && !hasValidCustom) {
                         e.preventDefault();
@@ -936,6 +1007,12 @@
                         return false;
                     }
                 });
+            }
+
+            const inputNominalTw = document.getElementById('input-nominal-tabungan-wajib');
+            if (inputNominalTw) {
+                inputNominalTw.addEventListener('input', updateTotalBayar);
+                inputNominalTw.addEventListener('change', updateTotalBayar);
             }
 
             window.bindPilihSiswaButtons();
@@ -946,6 +1023,11 @@
                 if (sppBtn) {
                     e.preventDefault();
                     switchTab('spp');
+                }
+                const twBtn = e.target.closest('#tab-btn-tabungan_wajib');
+                if (twBtn) {
+                    e.preventDefault();
+                    switchTab('tabungan_wajib');
                 }
                 const iuranBtn = e.target.closest('#tab-btn-iuran');
                 if (iuranBtn) {
