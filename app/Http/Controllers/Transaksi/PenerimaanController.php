@@ -54,6 +54,7 @@ class PenerimaanController extends Controller
         $tahunAktif = TahunAjaran::aktif();
         $siswa = null;
         $tagihanSpp = collect();
+        $tagihanTabunganWajib = collect();
         $tagihanIuran = collect();
         $sisaTunggakan = 0;
         $tarifTabunganWajib = 0;
@@ -64,6 +65,7 @@ class PenerimaanController extends Controller
             if ($sta) {
                 $siswa = $sta;
                 $tagihanSpp = $sta->tagihanSpp;
+                $tagihanTabunganWajib = $sta->tagihanTabunganWajib;
                 $tagihanIuran = $sta->tagihanIuran;
                 $sisaTunggakan = $this->tunggakanService->hitungSisa($sta);
                 $tarifTabunganWajib = $this->masterDataService->getTarifTabunganWajibSiswa($sta);
@@ -110,6 +112,21 @@ class PenerimaanController extends Controller
                         'namaDispensasi' => $siswa->dispensasi->nama ?? null,
                     ];
                 }),
+                'tagihanTabunganWajib' => $tagihanTabunganWajib->map(function ($tw) {
+                    $lunas = $tw->status === 'lunas';
+                    $nama = \Carbon\Carbon::createFromDate($tw->tahun, $tw->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
+                    $nominal = $lunas ? $tw->tagihan : $tw->sisa();
+                    return [
+                        'id' => $tw->id,
+                        'bulan' => $tw->bulan,
+                        'tahun' => $tw->tahun,
+                        'nama' => $nama,
+                        'status' => $tw->status,
+                        'tagihan' => $tw->tagihan,
+                        'nominal' => $nominal,
+                        'lunas' => $lunas,
+                    ];
+                }),
                 'tagihanIuran' => $tagihanIuran->map(function ($iuran) {
                     $lunas = $iuran->status === 'lunas';
                     $nominal = $lunas ? $iuran->tagihan : $iuran->sisa();
@@ -133,6 +150,12 @@ class PenerimaanController extends Controller
                 ->where('siswa_tahun_ajaran.tahun_ajaran_id', $tahunAktif->id)
                 ->orderBy('siswa.nama');
 
+            $jenjang = \App\Models\Sekolah::getJenjangAktif();
+            if ($jenjang !== 'semua' && in_array($jenjang, ['7', '8', '9'])) {
+                $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+                $siswaQuery->where('siswa.kelas', $like, "{$jenjang}%");
+            }
+
             if ($request->filled('cari')) {
                 $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
                 $cari = $request->cari;
@@ -150,6 +173,7 @@ class PenerimaanController extends Controller
             'tahunAktif',
             'siswa',
             'tagihanSpp',
+            'tagihanTabunganWajib',
             'tagihanIuran',
             'tarifTabunganWajib',
             'sisaTunggakan',

@@ -63,6 +63,10 @@
                class="py-3 px-6 font-medium text-sm border-b-2 transition-all duration-150 {{ $tab === 'spp' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
                 Laporan Pembayaran SPP
             </a>
+            <a href="{{ route('laporan.rekapitulasi', array_merge(request()->except('page'), ['tab' => 'tabungan'])) }}" 
+               class="py-3 px-6 font-medium text-sm border-b-2 transition-all duration-150 {{ $tab === 'tabungan' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                Laporan Tabungan Wajib
+            </a>
             <a href="{{ route('laporan.rekapitulasi', array_merge(request()->except('page'), ['tab' => 'iuran'])) }}" 
                class="py-3 px-6 font-medium text-sm border-b-2 transition-all duration-150 {{ $tab === 'iuran' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
                 Laporan Pembayaran Iuran
@@ -98,8 +102,8 @@
                     </select>
                 </div>
 
-                {{-- SPP Bulan Filter --}}
-                @if($tab === 'spp')
+                {{-- Bulan Filter (SPP & Tabungan Wajib) --}}
+                @if($tab === 'spp' || $tab === 'tabungan')
                     <div class="w-full md:w-40">
                         <select name="bulan" class="form-select w-full">
                             <option value="">Semua Bulan (YTD)</option>
@@ -190,6 +194,17 @@
                                     <th class="text-right">Sisa Tagihan</th>
                                     <th class="text-center">Status</th>
                                 </tr>
+                            @elseif($tab === 'tabungan')
+                                <tr>
+                                    <th class="w-12 text-center">No</th>
+                                    <th>No. Induk</th>
+                                    <th>Nama Siswa</th>
+                                    <th class="text-center">Kelas</th>
+                                    <th class="text-right">Total Tagihan Tabungan</th>
+                                    <th class="text-right">Total Terbayar</th>
+                                    <th class="text-right">Sisa Tagihan</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
                             @elseif($tab === 'iuran')
                                 <tr>
                                     <th class="w-12 text-center">No</th>
@@ -211,12 +226,13 @@
                                     <th class="text-center" rowspan="2">No. Induk</th>
                                     <th rowspan="2">Nama Siswa</th>
                                     <th class="text-right" rowspan="2">Tagihan Setahun</th>
-                                    <th class="text-center" colspan="{{ 2 + $numIur }}">Rincian Yang Sudah Dibayar</th>
+                                    <th class="text-center" colspan="{{ 3 + $numIur }}">Rincian Yang Sudah Dibayar</th>
                                     <th class="text-right" rowspan="2">Total Sudah Bayar</th>
                                     <th class="text-right" rowspan="2">Total Kurang Bayar</th>
                                 </tr>
                                 <tr>
                                     <th class="text-right">SPP</th>
+                                    <th class="text-right">Tabungan Wajib</th>
                                     @foreach($jenisPenerimaanList as $jp)
                                         <th class="text-right">{{ $jp->nama }}</th>
                                     @endforeach
@@ -228,6 +244,7 @@
                             @php
                                 $sumTagihanSetahun = 0;
                                 $sumSppTerbayar = 0;
+                                $sumTwTerbayar = 0;
                                 $sumIurTerbayarMap = [];
                                 foreach($jenisPenerimaanList as $jp) { $sumIurTerbayarMap[$jp->id] = 0; }
                                 $sumTunggakanTerbayar = 0;
@@ -236,6 +253,8 @@
 
                                 $sumTagihanSpp = 0;
                                 $sumTerbayarSpp = 0;
+                                $sumTagihanTw = 0;
+                                $sumTerbayarTw = 0;
                                 $sumTagihanIur = 0;
                                 $sumTerbayarIur = 0;
                                 $counter = 1;
@@ -258,6 +277,42 @@
                                         
                                         $sumTagihanSpp += $tagihan;
                                         $sumTerbayarSpp += $terbayar;
+                                    @endphp
+                                    <tr>
+                                        <td class="text-center text-xs text-gray-500">{{ $index + 1 }}</td>
+                                        <td class="font-mono text-xs">{{ $sta->siswa->no_induk }}</td>
+                                        <td class="font-medium text-gray-900">{{ $sta->siswa->nama }}</td>
+                                        <td class="text-center font-semibold text-gray-700">{{ $sta->siswa->kelas }}</td>
+                                        <td class="text-right">{{ format_rupiah($tagihan) }}</td>
+                                        <td class="text-right text-emerald-600 font-medium">{{ format_rupiah($terbayar) }}</td>
+                                        <td class="text-right text-red-600 font-semibold">{{ format_rupiah($sisa) }}</td>
+                                        <td class="text-center">
+                                            @if($status === 'lunas')
+                                                <span class="badge-green">Lunas</span>
+                                            @elseif($status === 'cicilan')
+                                                <span class="badge-blue">Cicilan</span>
+                                            @else
+                                                <span class="badge-red">Belum Bayar</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @elseif($tab === 'tabungan')
+                                    @php
+                                        if ($bulanFilter) {
+                                            $bill = $sta->tagihanTabunganWajib->where('bulan', $bulanFilter)->first();
+                                            $tagihan = $bill ? $bill->tagihan : 0;
+                                            $terbayar = $bill ? $bill->terbayar : 0;
+                                            $status = $bill ? $bill->status : 'belum';
+                                        } else {
+                                            $tagihan = $sta->tagihanTabunganWajib->sum('tagihan');
+                                            $terbayar = $sta->tagihanTabunganWajib->sum('terbayar');
+                                            $sisa = $tagihan - $terbayar;
+                                            $status = $sisa <= 0 ? 'lunas' : ($terbayar > 0 ? 'cicilan' : 'belum');
+                                        }
+                                        $sisa = $tagihan - $terbayar;
+                                        
+                                        $sumTagihanTw += $tagihan;
+                                        $sumTerbayarTw += $terbayar;
                                     @endphp
                                     <tr>
                                         <td class="text-center text-xs text-gray-500">{{ $index + 1 }}</td>
@@ -314,17 +369,20 @@
                                     @php
                                         $sppTagihan = $sta->tagihanSpp->sum('tagihan');
                                         $sppTerbayar = $sta->tagihanSpp->sum('terbayar');
+                                        $twTagihan = $sta->tagihanTabunganWajib->sum('tagihan');
+                                        $twTerbayar = $sta->tagihanTabunganWajib->sum('terbayar');
                                         $iurTagihan = $sta->tagihanIuran->sum('tagihan');
                                         $iurTerbayar = $sta->tagihanIuran->sum('terbayar');
                                         $tunggakanAwal = $sta->tunggakan_awal ?? 0;
                                         $tunggakanTerbayar = (int) ($tunggakanMap[$sta->id] ?? 0);
 
-                                        $tagihanSetahun = $sppTagihan + $iurTagihan + $tunggakanAwal;
-                                        $totalSudahBayar = $sppTerbayar + $iurTerbayar + $tunggakanTerbayar;
+                                        $tagihanSetahun = $sppTagihan + $twTagihan + $iurTagihan + $tunggakanAwal;
+                                        $totalSudahBayar = $sppTerbayar + $twTerbayar + $iurTerbayar + $tunggakanTerbayar;
                                         $totalKurangBayar = max(0, $tagihanSetahun - $totalSudahBayar);
 
                                         $sumTagihanSetahun += $tagihanSetahun;
                                         $sumSppTerbayar += $sppTerbayar;
+                                        $sumTwTerbayar += $twTerbayar;
                                         $sumTunggakanTerbayar += $tunggakanTerbayar;
                                         $sumTotalSudahBayar += $totalSudahBayar;
                                         $sumTotalKurangBayar += $totalKurangBayar;
@@ -335,6 +393,7 @@
                                         <td class="font-medium text-gray-900 text-xs">{{ $sta->siswa->nama }}</td>
                                         <td class="text-right font-medium text-xs">{{ format_rupiah($tagihanSetahun) }}</td>
                                         <td class="text-right text-emerald-600 text-xs">{{ format_rupiah($sppTerbayar) }}</td>
+                                        <td class="text-right text-emerald-600 text-xs">{{ format_rupiah($twTerbayar) }}</td>
                                         @foreach($jenisPenerimaanList as $jp)
                                             @php
                                                 $byr = $sta->tagihanIuran->where('jenis_penerimaan_id', $jp->id)->sum('terbayar');
@@ -358,6 +417,14 @@
                                     <td class="text-right text-red-600">{{ format_rupiah($sumTagihanSpp - $sumTerbayarSpp) }}</td>
                                     <td></td>
                                 </tr>
+                            @elseif($tab === 'tabungan')
+                                <tr class="bg-gray-50 font-bold border-t-2 border-gray-200">
+                                    <td colspan="4" class="text-right">TOTAL REKAPITULASI:</td>
+                                    <td class="text-right">{{ format_rupiah($sumTagihanTw) }}</td>
+                                    <td class="text-right text-emerald-600">{{ format_rupiah($sumTerbayarTw) }}</td>
+                                    <td class="text-right text-red-600">{{ format_rupiah($sumTagihanTw - $sumTerbayarTw) }}</td>
+                                    <td></td>
+                                </tr>
                             @elseif($tab === 'iuran')
                                 <tr class="bg-gray-50 font-bold border-t-2 border-gray-200">
                                     <td colspan="5" class="text-right">TOTAL REKAPITULASI:</td>
@@ -371,6 +438,7 @@
                                     <td colspan="3" class="text-right text-sm">Grand Total</td>
                                     <td class="text-right text-sm">{{ format_rupiah($sumTagihanSetahun) }}</td>
                                     <td class="text-right text-emerald-600 text-xs">{{ format_rupiah($sumSppTerbayar) }}</td>
+                                    <td class="text-right text-emerald-600 text-xs">{{ format_rupiah($sumTwTerbayar) }}</td>
                                     @foreach($jenisPenerimaanList as $jp)
                                         <td class="text-right text-emerald-600 text-xs">{{ format_rupiah($sumIurTerbayarMap[$jp->id] ?? 0) }}</td>
                                     @endforeach

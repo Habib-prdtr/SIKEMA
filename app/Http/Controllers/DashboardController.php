@@ -25,6 +25,7 @@ class DashboardController extends Controller
         $totalPengeluaranBulanIni = $this->dashboardService->getTotalPengeluaranBulanIni($tahunAktif);
 
         $sppBelumLunas = $this->dashboardService->getSppBelumLunasBulanIni($tahunAktif);
+        $tabunganWajibBelumLunas = $this->dashboardService->getTabunganWajibBelumLunasBulanIni($tahunAktif);
         $totalSaldo = $this->dashboardService->getTotalSaldo($tahunAktif);
 
         $grafikPenerimaan = $this->dashboardService->getGrafikPenerimaanPerJenis($tahunAktif);
@@ -41,6 +42,12 @@ class DashboardController extends Controller
                 ->where('siswa_tahun_ajaran.tahun_ajaran_id', $tahunAktif->id)
                 ->orderBy('siswa.nama');
 
+            $jenjang = \App\Models\Sekolah::getJenjangAktif();
+            if ($jenjang !== 'semua' && in_array($jenjang, ['7', '8', '9'])) {
+                $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+                $siswaQuery->where('siswa.kelas', $like, "{$jenjang}%");
+            }
+
             if ($request->filled('cari')) {
                 $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
                 $cari = $request->cari;
@@ -56,6 +63,7 @@ class DashboardController extends Controller
 
         $siswa = null;
         $tagihanSpp = collect();
+        $tagihanTabunganWajib = collect();
         $tagihanIuran = collect();
         $sisaTunggakan = 0;
         $tarifTabunganWajib = 0;
@@ -70,13 +78,14 @@ class DashboardController extends Controller
             if ($sta) {
                 $siswa = $sta;
                 $tagihanSpp = $sta->tagihanSpp;
+                $tagihanTabunganWajib = $sta->tagihanTabunganWajib;
                 $tagihanIuran = $sta->tagihanIuran;
                 $sisaTunggakan = $tunggakanService->hitungSisa($sta);
                 $tarifTabunganWajib = $masterDataService->getTarifTabunganWajibSiswa($sta);
             }
         }
 
-        if ($request->has('ajax') || ($request->has('no_induk') && ($request->wantsJson() || $request->ajax()))) {
+        if ($request->has('ajax') || ($request->has('no_induk') && ($request->wantsJson() || $request.ajax()))) {
             if (!$siswa) {
                 return response()->json(['error' => 'Siswa dengan No. Induk tersebut tidak ditemukan atau belum aktif.'], 404);
             }
@@ -116,6 +125,21 @@ class DashboardController extends Controller
                         'namaDispensasi' => $siswa->dispensasi->nama ?? null,
                     ];
                 }),
+                'tagihanTabunganWajib' => $tagihanTabunganWajib->map(function ($tw) {
+                    $lunas = $tw->status === 'lunas';
+                    $nama = \Carbon\Carbon::createFromDate($tw->tahun, $tw->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
+                    $nominal = $lunas ? $tw->tagihan : $tw->sisa();
+                    return [
+                        'id' => $tw->id,
+                        'bulan' => $tw->bulan,
+                        'tahun' => $tw->tahun,
+                        'nama' => $nama,
+                        'status' => $tw->status,
+                        'tagihan' => $tw->tagihan,
+                        'nominal' => $nominal,
+                        'lunas' => $lunas,
+                    ];
+                }),
                 'tagihanIuran' => $tagihanIuran->map(function ($iuran) {
                     $lunas = $iuran->status === 'lunas';
                     $nominal = $lunas ? $iuran->tagihan : $iuran->sisa();
@@ -137,6 +161,7 @@ class DashboardController extends Controller
             'totalPenerimaanBulanIni',
             'totalPengeluaranBulanIni',
             'sppBelumLunas',
+            'tabunganWajibBelumLunas',
             'totalSaldo',
             'penerimaanPerJenisData',
             'maxPenerimaanJenis',
@@ -144,6 +169,7 @@ class DashboardController extends Controller
             'daftarSiswa',
             'siswa',
             'tagihanSpp',
+            'tagihanTabunganWajib',
             'tagihanIuran',
             'tarifTabunganWajib',
             'sisaTunggakan',

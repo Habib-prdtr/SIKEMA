@@ -51,6 +51,11 @@ class SiswaTahunAjaran extends Model
         return $this->hasMany(TagihanSpp::class);
     }
 
+    public function tagihanTabunganWajib()
+    {
+        return $this->hasMany(TagihanTabunganWajib::class);
+    }
+
     public function tagihanIuran()
     {
         return $this->hasMany(TagihanIuran::class);

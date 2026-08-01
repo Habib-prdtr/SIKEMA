@@ -128,6 +128,7 @@ class SiswaTahunAjaranController extends Controller
 
                 $sta->load('tahunAjaran');
                 $this->tagihanService->generateSpp($sta);
+                $this->tagihanService->generateTabunganWajib($sta);
                 $this->tagihanService->generateIuranUntukSiswa($sta);
                 $count++;
             }

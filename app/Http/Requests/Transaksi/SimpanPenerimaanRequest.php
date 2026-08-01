@@ -5,6 +5,7 @@ namespace App\Http\Requests\Transaksi;
 use App\Models\SiswaTahunAjaran;
 use App\Models\TagihanIuran;
 use App\Models\TagihanSpp;
+use App\Models\TagihanTabunganWajib;
 use App\Services\TunggakanService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
@@ -69,14 +70,18 @@ class SimpanPenerimaanRequest extends FormRequest
             }
 
             // Mapping Tabungan Wajib
-            if (! empty($rawItems['tabungan_wajib'])) {
-                $nominalTw = (int) $this->input('nominal_tabungan_wajib', 0);
-                if ($nominalTw > 0) {
-                    $formattedItems[] = [
-                        'jenis' => 'tabungan_wajib',
-                        'nominal' => $nominalTw,
-                        'keterangan' => 'Tabungan Wajib',
-                    ];
+            if (! empty($rawItems['tabungan_wajib']) && is_array($rawItems['tabungan_wajib'])) {
+                foreach ($rawItems['tabungan_wajib'] as $twId) {
+                    $tagihan = TagihanTabunganWajib::find($twId);
+                    if ($tagihan) {
+                        $formattedItems[] = [
+                            'jenis' => 'tabungan_wajib',
+                            'nominal' => $tagihan->sisa(),
+                            'bulan' => $tagihan->bulan,
+                            'tahun' => $tagihan->tahun,
+                            'tagihan_tabungan_wajib_id' => $tagihan->id,
+                        ];
+                    }
                 }
             }
 
@@ -118,7 +123,7 @@ class SimpanPenerimaanRequest extends FormRequest
             'items.*.jenis' => ['required', 'in:spp,tabungan_wajib,iuran,tunggakan,custom'],
             'items.*.nominal' => ['required', 'integer', 'min:0'],
             'items.*.nama_custom' => ['nullable', 'string', 'max:255'],
-            // Untuk SPP: bulan + tahun wajib
+            // Untuk SPP / Tabungan Wajib: bulan + tahun wajib
             'items.*.bulan' => ['nullable', 'integer', 'min:1', 'max:12'],
             'items.*.tahun' => ['nullable', 'integer'],
             // Untuk iuran: jenis_penerimaan_id wajib
@@ -165,6 +170,18 @@ class SimpanPenerimaanRequest extends FormRequest
                 if ($tagihan && $nominal > $tagihan->sisa()) {
                     $errors["items.{$index}.nominal"] = [
                         'Nominal melebihi sisa tagihan SPP bulan ini (Rp '.
+                        number_format($tagihan->sisa(), 0, ',', '.').').',
+                    ];
+                }
+            } elseif ($jenis === 'tabungan_wajib') {
+                $tagihan = TagihanTabunganWajib::where('siswa_tahun_ajaran_id', $sta->id)
+                    ->where('bulan', $item['bulan'])
+                    ->where('tahun', $item['tahun'])
+                    ->first();
+
+                if ($tagihan && $nominal > $tagihan->sisa()) {
+                    $errors["items.{$index}.nominal"] = [
+                        'Nominal melebihi sisa tagihan Tabungan Wajib bulan ini (Rp '.
                         number_format($tagihan->sisa(), 0, ',', '.').').',
                     ];
                 }

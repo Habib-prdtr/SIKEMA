@@ -400,6 +400,7 @@ class MasterDataService
 
             $sta->load('tahunAjaran');
             $tagihanService->generateSpp($sta);
+            $tagihanService->generateTabunganWajib($sta);
             $tagihanService->generateIuranUntukSiswa($sta);
         });
 
@@ -433,6 +434,7 @@ class MasterDataService
 
                 $sta->load('tahunAjaran');
                 $tagihanService->generateSpp($sta);
+                $tagihanService->generateTabunganWajib($sta);
                 $tagihanService->generateIuranUntukSiswa($sta);
                 $count++;
             }
@@ -709,7 +711,29 @@ class MasterDataService
 
     public function updateTabunganWajib(\App\Models\MasterTabunganWajib $tabunganWajib, array $data): bool
     {
-        return $tabunganWajib->update($data);
+        $newTarif = $data['tarif'] ?? $tabunganWajib->tarif;
+        $tarifGrade = $this->getGradeFromKelas($tabunganWajib->kelas);
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($tabunganWajib, $data, $newTarif, $tarifGrade) {
+            $updated = $tabunganWajib->update($data);
+
+            if ($updated && $tarifGrade !== null) {
+                $siswaTahunAjaranList = \App\Models\SiswaTahunAjaran::where('tahun_ajaran_id', $tabunganWajib->tahun_ajaran_id)
+                    ->with('siswa')
+                    ->get();
+
+                foreach ($siswaTahunAjaranList as $sta) {
+                    $siswaKelas = $sta->siswa->kelas ?? null;
+                    if ($siswaKelas && $this->getGradeFromKelas($siswaKelas) === $tarifGrade) {
+                        $sta->tagihanTabunganWajib()
+                            ->where('status', \App\Models\TagihanTabunganWajib::STATUS_BELUM)
+                            ->update(['tagihan' => $newTarif]);
+                    }
+                }
+            }
+
+            return $updated;
+        });
     }
 
     public function hapusTabunganWajib(\App\Models\MasterTabunganWajib $tabunganWajib): bool

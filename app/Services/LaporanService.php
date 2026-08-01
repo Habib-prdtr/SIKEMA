@@ -37,6 +37,13 @@ class LaporanService
             $query->whereYear('tanggal', $request->tahun);
         }
 
+        // Filter jenjang kelas fokus
+        $jenjang = \App\Models\Sekolah::getJenjangAktif();
+        if ($jenjang !== 'semua' && in_array($jenjang, ['7', '8', '9'])) {
+            $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $query->whereHas('siswaTahunAjaran.siswa', fn ($q) => $q->where('kelas', $like, "{$jenjang}%"));
+        }
+
         // Filter siswa
         if ($request->filled('siswa_id')) {
             $query->whereHas('siswaTahunAjaran', fn ($q) => $q->where('siswa_id', $request->siswa_id));
