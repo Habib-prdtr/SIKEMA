@@ -14,10 +14,27 @@
         @endisset
     </div>
 
-    {{-- Right side: tahun ajaran aktif + user --}}
+    {{-- Right side: jenjang kelas + tahun ajaran aktif + user --}}
     <div class="flex items-center gap-3">
 
-        @php $tahunAktif = \App\Models\TahunAjaran::aktif(); @endphp
+        @php
+            $tahunAktif = \App\Models\TahunAjaran::aktif();
+            $jenjangAktif = \App\Models\Sekolah::getJenjangAktif();
+            $labelJenjang = match($jenjangAktif) {
+                '7' => 'Kelas 7',
+                '8' => 'Kelas 8',
+                '9' => 'Kelas 9',
+                default => 'Semua Kelas',
+            };
+        @endphp
+
+        {{-- Badge Jenjang Kelas Aktif --}}
+        <a href="{{ route('pengaturan.sekolah.edit') }}" title="Klik untuk mengubah fokus jenjang kelas"
+            class="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-full transition-colors cursor-pointer">
+            <span class="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse"></span>
+            Fokus: {{ $labelJenjang }}
+        </a>
+
         @if($tahunAktif)
             <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
                 <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>

@@ -51,4 +51,27 @@ class SekolahController extends Controller
         return redirect()->route('pengaturan.sekolah.edit')
             ->with('sukses', 'Password berhasil diubah.');
     }
+
+    /**
+     * Update fokus jenjang kelas aktif (Switch Jenjang Kelas).
+     */
+    public function updateJenjangKelas(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'jenjang_kelas' => ['required', 'string', 'in:semua,7,8,9'],
+        ]);
+
+        $jenjang = $request->input('jenjang_kelas');
+        $this->pengaturanService->updateJenjangKelas($jenjang);
+
+        $label = match ($jenjang) {
+            '7' => 'Kelas 7',
+            '8' => 'Kelas 8',
+            '9' => 'Kelas 9',
+            default => 'Semua Kelas',
+        };
+
+        return redirect()->back()
+            ->with('sukses', "Fokus jenjang kelas berhasil diubah ke {$label}.");
+    }
 }

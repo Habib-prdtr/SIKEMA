@@ -44,4 +44,17 @@ class PengaturanService
             'password' => Hash::make($newPassword)
         ]);
     }
+
+    /**
+     * Update fokus jenjang kelas aktif.
+     */
+    public function updateJenjangKelas(string $jenjang): void
+    {
+        $valid = in_array($jenjang, ['semua', '7', '8', '9']) ? $jenjang : 'semua';
+        $sekolah = Sekolah::getData();
+        if ($sekolah) {
+            $sekolah->update(['jenjang_kelas_aktif' => $valid]);
+        }
+        session(['jenjang_kelas_aktif' => $valid]);
+    }
 }

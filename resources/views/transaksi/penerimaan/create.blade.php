@@ -268,28 +268,42 @@
                         </div>
 
                         {{-- Tabungan Wajib Section --}}
-                        <div id="section-tabungan_wajib" class="space-y-4 hidden">
-                            <div class="space-y-2">
-                                <label class="flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/50 bg-white">
-                                    <div class="flex items-center gap-4">
-                                        <input type="checkbox" name="items[tabungan_wajib]" value="1" id="checkbox-tabungan-wajib"
-                                            data-tagihan-nominal="{{ $tarifTabunganWajib ?? 0 }}"
-                                            class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 shrink-0">
-                                        <div class="space-y-0.5">
-                                            <p class="text-sm font-bold text-gray-900">Tabungan Wajib</p>
-                                            <p class="text-xs text-gray-500">Tarif per kelas: <span id="text-tarif-tabungan-wajib" class="font-semibold text-emerald-700">{{ format_rupiah($tarifTabunganWajib ?? 0) }}</span></p>
-                                        </div>
+                        <div id="section-tabungan_wajib" class="space-y-3 hidden">
+                            <div id="list-items-tabungan-wajib" class="space-y-2">
+                                @if(isset($tagihanTabunganWajib) && $tagihanTabunganWajib->isNotEmpty())
+                                    @foreach($tagihanTabunganWajib as $tw)
+                                        @php
+                                            $lunas   = $tw->status === 'lunas';
+                                            $nama    = \Carbon\Carbon::createFromDate($tw->tahun, $tw->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
+                                            $nominal = $tw->status === 'lunas' ? $tw->tagihan : $tw->sisa();
+                                        @endphp
+                                        <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
+                                            {{ $lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50' }}">
+                                            <div class="flex items-center gap-3">
+                                                <input type="checkbox" name="items[tabungan_wajib][]" value="{{ $tw->id }}"
+                                                    data-tagihan-nominal="{{ $nominal }}"
+                                                    {{ $lunas ? 'disabled' : '' }}
+                                                    class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">Tabungan Wajib {{ $nama }}</p>
+                                                    <p class="text-xs text-gray-500">
+                                                        {{ $tw->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : 'Belum dibayar') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="font-semibold text-sm text-gray-900">{{ format_rupiah($nominal) }}</p>
+                                                @if($lunas)
+                                                    <span class="badge-green text-xs">Lunas</span>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                @else
+                                    <div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <p class="text-sm font-medium">Tidak ada tagihan Tabungan Wajib untuk siswa ini.</p>
                                     </div>
-                                    <div class="text-right">
-                                        <div class="relative flex items-center">
-                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 select-none">Rp</span>
-                                            <input type="number" name="nominal_tabungan_wajib" id="input-nominal-tabungan-wajib"
-                                                value="{{ $tarifTabunganWajib ?? 0 }}"
-                                                class="form-input text-xs pl-9 pr-3 font-bold text-gray-900 w-36 text-right rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
-                                                min="0" step="1000" placeholder="Nominal">
-                                        </div>
-                                    </div>
-                                </label>
+                                @endif
                             </div>
                         </div>
 
@@ -736,6 +750,38 @@
                 sppListEl.innerHTML = html;
             } else {
                 sppListEl.innerHTML = '<div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200"><p class="text-sm font-medium">Tidak ada tagihan SPP untuk siswa ini.</p></div>';
+            }
+
+            // Render Tabungan Wajib items
+            const twListEl = document.getElementById('list-items-tabungan-wajib');
+            if (data.tagihanTabunganWajib && data.tagihanTabunganWajib.length > 0) {
+                let html = '';
+                data.tagihanTabunganWajib.forEach(tw => {
+                    const lunas = tw.lunas;
+                    const nominal = tw.nominal;
+
+                    html += `
+                    <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50'}">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" name="items[tabungan_wajib][]" value="${tw.id}"
+                                data-tagihan-nominal="${nominal}" ${lunas ? 'disabled' : ''}
+                                class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Tabungan Wajib ${tw.nama}</p>
+                                <p class="text-xs text-gray-500">
+                                    ${tw.status === 'cicilan' ? 'Cicilan — Sisa bayar' : (lunas ? 'Sudah lunas' : 'Belum dibayar')}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-sm text-gray-900">${formatRupiah(nominal)}</p>
+                            ${lunas ? '<span class="badge-green text-xs">Lunas</span>' : ''}
+                        </div>
+                    </label>`;
+                });
+                twListEl.innerHTML = html;
+            } else {
+                twListEl.innerHTML = '<div class="p-8 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200"><p class="text-sm font-medium">Tidak ada tagihan Tabungan Wajib untuk siswa ini.</p></div>';
             }
 
             // Render Iuran items

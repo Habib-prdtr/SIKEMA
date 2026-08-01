@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\SiswaTahunAjaran;
 use App\Models\TagihanIuran;
 use App\Models\TagihanSpp;
+use App\Models\TagihanTabunganWajib;
 use App\Models\Transaksi;
 use App\Models\TransaksiDetail;
 use App\Models\User;
@@ -74,8 +75,8 @@ class TransaksiService
                 // Update tagihan yang bersangkutan
                 match ($jenis) {
                     'spp' => $this->updateTagihanSpp($sta, $item, $nominal),
+                    'tabungan_wajib' => $this->updateTagihanTabunganWajib($sta, $item, $nominal),
                     'iuran' => $this->updateTagihanIuran($item, $nominal),
-                    'tabungan_wajib' => null,
                     'tunggakan' => null, // dihitung via TunggakanService, tidak ada tabel tagihan
                     default => null,
                 };
@@ -99,6 +100,21 @@ class TransaksiService
     }
 
     /**
+     * Update tagihan Tabungan Wajib berdasarkan bulan & tahun yang dibayar.
+     */
+    private function updateTagihanTabunganWajib(SiswaTahunAjaran $sta, array $item, int $nominal): void
+    {
+        $tagihan = TagihanTabunganWajib::where('siswa_tahun_ajaran_id', $sta->id)
+            ->where('bulan', $item['bulan'])
+            ->where('tahun', $item['tahun'])
+            ->first();
+
+        if ($tagihan) {
+            $tagihan->bayar($nominal);
+        }
+    }
+
+    /**
      * Update tagihan iuran berdasarkan jenis_penerimaan.
      */
     private function updateTagihanIuran(array $item, int $nominal): void
@@ -114,6 +130,12 @@ class TransaksiService
             ->where('tahun_ajaran_id', $tahunAktif?->id)
             ->orderByDesc('tanggal')
             ->orderByDesc('id');
+
+        $jenjang = \App\Models\Sekolah::getJenjangAktif();
+        if ($jenjang !== 'semua' && in_array($jenjang, ['7', '8', '9'])) {
+            $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $query->whereHas('siswaTahunAjaran.siswa', fn ($q) => $q->where('kelas', $like, "{$jenjang}%"));
+        }
 
         if ($request->filled('cari')) {
             $cari = $request->cari;
@@ -134,15 +156,24 @@ class TransaksiService
         $siswaCari = \App\Models\Siswa::where('no_induk', $noInduk)->first();
         if (!$siswaCari) return null;
 
-        return SiswaTahunAjaran::with([
+        $sta = SiswaTahunAjaran::with([
             'siswa',
             'tahunAjaran',
             'tagihanSpp' => fn ($q) => $q->orderBy('tahun')->orderBy('bulan'),
+            'tagihanTabunganWajib' => fn ($q) => $q->orderBy('tahun')->orderBy('bulan'),
             'tagihanIuran' => fn ($q) => $q->with('jenisPenerimaan'),
         ])
             ->where('siswa_id', $siswaCari->id)
             ->where('tahun_ajaran_id', $tahunAktif?->id)
             ->first();
+
+        if ($sta && $sta->tagihanTabunganWajib->isEmpty()) {
+            app(TagihanService::class)->generateTabunganWajib($sta);
+            $sta->unsetRelation('tagihanTabunganWajib');
+            $sta->load(['tagihanTabunganWajib' => fn ($q) => $q->orderBy('tahun')->orderBy('bulan')]);
+        }
+
+        return $sta;
     }
 
     public function cariSiswaTahunAjaran(?\App\Models\TahunAjaran $tahunAktif, ?string $keyword = null, int $perPage = 5): ?\Illuminate\Pagination\LengthAwarePaginator
@@ -154,6 +185,12 @@ class TransaksiService
             ->select('siswa_tahun_ajaran.*')
             ->where('siswa_tahun_ajaran.tahun_ajaran_id', $tahunAktif->id)
             ->orderBy('siswa.nama');
+
+        $jenjang = \App\Models\Sekolah::getJenjangAktif();
+        if ($jenjang !== 'semua' && in_array($jenjang, ['7', '8', '9'])) {
+            $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $siswaQuery->where('siswa.kelas', $like, "{$jenjang}%");
+        }
 
         if ($keyword) {
             $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';

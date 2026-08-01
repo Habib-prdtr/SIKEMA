@@ -82,6 +82,16 @@ class DashboardService
             ->count();
     }
 
+    public function getTabunganWajibBelumLunasBulanIni(?TahunAjaran $tahunAktif): int
+    {
+        if (!$tahunAktif) return 0;
+        return \App\Models\TagihanTabunganWajib::whereHas('siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
+            ->where('bulan', now()->month)
+            ->where('tahun', now()->year)
+            ->whereIn('status', [\App\Models\TagihanTabunganWajib::STATUS_BELUM, \App\Models\TagihanTabunganWajib::STATUS_CICILAN])
+            ->count();
+    }
+
     public function getTotalSaldo(?TahunAjaran $tahunAktif): int
     {
         if (!$tahunAktif) return 0;
@@ -141,12 +151,17 @@ class DashboardService
             ->whereHas('transaksi.siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
             ->sum('nominal');
 
-        // 2. Tunggakan
+        // 2. Tabungan Wajib
+        $totalTabunganWajib = (int) TransaksiDetail::where('jenis', 'tabungan_wajib')
+            ->whereHas('transaksi.siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
+            ->sum('nominal');
+
+        // 3. Tunggakan
         $totalTunggakan = (int) TransaksiDetail::where('jenis', 'tunggakan')
             ->whereHas('transaksi.siswaTahunAjaran', fn ($q) => $q->where('tahun_ajaran_id', $tahunAktif->id))
             ->sum('nominal');
 
-        // 3. Jenis Penerimaan (Iuran)
+        // 4. Jenis Penerimaan (Iuran)
         $jenisPenerimaanList = JenisPenerimaan::where('tahun_ajaran_id', $tahunAktif->id)
             ->orderBy('urutan')
             ->orderBy('id')
@@ -161,6 +176,11 @@ class DashboardService
         $data->push([
             'nama' => 'SPP',
             'total' => $totalSpp,
+        ]);
+
+        $data->push([
+            'nama' => 'Tabungan Wajib',
+            'total' => $totalTabunganWajib,
         ]);
 
         $data->push([

@@ -18,6 +18,7 @@ class Sekolah extends Model
         'email',
         'kepala_tu',
         'nip_kepala_tu',
+        'jenjang_kelas_aktif',
     ];
 
     protected $casts = [
@@ -37,8 +38,25 @@ class Sekolah extends Model
         if (!$sekolah) {
             $sekolah = static::create([
                 'nama_sekolah' => 'MTS IHYAUL ULUM',
+                'jenjang_kelas_aktif' => 'semua',
             ]);
         }
         return $sekolah;
+    }
+
+    /**
+     * Ambil jenjang kelas yang sedang aktif difokuskan.
+     */
+    public static function getJenjangAktif(): string
+    {
+        if (session()->has('jenjang_kelas_aktif')) {
+            return (string) session('jenjang_kelas_aktif');
+        }
+
+        $sekolah = static::getData();
+        $jenjang = $sekolah?->jenjang_kelas_aktif ?? 'semua';
+        session(['jenjang_kelas_aktif' => $jenjang]);
+
+        return $jenjang;
     }
 }

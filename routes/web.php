@@ -152,6 +152,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('pengaturan')->name('pengaturan.')->group(function () {
         Route::get('/sekolah', [SekolahController::class, 'edit'])->name('sekolah.edit');
         Route::put('/sekolah', [SekolahController::class, 'update'])->name('sekolah.update');
+        Route::post('/jenjang-kelas', [SekolahController::class, 'updateJenjangKelas'])->name('jenjang-kelas.update');
         Route::put('/password', [SekolahController::class, 'updatePassword'])->name('password.update');
     });
 

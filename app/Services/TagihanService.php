@@ -71,6 +71,50 @@ class TagihanService
     }
 
     /**
+     * Generate 12 tagihan Tabungan Wajib untuk siswa di tahun ajaran.
+     */
+    public function generateTabunganWajib(SiswaTahunAjaran $sta): void
+    {
+        $sta->loadMissing('tahunAjaran');
+        $tahunAwal = (int) substr($sta->tahunAjaran->nama, 0, 4);
+
+        $bulanTahun = [];
+        for ($bulan = 7; $bulan <= 12; $bulan++) {
+            $bulanTahun[] = ['bulan' => $bulan, 'tahun' => $tahunAwal];
+        }
+        for ($bulan = 1; $bulan <= 6; $bulan++) {
+            $bulanTahun[] = ['bulan' => $bulan, 'tahun' => $tahunAwal + 1];
+        }
+
+        $masterDataService = app(MasterDataService::class);
+        $tarif = $masterDataService->getTarifTabunganWajibSiswa($sta);
+
+        $rows = [];
+        foreach ($bulanTahun as $bt) {
+            $exists = \App\Models\TagihanTabunganWajib::where('siswa_tahun_ajaran_id', $sta->id)
+                ->where('bulan', $bt['bulan'])
+                ->where('tahun', $bt['tahun'])
+                ->exists();
+
+            if (!$exists) {
+                $rows[] = [
+                    'siswa_tahun_ajaran_id' => $sta->id,
+                    'bulan' => $bt['bulan'],
+                    'tahun' => $bt['tahun'],
+                    'tagihan' => $tarif,
+                    'terbayar' => 0,
+                    'status' => \App\Models\TagihanTabunganWajib::STATUS_BELUM,
+                    'updated_at' => null,
+                ];
+            }
+        }
+
+        if (!empty($rows)) {
+            \App\Models\TagihanTabunganWajib::insert($rows);
+        }
+    }
+
+    /**
      * Generate tagihan iuran untuk semua siswa aktif di tahun ajaran yang sama.
      *
      * Dipanggil saat operator menambah/mengaktifkan jenis penerimaan (iuran) baru.

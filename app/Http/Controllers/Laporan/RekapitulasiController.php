@@ -25,7 +25,8 @@ class RekapitulasiController extends Controller
         $selectedTahunId = $request->get('tahun_ajaran_id', $tahunAktif?->id);
         $tahunFilter = $selectedTahunId ? TahunAjaran::find($selectedTahunId) : $tahunAktif;
 
-        $kelasFilter = $request->get('kelas');
+        $jenjangAktif = \App\Models\Sekolah::getJenjangAktif();
+        $kelasFilter = $request->get('kelas', $jenjangAktif !== 'semua' ? $jenjangAktif : null);
         $cari = $request->get('cari');
         $bulanFilter = $request->get('bulan');
         $iuranFilterId = $request->get('jenis_penerimaan_id');
@@ -38,7 +39,7 @@ class RekapitulasiController extends Controller
         $jenisPenerimaanList = JenisPenerimaan::where('tahun_ajaran_id', $selectedTahunId)->orderBy('urutan')->get();
 
         // Base query
-        $query = SiswaTahunAjaran::with(['siswa', 'dispensasi', 'tagihanSpp', 'tagihanIuran.jenisPenerimaan'])
+        $query = SiswaTahunAjaran::with(['siswa', 'dispensasi', 'tagihanSpp', 'tagihanTabunganWajib', 'tagihanIuran.jenisPenerimaan'])
             ->where('tahun_ajaran_id', $selectedTahunId);
 
         if ($kelasFilter) {
@@ -99,7 +100,8 @@ class RekapitulasiController extends Controller
         $selectedTahunId = $request->get('tahun_ajaran_id', $tahunAktif?->id);
         $tahunFilter = $selectedTahunId ? TahunAjaran::find($selectedTahunId) : $tahunAktif;
 
-        $kelasFilter = $request->get('kelas');
+        $jenjangAktif = \App\Models\Sekolah::getJenjangAktif();
+        $kelasFilter = $request->get('kelas', $jenjangAktif !== 'semua' ? $jenjangAktif : null);
         $cari = $request->get('cari');
         $bulanFilter = $request->get('bulan');
         $iuranFilterId = $request->get('jenis_penerimaan_id');
@@ -152,7 +154,7 @@ class RekapitulasiController extends Controller
             $sheet->getPageSetup()->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
 
             $numIuran = count($jenisPenerimaanList);
-            $totalCols = 8 + $numIuran; // 4 (Kelas,No,Nama,Tagihan) + 1 (SPP) + N (Iuran) + 1 (Tunggakan) + 1 (SudahBayar) + 1 (KurangBayar)
+            $totalCols = 9 + $numIuran; // 4 (Kelas,No,Nama,Tagihan) + 1 (SPP) + 1 (Tabungan Wajib) + N (Iuran) + 1 (Tunggakan) + 1 (SudahBayar) + 1 (KurangBayar)
             $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalCols);
 
             // Header Yayasan / Sekolah (Rows 1-4)
@@ -224,7 +226,7 @@ class RekapitulasiController extends Controller
             $sheet->mergeCells('D9:D10');
 
             // Rincian Yang Sudah Dibayar Group
-            $tunggakanColIndex = 6 + $numIuran;
+            $tunggakanColIndex = 7 + $numIuran;
             $tunggakanColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($tunggakanColIndex);
             
             $sheet->setCellValue('E9', 'Rincian Yang Sudah Dibayar');
@@ -232,21 +234,22 @@ class RekapitulasiController extends Controller
 
             // Row 10 Sub-headers
             $sheet->setCellValue('E10', 'SPP');
+            $sheet->setCellValue('F10', 'Tabungan Wajib');
 
             foreach ($jenisPenerimaanList as $jpIndex => $jp) {
-                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(6 + $jpIndex);
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(7 + $jpIndex);
                 $sheet->setCellValue($colLetter . '10', $jp->nama);
             }
 
             $sheet->setCellValue($tunggakanColLetter . '10', 'Tunggakan');
 
             // Header Kolom Akhir
-            $totalSudahBayarColIndex = 7 + $numIuran;
+            $totalSudahBayarColIndex = 8 + $numIuran;
             $totalSudahBayarColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalSudahBayarColIndex);
             $sheet->setCellValue($totalSudahBayarColLetter . '9', "Total\nSudah\nBayar");
             $sheet->mergeCells("{$totalSudahBayarColLetter}9:{$totalSudahBayarColLetter}10");
 
-            $totalKurangBayarColIndex = 8 + $numIuran;
+            $totalKurangBayarColIndex = 9 + $numIuran;
             $totalKurangBayarColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalKurangBayarColIndex);
             $sheet->setCellValue($totalKurangBayarColLetter . '9', "Total\nKurang\nBayar");
             $sheet->mergeCells("{$totalKurangBayarColLetter}9:{$totalKurangBayarColLetter}10");
@@ -279,13 +282,15 @@ class RekapitulasiController extends Controller
 
                 $sppTagihan = $sta->tagihanSpp->sum('tagihan');
                 $sppTerbayar = $sta->tagihanSpp->sum('terbayar');
+                $twTagihan = $sta->tagihanTabunganWajib->sum('tagihan');
+                $twTerbayar = $sta->tagihanTabunganWajib->sum('terbayar');
                 $iurTagihan = $sta->tagihanIuran->sum('tagihan');
                 $iurTerbayar = $sta->tagihanIuran->sum('terbayar');
                 $tunggakanAwal = $sta->tunggakan_awal ?? 0;
                 $tunggakanTerbayar = (int) ($tunggakanMap[$sta->id] ?? 0);
 
-                $tagihanSetahun = $sppTagihan + $iurTagihan + $tunggakanAwal;
-                $totalSudahBayar = $sppTerbayar + $iurTerbayar + $tunggakanTerbayar;
+                $tagihanSetahun = $sppTagihan + $twTagihan + $iurTagihan + $tunggakanAwal;
+                $totalSudahBayar = $sppTerbayar + $twTerbayar + $iurTerbayar + $tunggakanTerbayar;
                 $totalKurangBayar = max(0, $tagihanSetahun - $totalSudahBayar);
 
                 $sheet->setCellValue('A' . $currentRow, $sta->siswa->kelas);
@@ -293,9 +298,10 @@ class RekapitulasiController extends Controller
                 $sheet->setCellValue('C' . $currentRow, $sta->siswa->nama);
                 $sheet->setCellValue('D' . $currentRow, $tagihanSetahun);
                 $sheet->setCellValue('E' . $currentRow, $sppTerbayar);
+                $sheet->setCellValue('F' . $currentRow, $twTerbayar);
 
                 foreach ($jenisPenerimaanList as $jpIndex => $jp) {
-                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(6 + $jpIndex);
+                    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(7 + $jpIndex);
                     $bayarIur = $sta->tagihanIuran->where('jenis_penerimaan_id', $jp->id)->sum('terbayar');
                     $sheet->setCellValue($colLetter . $currentRow, $bayarIur);
                 }
@@ -317,9 +323,10 @@ class RekapitulasiController extends Controller
 
             $sheet->setCellValue('D' . $footerRow, "=SUM(D{$startRow}:D{$lastDataRow})");
             $sheet->setCellValue('E' . $footerRow, "=SUM(E{$startRow}:E{$lastDataRow})");
+            $sheet->setCellValue('F' . $footerRow, "=SUM(F{$startRow}:F{$lastDataRow})");
 
             foreach ($jenisPenerimaanList as $jpIndex => $jp) {
-                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(6 + $jpIndex);
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(7 + $jpIndex);
                 $sheet->setCellValue($colLetter . $footerRow, "=SUM({$colLetter}{$startRow}:{$colLetter}{$lastDataRow})");
             }
 
@@ -361,6 +368,46 @@ class RekapitulasiController extends Controller
             $sheet->getColumnDimension('D')->setAutoSize(false)->setWidth(18);
             $sheet->getColumnDimension($totalSudahBayarColLetter)->setAutoSize(false)->setWidth(18);
             $sheet->getColumnDimension($totalKurangBayarColLetter)->setAutoSize(false)->setWidth(18);
+        } elseif ($tab === 'tabungan') {
+            $sheet->setCellValue('A1', 'LAPORAN REKAPITULASI PEMBAYARAN TABUNGAN WAJIB');
+            $sheet->setCellValue('A2', 'Tahun Ajaran: ' . ($tahunFilter?->nama ?? '-'));
+            $sheet->mergeCells('A1:H1');
+            $sheet->mergeCells('A2:H2');
+            $sheet->getStyle('A1:A2')->getFont()->setBold(true);
+
+            $sheet->setCellValue('A4', 'No');
+            $sheet->setCellValue('B4', 'No. Induk');
+            $sheet->setCellValue('C4', 'Nama Siswa');
+            $sheet->setCellValue('D4', 'Kelas');
+            $sheet->setCellValue('E4', 'Total Tagihan Tabungan');
+            $sheet->setCellValue('F4', 'Total Terbayar');
+            $sheet->setCellValue('G4', 'Sisa Tagihan');
+            $sheet->setCellValue('H4', 'Status');
+
+            $rowIdx = 5;
+            foreach ($students as $index => $sta) {
+                if ($bulanFilter) {
+                    $bill = $sta->tagihanTabunganWajib->where('bulan', $bulanFilter)->first();
+                    $tagihan = $bill ? $bill->tagihan : 0;
+                    $terbayar = $bill ? $bill->terbayar : 0;
+                    $status = $bill ? ucfirst($bill->status) : '-';
+                } else {
+                    $tagihan = $sta->tagihanTabunganWajib->sum('tagihan');
+                    $terbayar = $sta->tagihanTabunganWajib->sum('terbayar');
+                    $sisa = $tagihan - $terbayar;
+                    $status = $sisa <= 0 ? 'Lunas' : ($terbayar > 0 ? 'Cicilan' : 'Belum Bayar');
+                }
+
+                $sheet->setCellValue('A' . $rowIdx, $index + 1);
+                $sheet->setCellValue('B' . $rowIdx, $sta->siswa->no_induk);
+                $sheet->setCellValue('C' . $rowIdx, $sta->siswa->nama);
+                $sheet->setCellValue('D' . $rowIdx, $sta->siswa->kelas);
+                $sheet->setCellValue('E' . $rowIdx, $tagihan);
+                $sheet->setCellValue('F' . $rowIdx, $terbayar);
+                $sheet->setCellValue('G' . $rowIdx, $tagihan - $terbayar);
+                $sheet->setCellValue('H' . $rowIdx, $status);
+                $rowIdx++;
+            }
         } elseif ($tab === 'spp') {
             $sheet->setCellValue('A1', 'LAPORAN REKAPITULASI PEMBAYARAN SPP');
             $sheet->setCellValue('A2', 'Tahun Ajaran: ' . ($tahunFilter?->nama ?? '-'));
