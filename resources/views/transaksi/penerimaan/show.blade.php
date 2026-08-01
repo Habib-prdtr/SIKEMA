@@ -186,7 +186,12 @@
                 if ($detail->jenis === 'iuran') {
                     $label = $detail->jenisPenerimaan->nama ?? 'Iuran';
                 } elseif ($detail->jenis === 'tabungan_wajib') {
-                    $label = 'Tabungan Wajib';
+                    if ($detail->bulan && $detail->tahun) {
+                        $namaBulan = \Carbon\Carbon::createFromDate($detail->tahun, $detail->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
+                        $label = "Tabungan Wajib {$namaBulan}";
+                    } else {
+                        $label = 'Tabungan Wajib';
+                    }
                 } elseif ($detail->jenis === 'custom') {
                     $label = $detail->keterangan ?? 'Penerimaan Lain';
                 } else {
