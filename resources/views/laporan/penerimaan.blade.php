@@ -60,7 +60,7 @@
         </form>
 
         {{-- Summary Cards --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="card p-5 border-l-4 border-l-emerald-500">
                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Penerimaan</p>
                 <p class="text-2xl font-bold text-emerald-700 mt-1">{{ format_rupiah($totalPenerimaan) }}</p>
@@ -69,6 +69,10 @@
             <div class="card p-5 border-l-4 border-l-blue-500">
                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total SPP</p>
                 <p class="text-2xl font-bold text-blue-700 mt-1">{{ format_rupiah($totalSpp) }}</p>
+            </div>
+            <div class="card p-5 border-l-4 border-l-amber-500">
+                <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Tabungan Wajib</p>
+                <p class="text-2xl font-bold text-amber-700 mt-1">{{ format_rupiah($totalTabungan ?? 0) }}</p>
             </div>
             <div class="card p-5 border-l-4 border-l-purple-500">
                 <p class="text-xs text-gray-500 uppercase font-semibold tracking-wider">Total Iuran & Tunggakan</p>

@@ -13,8 +13,16 @@ class StoreJenisPenerimaanRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $tahunAjaranId = $this->input('tahun_ajaran_id');
+        $urutan = $this->input('urutan');
+        if (empty($urutan) && $tahunAjaranId) {
+            $maxUrutan = \App\Models\JenisPenerimaan::where('tahun_ajaran_id', $tahunAjaranId)->max('urutan') ?? 0;
+            $urutan = $maxUrutan + 1;
+        }
+
         $this->merge([
             'is_aktif' => $this->has('is_aktif'),
+            'urutan' => $urutan ?? 1,
         ]);
     }
 
@@ -22,8 +30,9 @@ class StoreJenisPenerimaanRequest extends FormRequest
     {
         return [
             'tahun_ajaran_id' => ['required', 'exists:tahun_ajaran,id'],
-            'urutan' => ['required', 'integer', 'min:1', 'max:15'],
+            'urutan' => ['nullable', 'integer', 'min:1'],
             'nama' => ['required', 'string', 'max:100'],
+            'kelas' => ['nullable', 'string', 'max:50'],
             'tarif' => ['required', 'integer', 'min:0'],
             'keterangan' => ['nullable', 'string', 'max:255'],
             'is_aktif' => ['boolean'],

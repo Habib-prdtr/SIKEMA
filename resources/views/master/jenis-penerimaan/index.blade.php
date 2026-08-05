@@ -61,8 +61,8 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Urutan</th>
                                 <th>Nama Iuran</th>
+                                <th>Target Kelas</th>
                                 <th class="text-right">Tarif</th>
                                 <th class="text-right">Total Terkumpul</th>
                                 <th class="text-center">Status</th>
@@ -73,8 +73,14 @@
                         <tbody>
                             @foreach($jenisPenerimaan as $jp)
                                 <tr>
-                                    <td class="text-center font-bold text-gray-500 w-16">{{ $jp->urutan }}</td>
                                     <td class="font-medium text-gray-900">{{ $jp->nama }}</td>
+                                    <td>
+                                        @if($jp->kelas)
+                                            <span class="badge-blue">{{ $jp->kelas }}</span>
+                                        @else
+                                            <span class="text-xs text-gray-500 font-normal italic">Semua Kelas</span>
+                                        @endif
+                                    </td>
                                     <td class="text-right font-semibold text-emerald-700">
                                         {{ format_rupiah($jp->tarif) }}
                                     </td>
@@ -100,7 +106,7 @@
                                         <div class="flex items-center justify-center gap-2">
                                             <button class="btn-secondary btn-sm"
                                                 data-modal-open="modal-edit-{{ $jp->id }}"
-                                                data-edit-fill="{{ json_encode(['nama' => $jp->nama, 'tarif' => $jp->tarif, 'urutan' => $jp->urutan, 'keterangan' => $jp->keterangan]) }}"
+                                                data-edit-fill="{{ json_encode(['nama' => $jp->nama, 'kelas' => $jp->kelas ?? '', 'tarif' => $jp->tarif, 'keterangan' => $jp->keterangan]) }}"
                                                 data-edit-form="form-edit-{{ $jp->id }}">
                                                 Edit
                                             </button>
@@ -137,17 +143,22 @@
                                                         class="form-input" maxlength="100" required>
                                                 </div>
                                                 <div>
+                                                    <label class="form-label">Target Kelas</label>
+                                                    <select name="kelas" class="form-select">
+                                                        <option value="" {{ empty($jp->kelas) ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
+                                                        <option value="Kelas 7" {{ $jp->kelas === 'Kelas 7' ? 'selected' : '' }}>Kelas 7</option>
+                                                        <option value="Kelas 8" {{ $jp->kelas === 'Kelas 8' ? 'selected' : '' }}>Kelas 8</option>
+                                                        <option value="Kelas 9" {{ $jp->kelas === 'Kelas 9' ? 'selected' : '' }}>Kelas 9</option>
+                                                    </select>
+                                                    <p class="text-xs text-gray-500 mt-1">Hanya siswa pada tingkat kelas ini yang dikenakan iuran.</p>
+                                                </div>
+                                                <div>
                                                     <label class="form-label">Tarif <span class="text-red-500">*</span></label>
                                                     <div class="relative">
                                                         <span class="absolute left-3 inset-y-0 flex items-center text-gray-500 text-sm">Rp</span>
                                                         <input type="number" name="tarif" value="{{ $jp->tarif }}"
                                                             class="form-input pl-9" min="0" step="1000" required>
                                                     </div>
-                                                </div>
-                                                <div>
-                                                    <label class="form-label">Urutan (1-15) <span class="text-red-500">*</span></label>
-                                                    <input type="number" name="urutan" value="{{ $jp->urutan }}"
-                                                        class="form-input" min="1" max="15" required>
                                                 </div>
                                                 <div>
                                                     <label class="form-label">Keterangan</label>
@@ -199,6 +210,17 @@
                         @error('nama')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div>
+                        <label class="form-label">Target Kelas</label>
+                        <select name="kelas" class="form-select">
+                            <option value="" {{ old('kelas') == '' ? 'selected' : '' }}>Semua Kelas (Seluruh Siswa)</option>
+                            <option value="Kelas 7" {{ old('kelas') === 'Kelas 7' ? 'selected' : '' }}>Kelas 7</option>
+                            <option value="Kelas 8" {{ old('kelas') === 'Kelas 8' ? 'selected' : '' }}>Kelas 8</option>
+                            <option value="Kelas 9" {{ old('kelas') === 'Kelas 9' ? 'selected' : '' }}>Kelas 9</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Kosongkan/pilih "Semua Kelas" jika iuran berlaku untuk seluruh siswa.</p>
+                        @error('kelas')<p class="form-error">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
                         <label class="form-label">Tarif <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <span class="absolute left-3 inset-y-0 flex items-center text-gray-500 text-sm">Rp</span>
@@ -206,12 +228,6 @@
                                 class="form-input pl-9" placeholder="0" min="0" step="1000" required>
                         </div>
                         @error('tarif')<p class="form-error">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label class="form-label">Urutan (1-15) <span class="text-red-500">*</span></label>
-                        <input type="number" name="urutan" value="{{ old('urutan', $jenisPenerimaan->count() + 1) }}"
-                            class="form-input" min="1" max="15" required>
-                        @error('urutan')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="form-label">Keterangan</label>

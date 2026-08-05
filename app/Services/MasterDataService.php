@@ -215,12 +215,17 @@ class MasterDataService
     public function updateJenisPenerimaan(\App\Models\JenisPenerimaan $jenisPenerimaan, array $data, \App\Services\TagihanService $tagihanService): bool
     {
         return \Illuminate\Support\Facades\DB::transaction(function () use ($jenisPenerimaan, $data, $tagihanService) {
-            $statusSebelumnya = $jenisPenerimaan->is_aktif;
+            $oldTarif = $jenisPenerimaan->tarif;
             $updated = $jenisPenerimaan->update($data);
 
-            if (! $statusSebelumnya && $jenisPenerimaan->is_aktif) {
-                $tagihanService->generateIuran($jenisPenerimaan);
+            $tagihanService->syncIuran($jenisPenerimaan);
+
+            if ($updated && isset($data['tarif']) && $data['tarif'] != $oldTarif) {
+                \App\Models\TagihanIuran::where('jenis_penerimaan_id', $jenisPenerimaan->id)
+                    ->where('terbayar', 0)
+                    ->update(['tagihan' => $jenisPenerimaan->tarif]);
             }
+
             return $updated;
         });
     }
