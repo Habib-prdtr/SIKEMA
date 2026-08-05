@@ -366,27 +366,36 @@
                                         </tr>
                                     @endforeach
                                 @else {{-- gabungan --}}
-                                    @php
-                                        $sppTagihan = $sta->tagihanSpp->sum('tagihan');
-                                        $sppTerbayar = $sta->tagihanSpp->sum('terbayar');
-                                        $twTagihan = $sta->tagihanTabunganWajib->sum('tagihan');
-                                        $twTerbayar = $sta->tagihanTabunganWajib->sum('terbayar');
-                                        $iurTagihan = $sta->tagihanIuran->sum('tagihan');
-                                        $iurTerbayar = $sta->tagihanIuran->sum('terbayar');
-                                        $tunggakanAwal = $sta->tunggakan_awal ?? 0;
-                                        $tunggakanTerbayar = (int) ($tunggakanMap[$sta->id] ?? 0);
+                                     @php
+                                         $sppTagihan = $sta->tagihanSpp->sum('tagihan');
+                                         $sppTerbayar = $sta->tagihanSpp->sum('terbayar');
+                                         $twTagihan = $sta->tagihanTabunganWajib->sum('tagihan');
+                                         $twTerbayar = $sta->tagihanTabunganWajib->sum('terbayar');
 
-                                        $tagihanSetahun = $sppTagihan + $twTagihan + $iurTagihan + $tunggakanAwal;
-                                        $totalSudahBayar = $sppTerbayar + $twTerbayar + $iurTerbayar + $tunggakanTerbayar;
-                                        $totalKurangBayar = max(0, $tagihanSetahun - $totalSudahBayar);
+                                         $iurTagihan = 0;
+                                         $iurTerbayar = $sta->tagihanIuran->sum('terbayar');
+                                         foreach ($jenisPenerimaanList as $jp) {
+                                             if ($jp->is_aktif && $jp->matchesKelas($sta->siswa->kelas ?? null)) {
+                                                 $bill = $sta->tagihanIuran->where('jenis_penerimaan_id', $jp->id)->first();
+                                                 $iurTagihan += $bill ? $bill->tagihan : $jp->tarif;
+                                             }
+                                         }
 
-                                        $sumTagihanSetahun += $tagihanSetahun;
-                                        $sumSppTerbayar += $sppTerbayar;
-                                        $sumTwTerbayar += $twTerbayar;
-                                        $sumTunggakanTerbayar += $tunggakanTerbayar;
-                                        $sumTotalSudahBayar += $totalSudahBayar;
-                                        $sumTotalKurangBayar += $totalKurangBayar;
-                                    @endphp
+                                         $tunggakanAwal = $sta->tunggakan_awal ?? 0;
+                                         $tunggakanTerbayar = (int) ($tunggakanMap[$sta->id] ?? 0);
+                                         $customTerbayar = (int) ($customMap[$sta->id] ?? 0);
+
+                                         $tagihanSetahun = $sppTagihan + $twTagihan + $iurTagihan + $tunggakanAwal + $customTerbayar;
+                                         $totalSudahBayar = $sppTerbayar + $twTerbayar + $iurTerbayar + $tunggakanTerbayar + $customTerbayar;
+                                         $totalKurangBayar = max(0, $tagihanSetahun - $totalSudahBayar);
+
+                                         $sumTagihanSetahun += $tagihanSetahun;
+                                         $sumSppTerbayar += $sppTerbayar;
+                                         $sumTwTerbayar += $twTerbayar;
+                                         $sumTunggakanTerbayar += $tunggakanTerbayar;
+                                         $sumTotalSudahBayar += $totalSudahBayar;
+                                         $sumTotalKurangBayar += $totalKurangBayar;
+                                     @endphp
                                     <tr>
                                         <td class="text-center font-semibold text-gray-700 text-xs">{{ $sta->siswa->kelas }}</td>
                                         <td class="font-mono text-xs">{{ $sta->siswa->no_induk }}</td>
