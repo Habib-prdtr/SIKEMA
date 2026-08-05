@@ -117,52 +117,101 @@ class TagihanService
     /**
      * Generate tagihan iuran untuk semua siswa aktif di tahun ajaran yang sama.
      *
-     * Dipanggil saat operator menambah/mengaktifkan jenis penerimaan (iuran) baru.
-     * Hanya dibuat untuk siswa yang belum punya tagihan iuran tersebut.
+    /**
+     * Generate tagihan iuran untuk semua siswa aktif di tahun ajaran yang sesuai kelas.
      *
-     * @param  JenisPenerimaan  $jp  Jenis penerimaan yang baru diaktifkan
+     * @param  JenisPenerimaan  $jp  Jenis penerimaan yang baru diaktifkan / diperbarui
      */
     public function generateIuran(JenisPenerimaan $jp): void
     {
+        $this->syncIuran($jp);
+    }
+
+    /**
+     * Sinkronkan semua jenis penerimaan (iuran) di tahun ajaran tertentu.
+     */
+    public function syncSemuaIuranTahunAjaran(?int $tahunAjaranId): void
+    {
+        if (! $tahunAjaranId) return;
+
+        $jenisPenerimaanList = JenisPenerimaan::where('tahun_ajaran_id', $tahunAjaranId)->get();
+        foreach ($jenisPenerimaanList as $jp) {
+            $this->syncIuran($jp);
+        }
+    }
+
+    /**
+     * Sinkronkan tagihan iuran berdasarkan kelas jenis penerimaan.
+     * Hapus tagihan belum terbayar milik siswa yang tidak cocok kelasnya,
+     * dan buat tagihan baru untuk siswa yang cocok kelasnya.
+     */
+    public function syncIuran(JenisPenerimaan $jp): void
+    {
         // Ambil semua siswa yang aktif di tahun ajaran ini
-        $siswaTahunAjaran = SiswaTahunAjaran::where('tahun_ajaran_id', $jp->tahun_ajaran_id)
-            ->pluck('id');
+        $allSiswa = SiswaTahunAjaran::with('siswa')
+            ->where('tahun_ajaran_id', $jp->tahun_ajaran_id)
+            ->get();
 
-        // Cek siswa yang sudah punya tagihan iuran ini (hindari duplikasi)
-        $sudahAda = TagihanIuran::where('jenis_penerimaan_id', $jp->id)
-            ->whereIn('siswa_tahun_ajaran_id', $siswaTahunAjaran)
-            ->pluck('siswa_tahun_ajaran_id')
-            ->toArray();
+        $matchingStaIds = [];
+        $nonMatchingStaIds = [];
 
-        $rows = [];
-        foreach ($siswaTahunAjaran as $staId) {
-            if (in_array($staId, $sudahAda)) {
-                continue; // Skip jika sudah ada
+        foreach ($allSiswa as $sta) {
+            if ($jp->matchesKelas($sta->siswa->kelas ?? null)) {
+                $matchingStaIds[] = $sta->id;
+            } else {
+                $nonMatchingStaIds[] = $sta->id;
             }
-
-            $rows[] = [
-                'siswa_tahun_ajaran_id' => $staId,
-                'jenis_penerimaan_id' => $jp->id,
-                'tagihan' => $jp->tarif,
-                'terbayar' => 0,
-                'status' => TagihanIuran::STATUS_BELUM,
-                'updated_at' => null,
-            ];
         }
 
-        if (! empty($rows)) {
-            TagihanIuran::insert($rows);
+        // Hapus tagihan iuran yang belum pernah dibayar (terbayar == 0) untuk siswa yang tidak sesuai kelasnya
+        if (! empty($nonMatchingStaIds)) {
+            TagihanIuran::where('jenis_penerimaan_id', $jp->id)
+                ->whereIn('siswa_tahun_ajaran_id', $nonMatchingStaIds)
+                ->where('terbayar', 0)
+                ->delete();
+        }
+
+        // Jika iuran aktif, buat tagihan baru untuk siswa yang sesuai kelas tetapi belum punya tagihan
+        if ($jp->is_aktif && ! empty($matchingStaIds)) {
+            $sudahAda = TagihanIuran::where('jenis_penerimaan_id', $jp->id)
+                ->whereIn('siswa_tahun_ajaran_id', $matchingStaIds)
+                ->pluck('siswa_tahun_ajaran_id')
+                ->toArray();
+
+            $rows = [];
+            foreach ($matchingStaIds as $staId) {
+                if (in_array($staId, $sudahAda)) {
+                    continue;
+                }
+
+                $rows[] = [
+                    'siswa_tahun_ajaran_id' => $staId,
+                    'jenis_penerimaan_id' => $jp->id,
+                    'tagihan' => $jp->tarif,
+                    'terbayar' => 0,
+                    'status' => TagihanIuran::STATUS_BELUM,
+                    'updated_at' => null,
+                ];
+            }
+
+            if (! empty($rows)) {
+                TagihanIuran::insert($rows);
+            }
         }
     }
 
     /**
      * Generate tagihan iuran untuk siswa yang baru diaktifkan.
-     * Membuat tagihan untuk semua jenis penerimaan (iuran) aktif di tahun ajaran tersebut.
+     * Membuat tagihan untuk semua jenis penerimaan (iuran) aktif di tahun ajaran tersebut
+     * yang sesuai dengan kelas siswa.
      *
      * @param  SiswaTahunAjaran  $sta  Record siswa-tahun-ajaran yang baru dibuat
      */
     public function generateIuranUntukSiswa(SiswaTahunAjaran $sta): void
     {
+        $sta->loadMissing('siswa');
+        $siswaKelas = $sta->siswa->kelas ?? null;
+
         // Ambil semua jenis penerimaan (iuran) yang aktif di tahun ajaran ini
         $jenisPenerimaan = JenisPenerimaan::where('tahun_ajaran_id', $sta->tahun_ajaran_id)
             ->where('is_aktif', true)
@@ -170,12 +219,16 @@ class TagihanService
 
         $rows = [];
         foreach ($jenisPenerimaan as $jp) {
+            if (! $jp->matchesKelas($siswaKelas)) {
+                continue;
+            }
+
             // Cek apakah sudah ada tagihan untuk iuran ini (untuk menghindari duplikasi)
             $exists = TagihanIuran::where('siswa_tahun_ajaran_id', $sta->id)
                 ->where('jenis_penerimaan_id', $jp->id)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 $rows[] = [
                     'siswa_tahun_ajaran_id' => $sta->id,
                     'jenis_penerimaan_id' => $jp->id,

@@ -33,6 +33,7 @@ class PenerimaanController extends Controller
         $laporanData = app(\App\Services\LaporanService::class)->getLaporanPenerimaan($request, $tahunAktif);
         $totalPenerimaan = $laporanData['totalPenerimaan'];
         $totalSpp = $laporanData['totalSpp'];
+        $totalTabungan = $laporanData['totalTabungan'];
         $totalIuran = $laporanData['totalIuran'];
         $totalTunggakan = $laporanData['totalTunggakan'];
 
@@ -41,6 +42,7 @@ class PenerimaanController extends Controller
             'tahunAktif',
             'totalPenerimaan',
             'totalSpp',
+            'totalTabungan',
             'totalIuran',
             'totalTunggakan'
         ));

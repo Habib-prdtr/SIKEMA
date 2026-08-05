@@ -32,13 +32,15 @@ class JenisPenerimaanController extends Controller
         $tahunFilter = $selectedTahunId ? TahunAjaran::find($selectedTahunId) : $tahunAktif;
 
         $jenisPenerimaan = $this->masterDataService->getJenisPenerimaan($tahunFilter);
+        $daftarKelas = $this->masterDataService->getDaftarKelasSiswa();
 
         return view('master.jenis-penerimaan.index', compact(
             'jenisPenerimaan',
             'tahunAktif',
             'tahunList',
             'selectedTahunId',
-            'tahunFilter'
+            'tahunFilter',
+            'daftarKelas'
         ));
     }
 

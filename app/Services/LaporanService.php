@@ -56,6 +56,7 @@ class LaporanService
 
         // Rekap per jenis
         $totalSpp = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'spp')->sum('nominal');
+        $totalTabungan = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'tabungan_wajib')->sum('nominal');
         $totalIuran = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'iuran')->sum('nominal');
         $totalTunggakan = $transaksi->flatMap(fn ($t) => $t->details)->where('jenis', 'tunggakan')->sum('nominal');
 
@@ -65,6 +66,7 @@ class LaporanService
             'tahunAktif',
             'totalPenerimaan',
             'totalSpp',
+            'totalTabungan',
             'totalIuran',
             'totalTunggakan'
         );

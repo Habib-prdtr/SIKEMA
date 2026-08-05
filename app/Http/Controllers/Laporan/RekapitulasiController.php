@@ -59,11 +59,26 @@ class RekapitulasiController extends Controller
             });
         }
 
+        if ($selectedTahunId) {
+            $tagihanService = app(\App\Services\TagihanService::class);
+            $tagihanService->syncSemuaIuranTahunAjaran($selectedTahunId);
+        }
+
         // Fetch tunggakan terbayar map
         $tunggakanMap = \App\Models\TransaksiDetail::whereHas('transaksi', function ($q) use ($selectedTahunId) {
             $q->where('tahun_ajaran_id', $selectedTahunId);
         })
         ->where('jenis', 'tunggakan')
+        ->selectRaw('transaksi.siswa_tahun_ajaran_id, SUM(transaksi_detail.nominal) as total')
+        ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
+        ->groupBy('transaksi.siswa_tahun_ajaran_id')
+        ->pluck('total', 'siswa_tahun_ajaran_id');
+
+        // Fetch custom (penerimaan lain) terbayar map
+        $customMap = \App\Models\TransaksiDetail::whereHas('transaksi', function ($q) use ($selectedTahunId) {
+            $q->where('tahun_ajaran_id', $selectedTahunId);
+        })
+        ->where('jenis', 'custom')
         ->selectRaw('transaksi.siswa_tahun_ajaran_id, SUM(transaksi_detail.nominal) as total')
         ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
         ->groupBy('transaksi.siswa_tahun_ajaran_id')
@@ -82,6 +97,7 @@ class RekapitulasiController extends Controller
             'daftarKelas',
             'jenisPenerimaanList',
             'tunggakanMap',
+            'customMap',
             'kelasFilter',
             'cari',
             'bulanFilter',
@@ -136,10 +152,24 @@ class RekapitulasiController extends Controller
 
         $jenisPenerimaanList = JenisPenerimaan::where('tahun_ajaran_id', $selectedTahunId)->orderBy('urutan')->get();
 
+        if ($selectedTahunId) {
+            $tagihanService = app(\App\Services\TagihanService::class);
+            $tagihanService->syncSemuaIuranTahunAjaran($selectedTahunId);
+        }
+
         $tunggakanMap = \App\Models\TransaksiDetail::whereHas('transaksi', function ($q) use ($selectedTahunId) {
             $q->where('tahun_ajaran_id', $selectedTahunId);
         })
         ->where('jenis', 'tunggakan')
+        ->selectRaw('transaksi.siswa_tahun_ajaran_id, SUM(transaksi_detail.nominal) as total')
+        ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
+        ->groupBy('transaksi.siswa_tahun_ajaran_id')
+        ->pluck('total', 'siswa_tahun_ajaran_id');
+
+        $customMap = \App\Models\TransaksiDetail::whereHas('transaksi', function ($q) use ($selectedTahunId) {
+            $q->where('tahun_ajaran_id', $selectedTahunId);
+        })
+        ->where('jenis', 'custom')
         ->selectRaw('transaksi.siswa_tahun_ajaran_id, SUM(transaksi_detail.nominal) as total')
         ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
         ->groupBy('transaksi.siswa_tahun_ajaran_id')
@@ -158,54 +188,44 @@ class RekapitulasiController extends Controller
             $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalCols);
 
             // Header Yayasan / Sekolah (Rows 1-4)
-            $sheet->setCellValue('A1', $sekolah->nama_yayasan ?? 'YPI "IHYAUL ULUM"');
+            $sheet->setCellValue('A1', strtoupper($sekolah->nama_sekolah ?? 'MTS IHYAUL ULUM'));
             $sheet->mergeCells("A1:{$lastColLetter}1");
-            $sheet->setCellValue('A2', $sekolah->nama_sekolah ?? 'MTS IHYAUL ULUM');
-            $sheet->mergeCells("A2:{$lastColLetter}2");
-            $sheet->setCellValue('A3', $sekolah->alamat ?? 'Miru Banyuurip Kedamean Gresik');
-            $sheet->mergeCells("A3:{$lastColLetter}3");
-            $sheet->setCellValue('A4', 'TAHUN ' . ($tahunFilter?->nama ?? date('Y')));
-            $sheet->mergeCells("A4:{$lastColLetter}4");
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+            $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-            $schoolHeaderStyle = [
-                'alignment' => [
-                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-                ],
-                'font' => [
-                    'bold' => true,
-                    'size' => 11,
-                ],
-            ];
-            $sheet->getStyle("A1:{$lastColLetter}4")->applyFromArray($schoolHeaderStyle);
+            if ($sekolah->nama_yayasan ?? false) {
+                $sheet->setCellValue('A2', strtoupper($sekolah->nama_yayasan));
+                $sheet->mergeCells("A2:{$lastColLetter}2");
+                $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(11);
+                $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            }
 
-            // Judul Laporan (Row 6)
-            $sheet->setCellValue('A6', 'LAPORAN TAGIHAN DAN RINCIAN PEMBAYARAN UANG SEKOLAH');
+            if (($sekolah->alamat ?? false) || ($sekolah->telepon ?? false)) {
+                $alamatText = $sekolah->alamat ?? '';
+                if ($sekolah->telepon ?? false) {
+                    $alamatText .= ($alamatText ? ' | ' : '') . 'Telp: ' . $sekolah->telepon;
+                }
+                $sheet->setCellValue('A3', $alamatText);
+                $sheet->mergeCells("A3:{$lastColLetter}3");
+                $sheet->getStyle('A3')->getFont()->setSize(9);
+                $sheet->getStyle('A3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            }
+
+            $sheet->setCellValue('A5', 'LAPORAN REKAPITULASI PEMBAYARAN GABUNGAN');
+            $sheet->mergeCells("A5:{$lastColLetter}5");
+            $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(13);
+            $sheet->getStyle('A5')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+            $taNama = $tahunFilter->nama ?? '-';
+            $sheet->setCellValue('A6', "Tahun Ajaran: {$taNama}");
             $sheet->mergeCells("A6:{$lastColLetter}6");
-            $sheet->getStyle("A6:{$lastColLetter}6")->applyFromArray([
-                'alignment' => [
-                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-                ],
-                'font' => [
-                    'bold' => true,
-                    'size' => 13,
-                ],
-            ]);
+            $sheet->getStyle('A6')->getFont()->setItalic(true)->setSize(10);
+            $sheet->getStyle('A6')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-            // Subtitle Tanggal (Row 7)
-            $todayFormatted = \Carbon\Carbon::now()->locale('id')->isoFormat('dddd D MMMM YYYY');
-            $sheet->setCellValue('A7', 'Sampai Dengan Hari ini : ' . $todayFormatted);
-            $sheet->mergeCells("A7:{$lastColLetter}7");
             $sheet->getStyle("A7:{$lastColLetter}7")->applyFromArray([
                 'alignment' => [
                     'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
                     'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-                ],
-                'font' => [
-                    'bold' => true,
-                    'size' => 11,
-                    'color' => ['argb' => 'FF008000'],
                 ],
             ]);
 
@@ -284,13 +304,22 @@ class RekapitulasiController extends Controller
                 $sppTerbayar = $sta->tagihanSpp->sum('terbayar');
                 $twTagihan = $sta->tagihanTabunganWajib->sum('tagihan');
                 $twTerbayar = $sta->tagihanTabunganWajib->sum('terbayar');
-                $iurTagihan = $sta->tagihanIuran->sum('tagihan');
+
+                $iurTagihan = 0;
                 $iurTerbayar = $sta->tagihanIuran->sum('terbayar');
+                foreach ($jenisPenerimaanList as $jp) {
+                    if ($jp->is_aktif && $jp->matchesKelas($sta->siswa->kelas ?? null)) {
+                        $bill = $sta->tagihanIuran->where('jenis_penerimaan_id', $jp->id)->first();
+                        $iurTagihan += $bill ? $bill->tagihan : $jp->tarif;
+                    }
+                }
+
                 $tunggakanAwal = $sta->tunggakan_awal ?? 0;
                 $tunggakanTerbayar = (int) ($tunggakanMap[$sta->id] ?? 0);
+                $customTerbayar = (int) ($customMap[$sta->id] ?? 0);
 
-                $tagihanSetahun = $sppTagihan + $twTagihan + $iurTagihan + $tunggakanAwal;
-                $totalSudahBayar = $sppTerbayar + $twTerbayar + $iurTerbayar + $tunggakanTerbayar;
+                $tagihanSetahun = $sppTagihan + $twTagihan + $iurTagihan + $tunggakanAwal + $customTerbayar;
+                $totalSudahBayar = $sppTerbayar + $twTerbayar + $iurTerbayar + $tunggakanTerbayar + $customTerbayar;
                 $totalKurangBayar = max(0, $tagihanSetahun - $totalSudahBayar);
 
                 $sheet->setCellValue('A' . $currentRow, $sta->siswa->kelas);
