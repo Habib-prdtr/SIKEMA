@@ -118,7 +118,7 @@
             $tarifSpp = $transaksi->siswaTahunAjaran->tarif_spp ?? 0;
             $namaDispensasi = $transaksi->siswaTahunAjaran->dispensasi->nama ?? 'Potongan';
 
-            $processGroupItem = function ($group, $tarifSpp, $namaDispensasi) {
+            $processGroupItem = function ($group, $prefix, $tarifSpp = 0, $namaDispensasi = null) {
                 $first = $group[0];
                 $last = end($group);
                 $totalNominal = collect($group)->sum('nominal');
@@ -126,26 +126,28 @@
                 $firstBulanStr = \Carbon\Carbon::createFromDate($first->tahun, $first->bulan, 1)->locale('id')->isoFormat('MMMM');
 
                 if (count($group) === 1) {
-                    $keterangan = 'SPP ' . \Carbon\Carbon::createFromDate($first->tahun, $first->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
+                    $keterangan = "{$prefix} " . \Carbon\Carbon::createFromDate($first->tahun, $first->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
                 } else {
                     $lastBulanStr = \Carbon\Carbon::createFromDate($last->tahun, $last->bulan, 1)->locale('id')->isoFormat('MMMM');
                     if ($first->tahun === $last->tahun) {
-                        $keterangan = "SPP {$firstBulanStr} - {$lastBulanStr} {$first->tahun}";
+                        $keterangan = "{$prefix} {$firstBulanStr} - {$lastBulanStr} {$first->tahun}";
                     } else {
-                        $keterangan = "SPP {$firstBulanStr} {$first->tahun} - {$lastBulanStr} {$last->tahun}";
+                        $keterangan = "{$prefix} {$firstBulanStr} {$first->tahun} - {$lastBulanStr} {$last->tahun}";
                     }
                 }
 
-                $hasDisp = false;
-                foreach ($group as $item) {
-                    if ($tarifSpp > 0 && $item->nominal < $tarifSpp) {
-                        $hasDisp = true;
-                        break;
+                if ($prefix === 'SPP' && $namaDispensasi) {
+                    $hasDisp = false;
+                    foreach ($group as $item) {
+                        if ($tarifSpp > 0 && $item->nominal < $tarifSpp) {
+                            $hasDisp = true;
+                            break;
+                        }
                     }
-                }
 
-                if ($hasDisp) {
-                    $keterangan .= " (Disp: {$namaDispensasi})";
+                    if ($hasDisp) {
+                        $keterangan .= " (Disp: {$namaDispensasi})";
+                    }
                 }
 
                 return [
@@ -154,6 +156,7 @@
                 ];
             };
 
+            // Group SPP Details
             $sppDetails = $transaksi->details->where('jenis', 'spp')->sortBy(function ($item) {
                 return ($item->tahun * 12) + $item->bulan;
             })->values();
@@ -171,27 +174,58 @@
                         if ($currIndex === $prevIndex + 1) {
                             $currentGroup[] = $detail;
                         } else {
-                            $rincianPembayaran->push($processGroupItem($currentGroup, $tarifSpp, $namaDispensasi));
+                            $rincianPembayaran->push($processGroupItem($currentGroup, 'SPP', $tarifSpp, $namaDispensasi));
                             $currentGroup = [$detail];
                         }
                     }
                 }
                 if (!empty($currentGroup)) {
-                    $rincianPembayaran->push($processGroupItem($currentGroup, $tarifSpp, $namaDispensasi));
+                    $rincianPembayaran->push($processGroupItem($currentGroup, 'SPP', $tarifSpp, $namaDispensasi));
                 }
             }
 
-            $nonSppDetails = $transaksi->details->where('jenis', '!=', 'spp');
-            foreach ($nonSppDetails as $detail) {
+            // Group Tabungan Wajib Details
+            $twDetails = $transaksi->details->where('jenis', 'tabungan_wajib')->filter(function ($item) {
+                return !empty($item->bulan) && !empty($item->tahun);
+            })->sortBy(function ($item) {
+                return ($item->tahun * 12) + $item->bulan;
+            })->values();
+
+            if ($twDetails->isNotEmpty()) {
+                $currentGroup = [];
+                foreach ($twDetails as $detail) {
+                    if (empty($currentGroup)) {
+                        $currentGroup[] = $detail;
+                    } else {
+                        $prev = end($currentGroup);
+                        $prevIndex = ($prev->tahun * 12) + $prev->bulan;
+                        $currIndex = ($detail->tahun * 12) + $detail->bulan;
+
+                        if ($currIndex === $prevIndex + 1) {
+                            $currentGroup[] = $detail;
+                        } else {
+                            $rincianPembayaran->push($processGroupItem($currentGroup, 'Tabungan Wajib'));
+                            $currentGroup = [$detail];
+                        }
+                    }
+                }
+                if (!empty($currentGroup)) {
+                    $rincianPembayaran->push($processGroupItem($currentGroup, 'Tabungan Wajib'));
+                }
+            }
+
+            // Other details (iuran, custom, tunggakan, or tabungan_wajib without month/year)
+            $otherDetails = $transaksi->details->reject(function ($detail) {
+                if ($detail->jenis === 'spp') return true;
+                if ($detail->jenis === 'tabungan_wajib' && !empty($detail->bulan) && !empty($detail->tahun)) return true;
+                return false;
+            });
+
+            foreach ($otherDetails as $detail) {
                 if ($detail->jenis === 'iuran') {
                     $label = $detail->jenisPenerimaan->nama ?? 'Iuran';
                 } elseif ($detail->jenis === 'tabungan_wajib') {
-                    if ($detail->bulan && $detail->tahun) {
-                        $namaBulan = \Carbon\Carbon::createFromDate($detail->tahun, $detail->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
-                        $label = "Tabungan Wajib {$namaBulan}";
-                    } else {
-                        $label = 'Tabungan Wajib';
-                    }
+                    $label = 'Tabungan Wajib';
                 } elseif ($detail->jenis === 'custom') {
                     $label = $detail->keterangan ?? 'Penerimaan Lain';
                 } else {
