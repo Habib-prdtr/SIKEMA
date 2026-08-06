@@ -21,9 +21,10 @@ class DispensasiController extends Controller
      */
     public function index(): View
     {
-        $dispensasiList = Dispensasi::orderBy('nama')->get();
+        $dispensasiList = Dispensasi::with('jenisPenerimaan.tahunAjaran')->orderBy('nama')->get();
+        $jenisPenerimaanOptions = \App\Models\JenisPenerimaan::with('tahunAjaran')->orderBy('nama')->get();
 
-        return view('master.dispensasi.index', compact('dispensasiList'));
+        return view('master.dispensasi.index', compact('dispensasiList', 'jenisPenerimaanOptions'));
     }
 
     /**
@@ -33,6 +34,7 @@ class DispensasiController extends Controller
     {
         $rules = [
             'nama' => 'required|string|max:100',
+            'jenis_penerimaan_id' => 'nullable|exists:jenis_penerimaan,id',
             'tipe_potongan' => 'required|in:persen,nominal',
             'nilai_potongan' => 'required|integer|min:0',
             'keterangan' => 'nullable|string',
@@ -61,6 +63,7 @@ class DispensasiController extends Controller
     {
         $rules = [
             'nama' => 'required|string|max:100',
+            'jenis_penerimaan_id' => 'nullable|exists:jenis_penerimaan,id',
             'tipe_potongan' => 'required|in:persen,nominal',
             'nilai_potongan' => 'required|integer|min:0',
             'keterangan' => 'nullable|string',
@@ -156,20 +159,36 @@ class DispensasiController extends Controller
      */
     public function tambahSiswa(Request $request, Dispensasi $dispensasi): RedirectResponse
     {
-        $validated = $request->validate([
-            'siswa_tahun_ajaran_id' => 'nullable|exists:siswa_tahun_ajaran,id',
-            'siswa_tahun_ajaran_ids' => 'nullable|array',
-            'siswa_tahun_ajaran_ids.*' => 'exists:siswa_tahun_ajaran,id',
-            'durasi_dispensasi' => 'required|integer|min:1|max:12',
-            'semester_dispensasi' => 'nullable|in:ganjil,genap,semua',
-        ], [
+        $isIuran = !empty($dispensasi->jenis_penerimaan_id);
+
+        if ($isIuran) {
+            $rules = [
+                'siswa_tahun_ajaran_id' => 'nullable|exists:siswa_tahun_ajaran,id',
+                'siswa_tahun_ajaran_ids' => 'nullable|array',
+                'siswa_tahun_ajaran_ids.*' => 'exists:siswa_tahun_ajaran,id',
+                'durasi_dispensasi' => 'nullable|integer',
+                'semester_dispensasi' => 'nullable|in:ganjil,genap,semua',
+            ];
+        } else {
+            $rules = [
+                'siswa_tahun_ajaran_id' => 'nullable|exists:siswa_tahun_ajaran,id',
+                'siswa_tahun_ajaran_ids' => 'nullable|array',
+                'siswa_tahun_ajaran_ids.*' => 'exists:siswa_tahun_ajaran,id',
+                'durasi_dispensasi' => 'required|integer|min:1|max:12',
+                'semester_dispensasi' => 'nullable|in:ganjil,genap,semua',
+            ];
+        }
+
+        $validated = $request->validate($rules, [
             'durasi_dispensasi.required' => 'Durasi dispensasi wajib diisi.',
             'durasi_dispensasi.min' => 'Durasi minimal 1 bulan.',
             'durasi_dispensasi.max' => 'Durasi maksimal 12 bulan.',
         ]);
 
-        $semester = $validated['semester_dispensasi'] ?? 'semua';
-        if (in_array($semester, ['ganjil', 'genap']) && (int) $validated['durasi_dispensasi'] > 6) {
+        $durasi = $isIuran ? 1 : (int) ($validated['durasi_dispensasi'] ?? 1);
+        $semester = $isIuran ? 'semua' : ($validated['semester_dispensasi'] ?? 'semua');
+
+        if (!$isIuran && in_array($semester, ['ganjil', 'genap']) && $durasi > 6) {
             return back()->withErrors(['durasi_dispensasi' => 'Durasi dispensasi per semester maksimal 6 bulan.']);
         }
 
@@ -188,7 +207,7 @@ class DispensasiController extends Controller
             $count = 0;
             foreach ($ids as $staId) {
                 $sta = SiswaTahunAjaran::findOrFail($staId);
-                $this->masterDataService->assignDispensasiKeSiswa($sta, $dispensasi->id, (int) $validated['durasi_dispensasi'], $semester);
+                $this->masterDataService->assignDispensasiKeSiswa($sta, $dispensasi->id, $durasi, $semester);
                 $count++;
             }
         } catch (\Exception $e) {

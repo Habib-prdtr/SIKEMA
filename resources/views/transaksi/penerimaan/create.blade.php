@@ -315,6 +315,11 @@
                                         @php
                                             $lunas = $iuran->status === 'lunas';
                                             $nominal = $lunas ? $iuran->tagihan : $iuran->sisa();
+                                            $origTarif = $iuran->jenisPenerimaan->tarif ?? $iuran->tagihan;
+                                            $isIuranDispensasi = isset($siswa) && $siswa->dispensasi && $siswa->dispensasi->jenis_penerimaan_id == $iuran->jenis_penerimaan_id;
+                                            $hasDispensasi = $isIuranDispensasi && ($iuran->tagihan < $origTarif);
+                                            $potongan = $hasDispensasi ? ($origTarif - $iuran->tagihan) : 0;
+                                            $namaDispensasi = $siswa->dispensasi->nama ?? 'Dispensasi';
                                         @endphp
                                         <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
                                             {{ $lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50' }}">
@@ -328,11 +333,21 @@
                                                     <span class="text-xs text-gray-500 block">
                                                         {{ $iuran->status === 'cicilan' ? 'Cicilan — Sisa bayar' : ($lunas ? 'Sudah lunas' : 'Belum dibayar') }}
                                                     </span>
+                                                    @if($hasDispensasi)
+                                                        <p class="text-xs text-purple-700 font-medium mt-0.5 flex items-center gap-1">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-purple-600 inline-block"></span>
+                                                            Potongan Dispensasi ({{ $namaDispensasi }}): -{{ format_rupiah($potongan) }} (Normal: {{ format_rupiah($origTarif) }})
+                                                        </p>
+                                                    @endif
                                                 </div>
                                             </div>
                                             <div class="text-right">
-                                                <p class="font-semibold text-sm">{{ format_rupiah($nominal) }}</p>
-                                                @if($lunas) <span class="badge-green text-xs">Lunas</span> @endif
+                                                <p class="font-semibold text-sm text-gray-900">{{ format_rupiah($nominal) }}</p>
+                                                @if($lunas)
+                                                    <span class="badge-green text-xs">Lunas</span>
+                                                @elseif($hasDispensasi)
+                                                    <span class="inline-block text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded">{{ $namaDispensasi }}</span>
+                                                @endif
                                             </div>
                                         </label>
                                     @endforeach
@@ -791,6 +806,9 @@
                 data.tagihanIuran.forEach(iuran => {
                     const lunas = iuran.lunas;
                     const nominal = iuran.nominal;
+                    const hasDispensasi = iuran.hasDispensasi;
+                    const potongan = iuran.potongan;
+                    const namaDispensasi = iuran.namaDispensasi || 'Dispensasi';
                     html += `
                     <label class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${lunas ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50'}">
                         <div class="flex items-center gap-3">
@@ -802,11 +820,17 @@
                                 <span class="text-xs text-gray-500 block">
                                     ${iuran.status === 'cicilan' ? 'Cicilan — Sisa bayar' : (lunas ? 'Sudah lunas' : 'Belum dibayar')}
                                 </span>
+                                ${hasDispensasi ? `
+                                    <p class="text-xs text-purple-700 font-medium mt-0.5 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-600 inline-block"></span>
+                                        Potongan Dispensasi (${namaDispensasi}): -${formatRupiah(potongan)}
+                                    </p>
+                                ` : ''}
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="font-semibold text-sm">${formatRupiah(nominal)}</p>
-                            ${lunas ? '<span class="badge-green text-xs">Lunas</span>' : ''}
+                            <p class="font-semibold text-sm text-gray-900">${formatRupiah(nominal)}</p>
+                            ${lunas ? '<span class="badge-green text-xs">Lunas</span>' : (hasDispensasi ? `<span class="inline-block text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded">${namaDispensasi}</span>` : '')}
                         </div>
                     </label>`;
                 });

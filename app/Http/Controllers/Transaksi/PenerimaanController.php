@@ -98,7 +98,8 @@ class PenerimaanController extends Controller
                     $lunas = $spp->status === 'lunas';
                     $nama = \Carbon\Carbon::createFromDate($spp->tahun, $spp->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
                     $nominal = $lunas ? $spp->tagihan : $spp->sisa();
-                    $hasDispensasi = $spp->tagihan < $siswa->tarif_spp;
+                    $isSppDispensasi = $siswa->dispensasi && empty($siswa->dispensasi->jenis_penerimaan_id);
+                    $hasDispensasi = $isSppDispensasi && ($spp->tagihan < $siswa->tarif_spp);
                     $potongan = $hasDispensasi ? ($siswa->tarif_spp - $spp->tagihan) : 0;
                     return [
                         'id' => $spp->id,
@@ -111,7 +112,7 @@ class PenerimaanController extends Controller
                         'lunas' => $lunas,
                         'hasDispensasi' => $hasDispensasi,
                         'potongan' => $potongan,
-                        'namaDispensasi' => $siswa->dispensasi->nama ?? null,
+                        'namaDispensasi' => $isSppDispensasi ? ($siswa->dispensasi->nama ?? null) : null,
                     ];
                 }),
                 'tagihanTabunganWajib' => $tagihanTabunganWajib->map(function ($tw) {
@@ -129,9 +130,13 @@ class PenerimaanController extends Controller
                         'lunas' => $lunas,
                     ];
                 }),
-                'tagihanIuran' => $tagihanIuran->map(function ($iuran) {
+                'tagihanIuran' => $tagihanIuran->map(function ($iuran) use ($siswa) {
                     $lunas = $iuran->status === 'lunas';
                     $nominal = $lunas ? $iuran->tagihan : $iuran->sisa();
+                    $origTarif = $iuran->jenisPenerimaan->tarif ?? $iuran->tagihan;
+                    $isIuranDispensasi = $siswa->dispensasi && $siswa->dispensasi->jenis_penerimaan_id == $iuran->jenis_penerimaan_id;
+                    $hasDispensasi = $isIuranDispensasi && ($iuran->tagihan < $origTarif);
+                    $potongan = $hasDispensasi ? ($origTarif - $iuran->tagihan) : 0;
                     return [
                         'id' => $iuran->id,
                         'nama' => $iuran->jenisPenerimaan->nama ?? 'Iuran',
@@ -139,6 +144,9 @@ class PenerimaanController extends Controller
                         'tagihan' => $iuran->tagihan,
                         'nominal' => $nominal,
                         'lunas' => $lunas,
+                        'hasDispensasi' => $hasDispensasi,
+                        'potongan' => $potongan,
+                        'namaDispensasi' => $isIuranDispensasi ? ($siswa->dispensasi->nama ?? null) : null,
                     ];
                 }),
             ]);

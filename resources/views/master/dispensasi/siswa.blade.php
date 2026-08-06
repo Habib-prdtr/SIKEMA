@@ -1,24 +1,34 @@
 @php
     $daftarKelas = $availableSiswa->pluck('siswa.kelas')->unique()->sort();
+    $isIuran = !empty($dispensasi->jenis_penerimaan_id);
 @endphp
 <x-layouts.app title="Siswa Penerima Dispensasi">
     <x-slot:pageTitle>Master Data / Dispensasi / Siswa Penerima</x-slot:pageTitle>
 
     <div class="space-y-5">
         {{-- Header & Back Button --}}
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div class="flex items-center gap-3">
-                <a href="{{ route('master.dispensasi.index') }}" class="btn-secondary btn-sm p-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('master.dispensasi.index') }}" class="btn-secondary p-2.5 rounded-xl shrink-0">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                     </svg>
                 </a>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Siswa Penerima Dispensasi</h1>
-                    <p class="text-gray-500 text-sm mt-0.5">Dispensasi: <span class="font-semibold text-blue-600">{{ $dispensasi->nama }}</span> (Potongan: {{ $dispensasi->tipe_potongan === 'persen' ? $dispensasi->nilai_potongan . '%' : format_rupiah($dispensasi->nilai_potongan) }})</p>
+                    <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <span>{{ $dispensasi->nama }}</span>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full {{ $isIuran ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800' }}">
+                            {{ $dispensasi->target_nama }}
+                        </span>
+                    </h1>
+                    <p class="text-gray-500 text-xs mt-1 flex items-center gap-2">
+                        <span>Potongan: <strong class="text-gray-800">{{ $dispensasi->tipe_potongan === 'persen' ? $dispensasi->nilai_potongan . '%' : format_rupiah($dispensasi->nilai_potongan) }}</strong></span>
+                        <span>•</span>
+                        <span>Diberikan ke <strong class="text-blue-600">{{ $penerimaList->count() }} siswa</strong></span>
+                    </p>
                 </div>
             </div>
-            <button data-modal-open="modal-tambah-siswa" class="btn-primary">
+            <button data-modal-open="modal-tambah-siswa" class="btn-primary shrink-0 flex items-center gap-1.5 shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -45,7 +55,7 @@
                                 <th>Nama Siswa</th>
                                 <th>Kelas</th>
                                 <th>Alamat</th>
-                                <th class="text-center">Durasi Dispensasi</th>
+                                <th class="text-center">{{ $isIuran ? 'Status Target' : 'Durasi Dispensasi' }}</th>
                                 <th class="text-center w-24">Aksi</th>
                             </tr>
                         </thead>
@@ -56,17 +66,23 @@
                                     <td class="font-medium text-gray-900">{{ $p->siswa->nama }}</td>
                                     <td>{{ $p->siswa->kelas }}</td>
                                     <td>{{ $p->siswa->alamat ?? '-' }}</td>
-                                    <td class="text-center font-semibold text-blue-600">
-                                        <div>{{ $p->total_durasi ?? $p->durasi_dispensasi }} Bulan</div>
-                                        <div class="text-[11px] text-gray-500 font-normal">
-                                            @if(($p->durasi_ganjil ?? 0) > 0 && ($p->durasi_genap ?? 0) > 0)
-                                                Ganjil: {{ $p->durasi_ganjil }} bln | Genap: {{ $p->durasi_genap }} bln
-                                            @elseif(($p->durasi_ganjil ?? 0) > 0)
-                                                Sem. Ganjil ({{ $p->durasi_ganjil }} bln)
-                                            @elseif(($p->durasi_genap ?? 0) > 0)
-                                                Sem. Genap ({{ $p->durasi_genap }} bln)
-                                            @endif
-                                        </div>
+                                    <td class="text-center font-semibold">
+                                        @if($isIuran)
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                                Terpotong ({{ $dispensasi->target_nama }})
+                                            </span>
+                                        @else
+                                            <div class="text-blue-600">{{ $p->total_durasi ?? $p->durasi_dispensasi }} Bulan</div>
+                                            <div class="text-[11px] text-gray-500 font-normal">
+                                                @if(($p->durasi_ganjil ?? 0) > 0 && ($p->durasi_genap ?? 0) > 0)
+                                                    Ganjil: {{ $p->durasi_ganjil }} bln | Genap: {{ $p->durasi_genap }} bln
+                                                @elseif(($p->durasi_ganjil ?? 0) > 0)
+                                                    Sem. Ganjil ({{ $p->durasi_ganjil }} bln)
+                                                @elseif(($p->durasi_genap ?? 0) > 0)
+                                                    Sem. Genap ({{ $p->durasi_genap }} bln)
+                                                @endif
+                                            </div>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         <form id="del-siswa-{{ $p->id }}" method="POST"
@@ -102,48 +118,68 @@
             </div>
             <form method="POST" action="{{ route('master.dispensasi.siswa.store', $dispensasi) }}">
                 @csrf
-                <input type="hidden" name="semester_dispensasi" id="semester_dispensasi_input" value="">
+                @if($isIuran)
+                    <input type="hidden" name="semester_dispensasi" value="semua">
+                    <input type="hidden" name="durasi_dispensasi" value="1">
+                @else
+                    <input type="hidden" name="semester_dispensasi" id="semester_dispensasi_input" value="">
+                @endif
 
                 <div class="modal-body space-y-4">
-                    {{-- Step 1: Semester Selector Tabs --}}
-                    <div id="step_1_container">
-                        <label class="form-label font-semibold text-gray-700 mb-1.5 block">Pilih Target Semester Terlebih Dahulu <span class="text-red-500">*</span></label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button type="button" class="btn-tab-semester btn-secondary text-xs py-2.5 px-3 justify-center font-semibold rounded-lg border border-gray-200 hover:border-blue-400 transition-all" data-semester="ganjil">
-                                📌 Semester Ganjil
-                            </button>
-                            <button type="button" class="btn-tab-semester btn-secondary text-xs py-2.5 px-3 justify-center font-semibold rounded-lg border border-gray-200 hover:border-blue-400 transition-all" data-semester="genap">
-                                📌 Semester Genap
-                            </button>
-                            <button type="button" class="btn-tab-semester btn-secondary text-xs py-2.5 px-3 justify-center font-semibold rounded-lg border border-gray-200 hover:border-blue-400 transition-all" data-semester="semua">
-                                📅 1 Tahun Penuh
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- Step 2 Container (Hidden until semester tab is clicked) --}}
-                    <div id="step_2_container" class="hidden space-y-4">
-                        {{-- Active Semester Banner with Change Button --}}
-                        <div class="flex items-center justify-between p-2.5 rounded-lg border text-xs" id="active_semester_banner">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-sm" id="banner_title">📌 Semester Ganjil</span>
-                                <span class="text-gray-500" id="banner_subtitle">(Juli - Desember | Maks. 6 Bulan)</span>
+                    @if($isIuran)
+                        {{-- Info Banner for Iuran Target --}}
+                        <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center gap-2.5">
+                            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="font-bold text-sm text-emerald-950">Target Dispensasi: {{ $dispensasi->target_nama }}</p>
+                                <p class="text-[11px] text-emerald-700 mt-0.5">Dispensasi ini berlaku untuk Iuran (bukan SPP bulanan). Potongan akan langsung memotong tarif iuran siswa terpilih pada tahun ajaran aktif.</p>
                             </div>
-                            <button type="button" id="btn_change_semester" class="text-blue-600 hover:text-blue-800 font-semibold underline text-xs">
-                                Ubah Semester
-                            </button>
                         </div>
-
-                        {{-- Durasi Dispensasi --}}
-                        <div>
-                            <label class="form-label font-semibold text-gray-700">Durasi Dispensasi (Bulan) <span class="text-red-500">*</span></label>
-                            <div class="flex items-center gap-2 mb-2" id="preset_durasi_container">
-                                <button type="button" class="btn-preset-durasi btn-secondary btn-sm" data-durasi="6">6 Bulan (Full Semester Ganjil)</button>
-                                <button type="button" class="btn-preset-durasi btn-secondary btn-sm" data-durasi="3">3 Bulan</button>
+                    @else
+                        {{-- Step 1: Semester Selector Tabs (For SPP only) --}}
+                        <div id="step_1_container">
+                            <label class="form-label font-semibold text-gray-700 mb-1.5 block">Pilih Target Semester Terlebih Dahulu <span class="text-red-500">*</span></label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button type="button" class="btn-tab-semester btn-secondary text-xs py-2.5 px-3 justify-center font-semibold rounded-lg border border-gray-200 hover:border-blue-400 transition-all" data-semester="ganjil">
+                                    📌 Semester Ganjil
+                                </button>
+                                <button type="button" class="btn-tab-semester btn-secondary text-xs py-2.5 px-3 justify-center font-semibold rounded-lg border border-gray-200 hover:border-blue-400 transition-all" data-semester="genap">
+                                    📌 Semester Genap
+                                </button>
+                                <button type="button" class="btn-tab-semester btn-secondary text-xs py-2.5 px-3 justify-center font-semibold rounded-lg border border-gray-200 hover:border-blue-400 transition-all" data-semester="semua">
+                                    📅 1 Tahun Penuh
+                                </button>
                             </div>
-                            <input type="number" id="durasi_dispensasi_input" name="durasi_dispensasi" value="{{ old('durasi_dispensasi') }}"
-                                class="form-input" placeholder="Masukkan durasi (1-6 bulan)" min="1" max="6" required>
                         </div>
+                    @endif
+
+                    {{-- Student Selection Container --}}
+                    <div id="step_2_container" class="{{ $isIuran ? 'space-y-4' : 'hidden space-y-4' }}">
+                        @if(!$isIuran)
+                            {{-- Active Semester Banner with Change Button (For SPP only) --}}
+                            <div class="flex items-center justify-between p-2.5 rounded-lg border text-xs" id="active_semester_banner">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-sm" id="banner_title">📌 Semester Ganjil</span>
+                                    <span class="text-gray-500" id="banner_subtitle">(Juli - Desember | Maks. 6 Bulan)</span>
+                                </div>
+                                <button type="button" id="btn_change_semester" class="text-blue-600 hover:text-blue-800 font-semibold underline text-xs">
+                                    Ubah Semester
+                                </button>
+                            </div>
+
+                            {{-- Durasi Dispensasi (For SPP only) --}}
+                            <div>
+                                <label class="form-label font-semibold text-gray-700">Durasi Dispensasi (Bulan) <span class="text-red-500">*</span></label>
+                                <div class="flex items-center gap-2 mb-2" id="preset_durasi_container">
+                                    <button type="button" class="btn-preset-durasi btn-secondary btn-sm" data-durasi="6">6 Bulan (Full Semester Ganjil)</button>
+                                    <button type="button" class="btn-preset-durasi btn-secondary btn-sm" data-durasi="3">3 Bulan</button>
+                                </div>
+                                <input type="number" id="durasi_dispensasi_input" name="durasi_dispensasi" value="{{ old('durasi_dispensasi') }}"
+                                    class="form-input" placeholder="Masukkan durasi (1-6 bulan)" min="1" max="6" required>
+                            </div>
+                        @endif
 
                         {{-- Filter & Search Siswa --}}
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-gray-100">
@@ -177,8 +213,8 @@
                                 <span id="selected_count_badge" class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">0 siswa dipilih</span>
                             </div>
 
-                            {{-- Scrollable Student List (Max 4 items visible) --}}
-                            <div class="space-y-1.5 pr-1 border border-gray-200 rounded-lg p-1.5 bg-gray-50/50" style="max-height: 180px; overflow-y: auto !important;" id="student_list_container">
+                            {{-- Scrollable Student List --}}
+                            <div class="space-y-1.5 pr-1 border border-gray-200 rounded-lg p-1.5 bg-gray-50/50" style="max-height: 220px; overflow-y: auto !important;" id="student_list_container">
                                 @foreach($availableSiswa as $as)
                                     @php
                                         $alreadyThis = $as->dispensasi_id === $dispensasi->id;
@@ -202,13 +238,13 @@
                                             </div>
                                         </div>
                                         <div class="text-right badge-status-container">
-                                            @if(($as->durasi_ganjil ?? 0) > 0 && ($as->durasi_genap ?? 0) > 0)
+                                            @if(!$isIuran && ($as->durasi_ganjil ?? 0) > 0 && ($as->durasi_genap ?? 0) > 0)
                                                 <span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-purple-100 text-purple-800">
                                                     Ganjil: {{ $as->durasi_ganjil }} bln | Genap: {{ $as->durasi_genap }} bln
                                                 </span>
                                             @elseif($alreadyThis)
                                                 <span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700">
-                                                    Sudah ada ({{ $as->total_durasi ?? $as->durasi_dispensasi }} bln)
+                                                    Sudah ada {{ $isIuran ? '' : '(' . ($as->total_durasi ?? $as->durasi_dispensasi) . ' bln)' }}
                                                 </span>
                                             @elseif($alreadyOther)
                                                 <span class="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800" title="Dispensasi: {{ $as->dispensasi->nama ?? '' }}">
@@ -235,6 +271,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const isIuranTarget = {{ $isIuran ? 'true' : 'false' }};
             const filterKelas = document.getElementById('filter_kelas');
             const searchInput = document.getElementById('search_siswa_input');
             const checkAll = document.getElementById('check_all_siswa');
@@ -265,6 +302,8 @@
             }
 
             function updateSemesterUI(selectedSem) {
+                if (isIuranTarget) return; // Skip semester tabs for Iuran target
+
                 if (!selectedSem) {
                     if (step1Container) step1Container.classList.remove('hidden');
                     if (step2Container) step2Container.classList.add('hidden');
@@ -335,6 +374,8 @@
             }
 
             function updateStudentBadges(selectedSem) {
+                if (isIuranTarget) return;
+
                 document.querySelectorAll('.siswa-item').forEach(item => {
                     const dGanjil = parseInt(item.dataset.durasiGanjil || 0, 10);
                     const dGenap = parseInt(item.dataset.durasiGenap || 0, 10);
@@ -484,8 +525,9 @@
                 cb.addEventListener('change', updateCountAndSubmit);
             });
 
-            // Initially hide step 2 until user clicks a semester button
-            updateSemesterUI('');
+            if (!isIuranTarget) {
+                updateSemesterUI('');
+            }
             updateCountAndSubmit();
         });
     </script>

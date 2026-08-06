@@ -15,12 +15,14 @@ class Dispensasi extends Model
 
     protected $fillable = [
         'nama',
+        'jenis_penerimaan_id',
         'tipe_potongan',
         'nilai_potongan',
         'keterangan',
     ];
 
     protected $casts = [
+        'jenis_penerimaan_id' => 'integer',
         'nilai_potongan' => 'integer',
         'created_at' => 'datetime',
     ];
@@ -29,8 +31,23 @@ class Dispensasi extends Model
     // Relasi
     // =========================================================
 
+    public function jenisPenerimaan()
+    {
+        return $this->belongsTo(JenisPenerimaan::class);
+    }
+
     public function siswaTahunAjaran()
     {
         return $this->hasMany(SiswaTahunAjaran::class);
+    }
+
+    // Accessor
+    public function getTargetNamaAttribute(): string
+    {
+        if ($this->jenis_penerimaan_id && $this->jenisPenerimaan) {
+            $tahunNama = $this->jenisPenerimaan->tahunAjaran->nama ?? null;
+            return $this->jenisPenerimaan->nama . ($tahunNama ? " ({$tahunNama})" : '');
+        }
+        return 'SPP';
     }
 }

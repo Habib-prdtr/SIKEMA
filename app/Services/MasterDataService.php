@@ -504,18 +504,72 @@ class MasterDataService
             $tarifSpp = $siswaTahunAjaran->tarif_spp;
             $dispensasi = $dispensasiId ? Dispensasi::find($dispensasiId) : null;
 
-            if (!$dispensasiId || $durasi <= 0 || !$dispensasi) {
-                $siswaTahunAjaran->update([
-                    'dispensasi_id' => null,
-                    'durasi_dispensasi' => 0,
-                ]);
+            // Reset iuran to full tarif for any non-matching iuran or when revoking dispensasi
+            $resetIuranFull = function ($targetJpId = null) use ($siswaTahunAjaran) {
+                $query = $siswaTahunAjaran->tagihanIuran()->where('terbayar', 0);
+                if ($targetJpId !== null) {
+                    $query->where('jenis_penerimaan_id', '!=', $targetJpId);
+                }
+                $tagihanIuranList = $query->with('jenisPenerimaan')->get();
+                foreach ($tagihanIuranList as $ti) {
+                    if ($ti->jenisPenerimaan) {
+                        $ti->update(['tagihan' => $ti->jenisPenerimaan->tarif]);
+                    }
+                }
+            };
+
+            // Reset SPP to full tarif
+            $resetSppFull = function () use ($siswaTahunAjaran, $tarifSpp) {
                 foreach ($siswaTahunAjaran->tagihanSpp as $bill) {
                     if ($bill->status === 'belum') {
                         $bill->update(['tagihan' => $tarifSpp]);
                     }
                 }
+            };
+
+            if (!$dispensasiId || $durasi <= 0 || !$dispensasi) {
+                $siswaTahunAjaran->update([
+                    'dispensasi_id' => null,
+                    'durasi_dispensasi' => 0,
+                ]);
+                $resetSppFull();
+                $resetIuranFull();
                 return;
             }
+
+            // Target is a specific Jenis Penerimaan (Iuran)
+            if (!empty($dispensasi->jenis_penerimaan_id)) {
+                $resetSppFull();
+                $resetIuranFull($dispensasi->jenis_penerimaan_id);
+
+                $targetIuran = $siswaTahunAjaran->tagihanIuran()
+                    ->where('jenis_penerimaan_id', $dispensasi->jenis_penerimaan_id)
+                    ->where('terbayar', 0)
+                    ->with('jenisPenerimaan')
+                    ->first();
+
+                if ($targetIuran && $targetIuran->jenisPenerimaan) {
+                    $origTarif = $targetIuran->jenisPenerimaan->tarif;
+                    if ($dispensasi->tipe_potongan === 'persen') {
+                        $potongan = ($origTarif * $dispensasi->nilai_potongan) / 100;
+                        $tagihanNominal = max(0, $origTarif - $potongan);
+                    } elseif ($dispensasi->tipe_potongan === 'nominal') {
+                        $tagihanNominal = max(0, $origTarif - $dispensasi->nilai_potongan);
+                    } else {
+                        $tagihanNominal = $origTarif;
+                    }
+                    $targetIuran->update(['tagihan' => $tagihanNominal]);
+                }
+
+                $siswaTahunAjaran->update([
+                    'dispensasi_id' => $dispensasiId,
+                    'durasi_dispensasi' => $durasi,
+                ]);
+                return;
+            }
+
+            // Target is SPP (jenis_penerimaan_id is null)
+            $resetIuranFull();
 
             $ganjilBulan = [7, 8, 9, 10, 11, 12];
             $genapBulan = [1, 2, 3, 4, 5, 6];
