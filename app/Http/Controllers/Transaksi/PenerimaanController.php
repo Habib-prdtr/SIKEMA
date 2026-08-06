@@ -91,15 +91,16 @@ class PenerimaanController extends Controller
                     'tarif_spp' => $siswa->tarif_spp,
                     'tarif_tabungan_wajib' => $tarifTabunganWajib,
                     'tunggakan_awal' => $siswa->tunggakan_awal,
-                    'dispensasi_nama' => $siswa->dispensasi->nama ?? null,
+                    'dispensasi_nama' => $siswa->getSppDispensasi()?->dispensasi?->nama ?? null,
                 ],
                 'sisaTunggakan' => $sisaTunggakan,
                 'tagihanSpp' => $tagihanSpp->map(function ($spp) use ($siswa) {
                     $lunas = $spp->status === 'lunas';
                     $nama = \Carbon\Carbon::createFromDate($spp->tahun, $spp->bulan, 1)->locale('id')->isoFormat('MMMM YYYY');
                     $nominal = $lunas ? $spp->tagihan : $spp->sisa();
-                    $isSppDispensasi = $siswa->dispensasi && empty($siswa->dispensasi->jenis_penerimaan_id);
-                    $hasDispensasi = $isSppDispensasi && ($spp->tagihan < $siswa->tarif_spp);
+                    $sppDispenObj = $siswa->getSppDispensasi();
+                    $sppDispen = $sppDispenObj ? $sppDispenObj->dispensasi : null;
+                    $hasDispensasi = $sppDispen && ($spp->tagihan < $siswa->tarif_spp);
                     $potongan = $hasDispensasi ? ($siswa->tarif_spp - $spp->tagihan) : 0;
                     return [
                         'id' => $spp->id,
@@ -112,7 +113,7 @@ class PenerimaanController extends Controller
                         'lunas' => $lunas,
                         'hasDispensasi' => $hasDispensasi,
                         'potongan' => $potongan,
-                        'namaDispensasi' => $isSppDispensasi ? ($siswa->dispensasi->nama ?? null) : null,
+                        'namaDispensasi' => $hasDispensasi ? $sppDispen->nama : null,
                     ];
                 }),
                 'tagihanTabunganWajib' => $tagihanTabunganWajib->map(function ($tw) {
@@ -134,8 +135,9 @@ class PenerimaanController extends Controller
                     $lunas = $iuran->status === 'lunas';
                     $nominal = $lunas ? $iuran->tagihan : $iuran->sisa();
                     $origTarif = $iuran->jenisPenerimaan->tarif ?? $iuran->tagihan;
-                    $isIuranDispensasi = $siswa->dispensasi && $siswa->dispensasi->jenis_penerimaan_id == $iuran->jenis_penerimaan_id;
-                    $hasDispensasi = $isIuranDispensasi && ($iuran->tagihan < $origTarif);
+                    $iuranDispenObj = $siswa->getIuranDispensasi($iuran->jenis_penerimaan_id);
+                    $iuranDispen = $iuranDispenObj ? $iuranDispenObj->dispensasi : null;
+                    $hasDispensasi = $iuranDispen && ($iuran->tagihan < $origTarif);
                     $potongan = $hasDispensasi ? ($origTarif - $iuran->tagihan) : 0;
                     return [
                         'id' => $iuran->id,
@@ -146,7 +148,7 @@ class PenerimaanController extends Controller
                         'lunas' => $lunas,
                         'hasDispensasi' => $hasDispensasi,
                         'potongan' => $potongan,
-                        'namaDispensasi' => $isIuranDispensasi ? ($siswa->dispensasi->nama ?? null) : null,
+                        'namaDispensasi' => $hasDispensasi ? $iuranDispen->nama : null,
                     ];
                 }),
             ]);

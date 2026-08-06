@@ -36,9 +36,16 @@ class Dispensasi extends Model
         return $this->belongsTo(JenisPenerimaan::class);
     }
 
+    public function siswaDispensasi()
+    {
+        return $this->hasMany(SiswaDispensasi::class);
+    }
+
     public function siswaTahunAjaran()
     {
-        return $this->hasMany(SiswaTahunAjaran::class);
+        return $this->belongsToMany(SiswaTahunAjaran::class, 'siswa_dispensasi', 'dispensasi_id', 'siswa_tahun_ajaran_id')
+            ->withPivot(['durasi_dispensasi', 'semester_dispensasi', 'durasi_ganjil', 'durasi_genap'])
+            ->withTimestamps();
     }
 
     // Accessor

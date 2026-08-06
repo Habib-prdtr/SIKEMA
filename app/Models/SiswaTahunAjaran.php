@@ -31,9 +31,43 @@ class SiswaTahunAjaran extends Model
     // Relasi
     // =========================================================
 
+    public function siswaDispensasi()
+    {
+        return $this->hasMany(SiswaDispensasi::class, 'siswa_tahun_ajaran_id');
+    }
+
+    public function dispensasiList()
+    {
+        return $this->belongsToMany(Dispensasi::class, 'siswa_dispensasi', 'siswa_tahun_ajaran_id', 'dispensasi_id')
+            ->withPivot(['durasi_dispensasi', 'semester_dispensasi', 'durasi_ganjil', 'durasi_genap'])
+            ->withTimestamps();
+    }
+
     public function dispensasi()
     {
         return $this->belongsTo(Dispensasi::class);
+    }
+
+    /**
+     * Dapatkan objek SiswaDispensasi yang aktif untuk SPP (jenis_penerimaan_id null).
+     */
+    public function getSppDispensasi(): ?SiswaDispensasi
+    {
+        return $this->siswaDispensasi
+            ->first(function ($sd) {
+                return $sd->dispensasi && empty($sd->dispensasi->jenis_penerimaan_id);
+            });
+    }
+
+    /**
+     * Dapatkan objek SiswaDispensasi yang aktif untuk jenis_penerimaan_id tertentu.
+     */
+    public function getIuranDispensasi(int $jenisPenerimaanId): ?SiswaDispensasi
+    {
+        return $this->siswaDispensasi
+            ->first(function ($sd) use ($jenisPenerimaanId) {
+                return $sd->dispensasi && $sd->dispensasi->jenis_penerimaan_id == $jenisPenerimaanId;
+            });
     }
 
     public function siswa()

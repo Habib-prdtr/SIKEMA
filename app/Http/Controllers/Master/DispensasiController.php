@@ -119,8 +119,10 @@ class DispensasiController extends Controller
 
         // Ambil semua siswa yang aktif di tahun ajaran aktif dan memiliki dispensasi ini
         $penerimaList = SiswaTahunAjaran::where('tahun_ajaran_id', $tahunAktif->id)
-            ->where('dispensasi_id', $dispensasi->id)
-            ->with(['siswa', 'tagihanSpp'])
+            ->whereHas('siswaDispensasi', function ($q) use ($dispensasi) {
+                $q->where('dispensasi_id', $dispensasi->id);
+            })
+            ->with(['siswa', 'tagihanSpp', 'siswaDispensasi'])
             ->get();
 
         foreach ($penerimaList as $p) {
@@ -136,7 +138,7 @@ class DispensasiController extends Controller
 
         // Ambil semua siswa yang aktif di tahun ajaran ini
         $availableSiswa = SiswaTahunAjaran::where('tahun_ajaran_id', $tahunAktif->id)
-            ->with(['siswa', 'dispensasi', 'tagihanSpp'])
+            ->with(['siswa', 'siswaDispensasi.dispensasi', 'tagihanSpp'])
             ->get()
             ->sortBy('siswa.nama');
 
@@ -228,7 +230,7 @@ class DispensasiController extends Controller
     public function hapusSiswa(Dispensasi $dispensasi, SiswaTahunAjaran $siswaTahunAjaran): RedirectResponse
     {
         try {
-            $this->masterDataService->assignDispensasiKeSiswa($siswaTahunAjaran, null, 0);
+            $this->masterDataService->revokeDispensasiDariSiswa($siswaTahunAjaran, $dispensasi->id);
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Gagal mencabut dispensasi: ' . $e->getMessage()]);
         }

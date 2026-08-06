@@ -217,8 +217,14 @@
                             <div class="space-y-1.5 pr-1 border border-gray-200 rounded-lg p-1.5 bg-gray-50/50" style="max-height: 220px; overflow-y: auto !important;" id="student_list_container">
                                 @foreach($availableSiswa as $as)
                                     @php
-                                        $alreadyThis = $as->dispensasi_id === $dispensasi->id;
-                                        $alreadyOther = $as->dispensasi_id && !$alreadyThis;
+                                        $alreadyThis = $as->siswaDispensasi->contains('dispensasi_id', $dispensasi->id);
+                                        $otherTargetDispen = $as->siswaDispensasi->first(function ($sd) use ($dispensasi) {
+                                            return $sd->dispensasi_id !== $dispensasi->id &&
+                                                   (($dispensasi->jenis_penerimaan_id && $sd->dispensasi && $sd->dispensasi->jenis_penerimaan_id == $dispensasi->jenis_penerimaan_id) ||
+                                                    (empty($dispensasi->jenis_penerimaan_id) && $sd->dispensasi && empty($sd->dispensasi->jenis_penerimaan_id)));
+                                        });
+                                        $alreadyOther = !empty($otherTargetDispen);
+                                        $otherDispenNama = $otherTargetDispen->dispensasi->nama ?? '';
                                     @endphp
                                     <label class="siswa-item flex items-center justify-between py-2 px-2.5 bg-white hover:bg-blue-50/80 rounded-md border border-gray-100 cursor-pointer transition-colors"
                                         data-kelas="{{ $as->siswa->kelas }}"
@@ -228,7 +234,7 @@
                                         data-durasi-total="{{ $as->total_durasi ?? $as->durasi_dispensasi }}"
                                         data-already-this="{{ $alreadyThis ? 'true' : 'false' }}"
                                         data-already-other="{{ $alreadyOther ? 'true' : 'false' }}"
-                                        data-dispensasi-nama="{{ $as->dispensasi->nama ?? '' }}">
+                                        data-dispensasi-nama="{{ $otherDispenNama }}">
                                         <div class="flex items-center gap-3">
                                             <input type="checkbox" name="siswa_tahun_ajaran_ids[]" value="{{ $as->id }}"
                                                 class="siswa-checkbox form-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
