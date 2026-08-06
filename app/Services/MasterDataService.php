@@ -7,6 +7,7 @@ use App\Models\JenisPenerimaan;
 use App\Models\PosBiaya;
 use App\Models\SaldoAwal;
 use App\Models\Siswa;
+use App\Models\SiswaDispensasi;
 use App\Models\SiswaTahunAjaran;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
@@ -398,10 +399,12 @@ class MasterDataService
                 'siswa_id' => $data['siswa_id'],
                 'tahun_ajaran_id' => $data['tahun_ajaran_id'],
                 'tarif_spp' => $tarifSpp,
-                'dispensasi_id' => $data['dispensasi_id'] ?? null,
-                'durasi_dispensasi' => $data['durasi_dispensasi'] ?? null,
                 'tunggakan_awal' => $data['tunggakan_awal'] ?? 0,
             ]);
+
+            if (!empty($data['dispensasi_id'])) {
+                $this->assignDispensasiKeSiswa($sta, $data['dispensasi_id'], $data['durasi_dispensasi'] ?? 12);
+            }
 
             $sta->load('tahunAjaran');
             $tagihanService->generateSpp($sta);
@@ -497,53 +500,50 @@ class MasterDataService
         });
     }
 
-    public function assignDispensasiKeSiswa(SiswaTahunAjaran $siswaTahunAjaran, ?int $dispensasiId, int $durasi, ?string $semester = 'semua'): void
+    public function assignDispensasiKeSiswa(SiswaTahunAjaran $siswaTahunAjaran, ?int $dispensasiId, int $durasi = 12, ?string $semester = 'semua'): void
     {
         \Illuminate\Support\Facades\DB::transaction(function () use ($siswaTahunAjaran, $dispensasiId, $durasi, $semester) {
             $sem = $semester ?? 'semua';
             $tarifSpp = $siswaTahunAjaran->tarif_spp;
             $dispensasi = $dispensasiId ? Dispensasi::find($dispensasiId) : null;
 
-            // Reset iuran to full tarif for any non-matching iuran or when revoking dispensasi
-            $resetIuranFull = function ($targetJpId = null) use ($siswaTahunAjaran) {
-                $query = $siswaTahunAjaran->tagihanIuran()->where('terbayar', 0);
-                if ($targetJpId !== null) {
-                    $query->where('jenis_penerimaan_id', '!=', $targetJpId);
-                }
-                $tagihanIuranList = $query->with('jenisPenerimaan')->get();
-                foreach ($tagihanIuranList as $ti) {
-                    if ($ti->jenisPenerimaan) {
-                        $ti->update(['tagihan' => $ti->jenisPenerimaan->tarif]);
-                    }
-                }
-            };
-
-            // Reset SPP to full tarif
-            $resetSppFull = function () use ($siswaTahunAjaran, $tarifSpp) {
-                foreach ($siswaTahunAjaran->tagihanSpp as $bill) {
-                    if ($bill->status === 'belum') {
-                        $bill->update(['tagihan' => $tarifSpp]);
-                    }
-                }
-            };
-
-            if (!$dispensasiId || $durasi <= 0 || !$dispensasi) {
-                $siswaTahunAjaran->update([
-                    'dispensasi_id' => null,
-                    'durasi_dispensasi' => 0,
-                ]);
-                $resetSppFull();
-                $resetIuranFull();
+            if (!$dispensasiId || !$dispensasi) {
                 return;
             }
 
-            // Target is a specific Jenis Penerimaan (Iuran)
+            // Case A: Target is a specific Jenis Penerimaan (Iuran)
             if (!empty($dispensasi->jenis_penerimaan_id)) {
-                $resetSppFull();
-                $resetIuranFull($dispensasi->jenis_penerimaan_id);
+                $targetJpId = $dispensasi->jenis_penerimaan_id;
 
+                // Remove any previous dispensasi for this SAME target iuran
+                $oldDispenIds = Dispensasi::where('jenis_penerimaan_id', $targetJpId)->pluck('id');
+                SiswaDispensasi::where('siswa_tahun_ajaran_id', $siswaTahunAjaran->id)
+                    ->whereIn('dispensasi_id', $oldDispenIds)
+                    ->delete();
+
+                // Insert/Update current dispensasi for this student
+                SiswaDispensasi::updateOrCreate(
+                    [
+                        'siswa_tahun_ajaran_id' => $siswaTahunAjaran->id,
+                        'dispensasi_id' => $dispensasiId,
+                    ],
+                    [
+                        'durasi_dispensasi' => 1,
+                        'semester_dispensasi' => 'semua',
+                        'durasi_ganjil' => 0,
+                        'durasi_genap' => 0,
+                    ]
+                );
+
+                // Update legacy column on siswa_tahun_ajaran for backward compatibility
+                $siswaTahunAjaran->update([
+                    'dispensasi_id' => $dispensasiId,
+                    'durasi_dispensasi' => 1,
+                ]);
+
+                // Apply discount to unpaid matching iuran
                 $targetIuran = $siswaTahunAjaran->tagihanIuran()
-                    ->where('jenis_penerimaan_id', $dispensasi->jenis_penerimaan_id)
+                    ->where('jenis_penerimaan_id', $targetJpId)
                     ->where('terbayar', 0)
                     ->with('jenisPenerimaan')
                     ->first();
@@ -561,15 +561,15 @@ class MasterDataService
                     $targetIuran->update(['tagihan' => $tagihanNominal]);
                 }
 
-                $siswaTahunAjaran->update([
-                    'dispensasi_id' => $dispensasiId,
-                    'durasi_dispensasi' => $durasi,
-                ]);
                 return;
             }
 
-            // Target is SPP (jenis_penerimaan_id is null)
-            $resetIuranFull();
+            // Case B: Target is SPP (jenis_penerimaan_id is null)
+            // Remove any previous SPP dispensasi for this student
+            $oldSppDispenIds = Dispensasi::whereNull('jenis_penerimaan_id')->pluck('id');
+            SiswaDispensasi::where('siswa_tahun_ajaran_id', $siswaTahunAjaran->id)
+                ->whereIn('dispensasi_id', $oldSppDispenIds)
+                ->delete();
 
             $ganjilBulan = [7, 8, 9, 10, 11, 12];
             $genapBulan = [1, 2, 3, 4, 5, 6];
@@ -627,10 +627,74 @@ class MasterDataService
                 ->where('tagihan', '<', $tarifSpp)
                 ->count();
 
-            $siswaTahunAjaran->update([
-                'dispensasi_id' => $totalDiscountedMonths > 0 ? $dispensasiId : null,
-                'durasi_dispensasi' => $totalDiscountedMonths,
-            ]);
+            $ganjilDiscounted = $siswaTahunAjaran->tagihanSpp()
+                ->whereIn('bulan', $ganjilBulan)
+                ->where('tagihan', '<', $tarifSpp)
+                ->count();
+
+            $genapDiscounted = $siswaTahunAjaran->tagihanSpp()
+                ->whereIn('bulan', $genapBulan)
+                ->where('tagihan', '<', $tarifSpp)
+                ->count();
+
+            if ($totalDiscountedMonths > 0) {
+                SiswaDispensasi::create([
+                    'siswa_tahun_ajaran_id' => $siswaTahunAjaran->id,
+                    'dispensasi_id' => $dispensasiId,
+                    'durasi_dispensasi' => $totalDiscountedMonths,
+                    'semester_dispensasi' => $sem,
+                    'durasi_ganjil' => $ganjilDiscounted,
+                    'durasi_genap' => $genapDiscounted,
+                ]);
+
+                $siswaTahunAjaran->update([
+                    'dispensasi_id' => $dispensasiId,
+                    'durasi_dispensasi' => $totalDiscountedMonths,
+                ]);
+            } else {
+                $siswaTahunAjaran->update([
+                    'dispensasi_id' => null,
+                    'durasi_dispensasi' => 0,
+                ]);
+            }
+        });
+    }
+
+    public function revokeDispensasiDariSiswa(SiswaTahunAjaran $siswaTahunAjaran, int $dispensasiId): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($siswaTahunAjaran, $dispensasiId) {
+            $dispensasi = Dispensasi::find($dispensasiId);
+            if (!$dispensasi) return;
+
+            SiswaDispensasi::where('siswa_tahun_ajaran_id', $siswaTahunAjaran->id)
+                ->where('dispensasi_id', $dispensasiId)
+                ->delete();
+
+            if (!empty($dispensasi->jenis_penerimaan_id)) {
+                // Reset matching iuran to full tarif
+                $targetIuran = $siswaTahunAjaran->tagihanIuran()
+                    ->where('jenis_penerimaan_id', $dispensasi->jenis_penerimaan_id)
+                    ->where('terbayar', 0)
+                    ->with('jenisPenerimaan')
+                    ->first();
+
+                if ($targetIuran && $targetIuran->jenisPenerimaan) {
+                    $targetIuran->update(['tagihan' => $targetIuran->jenisPenerimaan->tarif]);
+                }
+            } else {
+                // Reset SPP to full tarif
+                $tarifSpp = $siswaTahunAjaran->tarif_spp;
+                foreach ($siswaTahunAjaran->tagihanSpp as $bill) {
+                    if ($bill->status === 'belum') {
+                        $bill->update(['tagihan' => $tarifSpp]);
+                    }
+                }
+
+                $siswaTahunAjaran->update([
+                    'dispensasi_id' => null,
+                    'durasi_dispensasi' => 0,
+                ]);
+            }
         });
     }
 
@@ -640,9 +704,16 @@ class MasterDataService
             $updated = $dispensasi->update($data);
 
             if ($updated) {
-                $penerimaList = SiswaTahunAjaran::where('dispensasi_id', $dispensasi->id)->get();
-                foreach ($penerimaList as $sta) {
-                    $this->assignDispensasiKeSiswa($sta, $dispensasi->id, $sta->durasi_dispensasi ?? 0, $sta->semester_dispensasi ?? 'semua');
+                $penerimaList = SiswaDispensasi::where('dispensasi_id', $dispensasi->id)->with('siswaTahunAjaran')->get();
+                foreach ($penerimaList as $sd) {
+                    if ($sd->siswaTahunAjaran) {
+                        $this->assignDispensasiKeSiswa(
+                            $sd->siswaTahunAjaran,
+                            $dispensasi->id,
+                            $sd->durasi_dispensasi ?? 12,
+                            $sd->semester_dispensasi ?? 'semua'
+                        );
+                    }
                 }
             }
 
