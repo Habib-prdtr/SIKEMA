@@ -45,8 +45,8 @@ class TagihanService
         foreach ($bulanTahun as $bt) {
             $tagihanNominal = $sta->tarif_spp;
 
-            // Jika dalam masa durasi dispensasi, potong tagihan SPP
-            if ($dispensasi && $dispensasiAppliedCount < $durasiDispensasi) {
+            // Jika dalam masa durasi dispensasi dan dispensasi memotong SPP (jenis_penerimaan_id null)
+            if ($dispensasi && empty($dispensasi->jenis_penerimaan_id) && $dispensasiAppliedCount < $durasiDispensasi) {
                 if ($dispensasi->tipe_potongan === 'persen') {
                     $potongan = ($sta->tarif_spp * $dispensasi->nilai_potongan) / 100;
                     $tagihanNominal = max(0, $sta->tarif_spp - $potongan);
@@ -178,16 +178,33 @@ class TagihanService
                 ->pluck('siswa_tahun_ajaran_id')
                 ->toArray();
 
+            $matchingStas = SiswaTahunAjaran::with('dispensasi')
+                ->whereIn('id', $matchingStaIds)
+                ->get()
+                ->keyBy('id');
+
             $rows = [];
             foreach ($matchingStaIds as $staId) {
                 if (in_array($staId, $sudahAda)) {
                     continue;
                 }
 
+                $staItem = $matchingStas[$staId] ?? null;
+                $tagihanNominal = $jp->tarif;
+                if ($staItem && $staItem->dispensasi && $staItem->dispensasi->jenis_penerimaan_id == $jp->id) {
+                    $disp = $staItem->dispensasi;
+                    if ($disp->tipe_potongan === 'persen') {
+                        $pot = ($jp->tarif * $disp->nilai_potongan) / 100;
+                        $tagihanNominal = max(0, $jp->tarif - $pot);
+                    } elseif ($disp->tipe_potongan === 'nominal') {
+                        $tagihanNominal = max(0, $jp->tarif - $disp->nilai_potongan);
+                    }
+                }
+
                 $rows[] = [
                     'siswa_tahun_ajaran_id' => $staId,
                     'jenis_penerimaan_id' => $jp->id,
-                    'tagihan' => $jp->tarif,
+                    'tagihan' => $tagihanNominal,
                     'terbayar' => 0,
                     'status' => TagihanIuran::STATUS_BELUM,
                     'updated_at' => null,
@@ -209,7 +226,7 @@ class TagihanService
      */
     public function generateIuranUntukSiswa(SiswaTahunAjaran $sta): void
     {
-        $sta->loadMissing('siswa');
+        $sta->loadMissing(['siswa', 'dispensasi']);
         $siswaKelas = $sta->siswa->kelas ?? null;
 
         // Ambil semua jenis penerimaan (iuran) yang aktif di tahun ajaran ini
@@ -229,10 +246,21 @@ class TagihanService
                 ->exists();
 
             if (! $exists) {
+                $tagihanNominal = $jp->tarif;
+                if ($sta->dispensasi && $sta->dispensasi->jenis_penerimaan_id == $jp->id) {
+                    $disp = $sta->dispensasi;
+                    if ($disp->tipe_potongan === 'persen') {
+                        $pot = ($jp->tarif * $disp->nilai_potongan) / 100;
+                        $tagihanNominal = max(0, $jp->tarif - $pot);
+                    } elseif ($disp->tipe_potongan === 'nominal') {
+                        $tagihanNominal = max(0, $jp->tarif - $disp->nilai_potongan);
+                    }
+                }
+
                 $rows[] = [
                     'siswa_tahun_ajaran_id' => $sta->id,
                     'jenis_penerimaan_id' => $jp->id,
-                    'tagihan' => $jp->tarif,
+                    'tagihan' => $tagihanNominal,
                     'terbayar' => 0,
                     'status' => TagihanIuran::STATUS_BELUM,
                     'updated_at' => null,
